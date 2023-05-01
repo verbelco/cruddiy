@@ -199,34 +199,29 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
             WHERE `{TABLE_NAME}`.`{TABLE_ID}` = ?
             GROUP BY `{TABLE_NAME}`.`{TABLE_ID}`;";
 
-    if($stmt = mysqli_prepare($link, $sql)){
-        // Set parameters
-        $param_id = trim($_GET["{TABLE_ID}"]);
+    $stmt = mysqli_prepare($link, $sql);
+    // Set parameters
+    $param_id = trim($_GET["{TABLE_ID}"]);
 
-        // Bind variables to the prepared statement as parameters
-		if (is_int($param_id)) $__vartype = "i";
-		elseif (is_string($param_id)) $__vartype = "s";
-		elseif (is_numeric($param_id)) $__vartype = "d";
-		else $__vartype = "b"; // blob
-        mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
+    // Bind variables to the prepared statement as parameters
+    if (is_int($param_id)) $__vartype = "i";
+    elseif (is_string($param_id)) $__vartype = "s";
+    elseif (is_numeric($param_id)) $__vartype = "d";
+    else $__vartype = "b"; // blob
+    mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
 
-        // Attempt to execute the prepared statement
-        if(mysqli_stmt_execute($stmt)){
-            $result = mysqli_stmt_get_result($stmt);
+    // Attempt to execute the prepared statement
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
-            if(mysqli_num_rows($result) == 1){
-                /* Fetch result row as an associative array. Since the result set
-                contains only one row, we don't need to use while loop */
-                $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-            } else{
-                // URL doesn't contain valid id parameter. Redirect to error page
-                header("location: error.php");
-                exit();
-            }
-
-        } else{
-            echo "Oops! Something went wrong. Please try again later.<br>".$stmt->error;
-        }
+    if(mysqli_num_rows($result) == 1){
+        /* Fetch result row as an associative array. Since the result set
+        contains only one row, we don't need to use while loop */
+        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    } else{
+        // URL doesn't contain valid id parameter. Redirect to error page
+        header("location: error.php");
+        exit();
     }
 
     // Close statement
@@ -483,41 +478,36 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
 
     // Prepare a select statement
     $sql = "SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?";
-    if($stmt = mysqli_prepare($link, $sql)){
-        // Set parameters
-        $param_id = ${COLUMN_ID};
+    $stmt = mysqli_prepare($link, $sql);
+    // Set parameters
+    $param_id = ${COLUMN_ID};
 
-        // Bind variables to the prepared statement as parameters
-        if (is_int($param_id)) $__vartype = "i";
-        elseif (is_string($param_id)) $__vartype = "s";
-        elseif (is_numeric($param_id)) $__vartype = "d";
-        else $__vartype = "b"; // blob
-        mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
+    // Bind variables to the prepared statement as parameters
+    if (is_int($param_id)) $__vartype = "i";
+    elseif (is_string($param_id)) $__vartype = "s";
+    elseif (is_numeric($param_id)) $__vartype = "d";
+    else $__vartype = "b"; // blob
+    mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
 
-        // Attempt to execute the prepared statement
-        if(mysqli_stmt_execute($stmt)){
-            $result = mysqli_stmt_get_result($stmt);
+    // Attempt to execute the prepared statement
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
-            if(mysqli_num_rows($result) == 1){
-                /* Fetch result row as an associative array. Since the result set
-                contains only one row, we don't need to use while loop */
-                $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    if(mysqli_num_rows($result) == 1){
+        /* Fetch result row as an associative array. Since the result set
+        contains only one row, we don't need to use while loop */
+        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
 
-                // Retrieve individual field value
+        // Retrieve individual field value
 
-                {UPDATE_COLUMN_ROWS}
+        {UPDATE_COLUMN_ROWS}
 
-            } else{
-                // URL doesn't contain valid id. Redirect to error page
-                header("location: error.php");
-                exit();
-            }
-
-        } else{
-            echo "Oops! Something went wrong. Please try again later.<br>".$stmt->error;
-        }
+    } else{
+        // URL doesn't contain valid id. Redirect to error page
+        header("location: error.php");
+        exit();
     }
-
+   
     // Close statement
     mysqli_stmt_close($stmt);
 
