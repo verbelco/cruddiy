@@ -304,7 +304,8 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
             mysqli_stmt_execute($stmt);
         } catch (Exception $e) {
             error_log($e->getMessage());
-            $error = $e->getMessage();
+            $error = "<p class='font-weight-bold'>Er zijn nog verwijzingen naar dit record, zie de view pagina voor meer informatie:</p>";
+            $error .= $e->getMessage();
         }
     
         if (!isset($error)){
