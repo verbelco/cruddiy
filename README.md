@@ -24,7 +24,7 @@
 - [ ] Advanced searching (remember search parameters) (Mail 8 mei van Klaas).
 - [ ] Advanced Ordering.
 - [ ] Extend the generation form with a large table, allowing for more options.
-- [ ] After editing, return to the record on the index.
+- [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
 
 ## Setup
 Clone deze repository in de root van WaterWeb, het zit al in de gitignore, dus waterweb heeft hier geen last van.
