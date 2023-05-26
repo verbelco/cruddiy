@@ -18,6 +18,7 @@
 - [x] Create an abstraction for the html syntax of columns in the read, edit and create pages.
 
 ## TODO
+- [ ] Move all config/validation to the top
 - [ ] Show SQL Table comments.
 - [ ] Pre-fill create form, to duplicate records.
 - [ ] Bulk updating of records.
