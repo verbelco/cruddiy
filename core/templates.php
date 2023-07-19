@@ -20,7 +20,7 @@ $indexfile = <<<'EOT'
         }
     </style>
 </head>
-<?php require_once('navbar.php'); ?>
+<?php require_once('../navbar.php'); ?>
 <body>
     <section class="pt-5">
         <div class="container-fluid">
@@ -28,13 +28,13 @@ $indexfile = <<<'EOT'
                 <div class="col-md-12">
                     <div class="page-header clearfix">
                         <h2 class="float-left">{TABLE_DISPLAY} Details {TABLE_COMMENT}</h2>
-                        <a href="{TABLE_NAME}-create.php" class="btn btn-success float-right">Add New Record</a>
-                        <a href="{TABLE_NAME}-index.php" class="btn btn-info float-right mr-2">Reset View</a>
+                        <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-right">Add New Record</a>
+                        <a href="../{TABLE_NAME}/index.php" class="btn btn-info float-right mr-2">Reset View</a>
                         <a href="javascript:history.back()" class="btn btn-secondary float-right mr-2">Back</a>
                     </div>
 
                     <div class="form-row">
-                        <form action="{TABLE_NAME}-index.php" method="get">
+                        <form action="../{TABLE_NAME}/index.php" method="get">
                         <div class="col">
                           <input type="text" class="form-control" placeholder="Search this table" name="search">
                         </div>
@@ -44,8 +44,8 @@ $indexfile = <<<'EOT'
 
                     <?php
                     // Include config file
-                    require_once "config.php";
-                    require_once "helpers.php";
+                    require_once "../config.php";
+                    require_once "../helpers.php";
 
                     //Get current URL and parameters for correct pagination
                     $script   = $_SERVER['SCRIPT_NAME'];
@@ -132,9 +132,9 @@ $indexfile = <<<'EOT'
                                     echo "<tr>";
                                     {INDEX_TABLE_ROWS}
                                         echo "<td>";
-                                            echo "<a href='{TABLE_NAME}-read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip'><i class='far fa-eye'></i></a>";
-                                            echo "<a href='{TABLE_NAME}-update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'><i class='far fa-edit'></i></a>";
-                                            echo "<a href='{TABLE_NAME}-delete.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
+                                            echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip'><i class='far fa-eye'></i></a>";
+                                            echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'><i class='far fa-edit'></i></a>";
+                                            echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
@@ -190,8 +190,8 @@ $readfile = <<<'EOT'
 $_GET["{TABLE_ID}"] = trim($_GET["{TABLE_ID}"]);
 if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     // Include config file
-    require_once "config.php";
-    require_once "helpers.php";
+    require_once "../config.php";
+    require_once "../helpers.php";
 
     // Prepare a select statement
     $sql = "SELECT `{TABLE_NAME}`.* {JOIN_COLUMNS}
@@ -220,7 +220,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
         $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
     } else{
         // URL doesn't contain valid id parameter. Redirect to error page
-        header("location: error.php");
+        header("location: ../error.php");
         exit();
     }
 
@@ -229,7 +229,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
 
 } else{
     // URL doesn't contain id parameter. Redirect to error page
-    header("location: error.php");
+    header("location: ../error.php");
     exit();
 }
 ?>
@@ -240,7 +240,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     <title>View Record</title>
     {CSS_REFS}
 </head>
-<?php require_once('navbar.php'); ?>
+<?php require_once('../navbar.php'); ?>
 <body>
     <section class="pt-5">
         <div class="container-fluid">
@@ -252,8 +252,8 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
 
                      {RECORDS_READ_FORM}
                     <p>
-                        <a href="{TABLE_NAME}-update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
-                        <a href="{TABLE_NAME}-delete.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-warning">Delete</a>
+                        <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
+                        <a href="../{TABLE_NAME}/delete.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-warning">Delete</a>
                         <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                     </p> 
                     <?php
@@ -280,8 +280,8 @@ EOT;
 $deletefile = <<<'EOT'
 <?php
 // Include config file
-require_once "config.php";
-require_once "helpers.php";
+require_once "../config.php";
+require_once "../helpers.php";
 
 // Process delete operation after confirmation
 if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
@@ -310,7 +310,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     
         if (!isset($error)){
             // Records deleted successfully. Redirect to landing page
-            header("location: {TABLE_NAME}-index.php");
+            header("location: ../{TABLE_NAME}/index.php");
         }
     }
 
@@ -324,7 +324,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
 	$_GET["{TABLE_ID}"] = trim($_GET["{TABLE_ID}"]);
     if(empty($_GET["{TABLE_ID}"])){
         // URL doesn't contain id parameter. Redirect to error page
-        header("location: error.php");
+        header("location: ../error.php");
         exit();
     }
 }
@@ -336,7 +336,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     <title>View Record</title>
     {CSS_REFS}
 </head>
-<?php require_once('navbar.php'); ?>
+<?php require_once('../navbar.php'); ?>
 <body>
     <section class="pt-5">
         <div class="container-fluid">
@@ -357,8 +357,8 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
                         </div>
                     </form>
                     <p>
-                        <a href="{TABLE_NAME}-read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-info">View</a>
-                        <a href="{TABLE_NAME}-update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
+                        <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-info">View</a>
+                        <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
                         <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                     </p>
                 </div>
@@ -379,8 +379,8 @@ EOT;
 $createfile = <<<'EOT'
 <?php
 // Include config file
-require_once "config.php";
-require_once "helpers.php";
+require_once "../config.php";
+require_once "../helpers.php";
 
 {CREATE_DEFAULT_VARIABLES}
 // Processing form data when form is submitted
@@ -399,9 +399,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     if (!isset($error)){
         $new_id = mysqli_insert_id($link);
         if(!isset($_POST['another'])){
-            header("location: {TABLE_NAME}-read.php?{COLUMN_ID}=$new_id");
+            header("location: ../{TABLE_NAME}/read.php?{COLUMN_ID}=$new_id");
         } else {
-            $message = "Record with <a href='{TABLE_NAME}-read.php?{COLUMN_ID}=$new_id'>{COLUMN_ID}=$new_id</a> added to {TABLE_NAME}";
+            $message = "Record with <a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=$new_id'>{COLUMN_ID}=$new_id</a> added to {TABLE_NAME}";
         }
     }
 }
@@ -414,7 +414,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <title>Create Record</title>
     {CSS_REFS}
 </head>
-<?php require_once('navbar.php'); ?>
+<?php require_once('../navbar.php'); ?>
 <body>
     <section class="pt-5">
         <div class="container-fluid">
@@ -431,7 +431,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                         <input type="submit" class="btn btn-primary" value="Create">
                         <input type="submit" class="btn btn-info" name='another' value="Create another">
-                        <a href="{TABLE_NAME}-index.php" class="btn btn-secondary">Cancel</a>
+                        <a href="../{TABLE_NAME}/index.php" class="btn btn-secondary">Cancel</a>
                     </form>
                     <p> * field can not be left empty </p>
                 </div>
@@ -452,8 +452,8 @@ EOT;
 $updatefile = <<<'EOT'
 <?php
 // Include config file
-require_once "config.php";
-require_once "helpers.php";
+require_once "../config.php";
+require_once "../helpers.php";
 
 // Processing form data when form is submitted
 if(isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])){
@@ -474,7 +474,7 @@ if(isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])){
     }
 
     if (!isset($error)){
-        header("location: {TABLE_NAME}-read.php?{COLUMN_ID}=${COLUMN_ID}");
+        header("location: ../{TABLE_NAME}/read.php?{COLUMN_ID}=${COLUMN_ID}");
     }
 } 
 // Check existence of id parameter before processing further
@@ -511,7 +511,7 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
 
     } else{
         // URL doesn't contain valid id. Redirect to error page
-        header("location: error.php");
+        header("location: ../error.php");
         exit();
     }
    
@@ -520,7 +520,7 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
 
 }  else{
     // URL doesn't contain id parameter. Redirect to error page
-    header("location: error.php");
+    header("location: ../error.php");
     exit();
 }
 ?>
@@ -532,7 +532,7 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
     <title>Update Record</title>
     {CSS_REFS}
 </head>
-<?php require_once('navbar.php'); ?>
+<?php require_once('../navbar.php'); ?>
 <body>
     <section class="pt-5">
         <div class="container-fluid">
@@ -553,8 +553,8 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
                             <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
                         </p>
                         <p>
-                            <a href="{TABLE_NAME}-read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-info">View</a>
-                            <a href="{TABLE_NAME}-delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-warning">Delete</a>
+                            <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-info">View</a>
+                            <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-warning">Delete</a>
                             <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                         </p>
                         <p> * field can not be left empty </p>

@@ -123,11 +123,11 @@ function get_fk_url($value, $fk_table, $fk_column, $representation, bool $pk=fal
         $value = htmlspecialchars($value);
         if($pk)
         {
-            return '<a href="' . $fk_table . '-read.php?' . $fk_column . '=' . $value . '">' . $representation . '</a>';
+            return '<a href="../' . $fk_table . '/read.php?' . $fk_column . '=' . $value . '">' . $representation . '</a>';
         }
         else
         {
-            return '<a href="' . $fk_table . '-index.php?' . $fk_column . '=' . $value . '">' . $representation . '</a>';
+            return '<a href="../' . $fk_table . '/index.php?' . $fk_column . '=' . $value . '">' . $representation . '</a>';
         }
         
     }

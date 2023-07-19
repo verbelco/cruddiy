@@ -29,15 +29,15 @@ $forced_deletion = false;
 $buttons_delimiter = '<!-- TABLE_BUTTONS -->';
 
 //$CSS_REFS = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">';
-$CSS_REFS = '<link rel="stylesheet" href="css/style.css" type="text/css"/>
-<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css"/>';
+$CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
+<link rel="stylesheet" href="../css/bootstrap.min.css" type="text/css"/>';
 
 // $JS_REFS = '<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 // <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 // <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>';
-$JS_REFS = '<script src="js/jquery-3.5.1.min.js"></script>
-<script src="js/popper.min.js"></script>
-<script src="js/bootstrap.min.js"></script>';
+$JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
+<script src="../js/popper.min.js"></script>
+<script src="../js/bootstrap.min.js"></script>';
     
 
 function column_type($columnname){
@@ -227,8 +227,8 @@ function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_he
     $step8 = str_replace("{INDEX_CONCAT_SEARCH_FIELDS}", $index_sql_search, $step7 );
     $step9 = str_replace("{APP_NAME}", $appname, $step8 );
     $step10 = str_replace("{JOIN_COLUMNS}", $join_columns, $step9 );
-    $step11 = str_replace("{JOIN_CLAUSES}", $join_clauses, $step10 );
-    if (!file_put_contents("app/".$tablename."-index.php", $step11, LOCK_EX)) {
+    $step11 = str_replace("{JOIN_CLAUSES}", $join_clauses, $step10 ); 
+    if (!file_put_contents("app/$tablename/index.php", $step11, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Index file<br>";
@@ -248,7 +248,7 @@ function generate_read($tablename, $column_id, $read_records, $foreign_key_refer
     $step3 = str_replace("{FOREIGN_KEY_REFS}", $foreign_key_references, $step2 );
     $step4 = str_replace("{JOIN_COLUMNS}", $join_columns, $step3 );
     $step5 = str_replace("{JOIN_CLAUSES}", $join_clauses, $step4 );
-    if (!file_put_contents("app/".$tablename."-read.php", $step5, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/read.php", $step5, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Read file<br>";
@@ -264,7 +264,7 @@ function generate_delete($tablename, $column_id){
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    if (!file_put_contents("app/".$tablename."-delete.php", $step1, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/delete.php", $step1, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Delete file<br><br>";
@@ -288,7 +288,7 @@ function generate_create($tablename,$create_records, $create_err_records, $creat
     $step7 = str_replace("{CREATE_POST_VARIABLES}", $create_postvars, $step6);
     $step8 = str_replace("{CREATE_DEFAULT_VARIABLES}", $create_default_vars, $step7);
     $step9 = str_replace("{COLUMN_ID}", $column_id, $step8);
-    if (!file_put_contents("app/".$tablename."-create.php", $step9, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/create.php", $step9, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Create file<br>";
@@ -312,7 +312,7 @@ function generate_update($tablename, $create_records, $create_err_records, $crea
     $step7 = str_replace("{CREATE_POST_VARIABLES}", $create_postvars, $step6);
     $step8 = str_replace("{UPDATE_COLUMN_ROWS}", $update_column_rows, $step7);
     $step9 = str_replace("{UPDATE_SQL_COLUMNS}", $update_sql_columns, $step8);
-    if (!file_put_contents("app/".$tablename."-update.php", $step9, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/update.php", $step9, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Update file<br>";
@@ -443,7 +443,7 @@ function generate($postdata) {
                     $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $sql))["count"];
                     if ($number_of_refs > 0)
                     {
-                        $html .= \'<p><a href="'. $table . '-index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
+                        $html .= \'<p><a href="../'. $table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
                     }';
                 }
             }
@@ -820,30 +820,35 @@ function generate($postdata) {
 
                     foreach($tables as $key => $value) {
                         //echo "$key is at $value";
-                        //$start_page .= '<a href="'. $key . '-index.php" class="btn btn-primary" role="button">'. $value. '</a> ';
+                        //$start_page .= '<a href="../'. $key . '/index.php" class="btn btn-primary" role="button">'. $value. '</a> ';
                         //$button_string = "\t".'<a class="dropdown-item" href="'.$start_page_link.'">'.$td.'</a>'."\n\t".$buttons_delimiter;
-                        $start_page .= '<a href="'. $key . '-index.php" class="dropdown-item">'. $value. '</a> ';
+                        $start_page .= '<a href="../'. $key . '/index.php" class="dropdown-item">'. $value. '</a> ';
                         $start_page .= "\n\t";
                     }
 
                     // force existing files deletion
-                    if (!$forced_deletion && (!isset($_POST['keep_startpage']) || (isset($_POST['keep_startpage']) && $_POST['keep_startpage'] != 'true'))) {
-                        $forced_deletion = true;
-                        echo '<h3>Deleting existing files</h3>';
-                        $keep = array('config.php', 'helpers.php');
-                        foreach( glob("app/*") as $file ) {
-                            if( !in_array(basename($file), $keep) ){
-                                if (unlink($file)) {
-                                    echo $file.'<br>';
-                                }
-                            }
-                        }
-                        echo '<br>';
-                    }
+                    // if (!$forced_deletion && (!isset($_POST['keep_startpage']) || (isset($_POST['keep_startpage']) && $_POST['keep_startpage'] != 'true'))) {
+                    //     $forced_deletion = true;
+                    //     echo '<h3>Deleting existing files</h3>';
+                    //     $keep = array('config.php', 'helpers.php');
+                    //     foreach( glob("app/*") as $file ) {
+                    //         if( !in_array(basename($file), $keep) ){
+                    //             if (unlink($file)) {
+                    //                 echo $file.'<br>';
+                    //             }
+                    //         }
+                    //     }
+                    //     echo '<br>';
+                    // }
 
                     generate_navbar($value, $start_page, isset($_POST['keep_startpage']) && $_POST['keep_startpage'] == 'true' ? true : false, isset($_POST['append_links']) && $_POST['append_links'] == 'true' ? true : false, $tabledisplay);
                     generate_error();
                     generate_startpage();
+
+                    if (!file_exists("app/$tablename/")) {
+                        mkdir("app/$tablename/", 0777, true);
+                    }
+
                     generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
                     generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
