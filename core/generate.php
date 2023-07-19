@@ -656,7 +656,7 @@ function generate($postdata) {
                             $column_value = '<?php echo get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', false); ?>';
 
                             $html .= ' <?php
-                                        $sql = "SELECT '. $fk_columns_select .', `'. $fk_column .'` FROM `'. $fk_table . '` ORDER BY '. $fk_columns_select .'";
+                                        $sql = "SELECT DISTINCT `'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` ORDER BY '. $fk_columns_select .'";
                                         $result = mysqli_query($link, $sql);
                                         while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
                                             $duprow = $row;

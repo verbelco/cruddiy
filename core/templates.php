@@ -166,6 +166,10 @@ $indexfile = <<<'EOT'
                         echo "ERROR: Could not able to execute $sql. " . mysqli_error($link);
                     }
 
+                    if (file_exists(stream_resolve_include_path("extension.php"))){
+                        include("extension.php");
+                    }
+
                     // Close connection
                     mysqli_close($link);
                     ?>
@@ -239,6 +243,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     <meta charset="UTF-8">
     <title>View Record</title>
     {CSS_REFS}
+    {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
 <body>
@@ -259,6 +264,10 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                     <?php
                     {FOREIGN_KEY_REFS}
 
+                    if (file_exists(stream_resolve_include_path("extension.php"))){
+                        include("extension.php");
+                    }
+
                     // Close connection
                     mysqli_close($link);
                     ?>
@@ -266,7 +275,6 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
             </div>
         </div>
     </section>
-    {JS_REFS}
         <script type="text/javascript">
             $(document).ready(function(){
                 $('[data-toggle="tooltip"]').tooltip();
@@ -335,6 +343,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     <meta charset="UTF-8">
     <title>View Record</title>
     {CSS_REFS}
+    {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
 <body>
@@ -364,8 +373,12 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
                 </div>
             </div>
         </div>
+        <?php
+            if (file_exists(stream_resolve_include_path("extension.php"))){
+                include("extension.php");
+            }
+        ?>
     </section>
-{JS_REFS}
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -413,6 +426,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <meta charset="UTF-8">
     <title>Create Record</title>
     {CSS_REFS}
+    {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
 <body>
@@ -437,8 +451,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 </div>
             </div>
         </div>
+        <?php
+            if (file_exists(stream_resolve_include_path("extension.php"))){
+                include("extension.php");
+            }
+        ?>
     </section>
-{JS_REFS}
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -531,6 +549,7 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
     <meta charset="UTF-8">
     <title>Update Record</title>
     {CSS_REFS}
+    {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
 <body>
@@ -562,9 +581,13 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
                 </div>
             </div>
         </div>
+        <?php
+            if (file_exists(stream_resolve_include_path("extension.php"))){
+                include("extension.php");
+            }
+        ?>
     </section>
 </body>
-{JS_REFS}
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -582,6 +605,7 @@ $errorfile = <<<'EOT'
     <meta charset="UTF-8">
     <title>Error</title>
     {CSS_REFS}
+    {JS_REFS}
 </head>
 <body>
     <section class="pt-5">
@@ -598,7 +622,6 @@ $errorfile = <<<'EOT'
             </div>
         </div>
     </section>
-    {JS_REFS}
 </body>
 </html>
 EOT;

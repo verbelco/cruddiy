@@ -31,7 +31,7 @@
                             <?php
                             //Get all tables
                             $tablelist = array();
-                            $res = mysqli_query($link,"SELECT TABLE_NAME, TABLE_COMMENT FROM `information_schema`.`TABLES` WHERE TABLE_SCHEMA = '$db_name';");
+                            $res = mysqli_query($link,"SELECT TABLE_NAME, TABLE_COMMENT FROM `information_schema`.`TABLES` WHERE TABLE_SCHEMA = '$db_name' ORDER BY TABLE_NAME;");
                             $i = 0;
                             while($cRow = mysqli_fetch_assoc($res))
                             {
