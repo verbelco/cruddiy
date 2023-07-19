@@ -31,23 +31,24 @@
                             <?php
                             //Get all tables
                             $tablelist = array();
-                            $res = mysqli_query($link,"SHOW TABLES");
-                            while($cRow = mysqli_fetch_array($res))
-                            {
-                                $tablelist[] = $cRow[0];
-                            }
-
-                            //Loop trough list of tables
+                            $res = mysqli_query($link,"SELECT TABLE_NAME, TABLE_COMMENT FROM `information_schema`.`TABLES` WHERE TABLE_SCHEMA = '$db_name';");
                             $i = 0;
-                            foreach($tablelist as $table) {
+                            while($cRow = mysqli_fetch_assoc($res))
+                            {
+                                //Loop trough list of tables
+                                $table = $cRow['TABLE_NAME'];
+                                $tablecomment = $cRow['TABLE_COMMENT'];         
 
                                 echo
                         '<div class="row align-items-center">
                             <div class="col-md-3 text-right">
+                            <span data-toggle="tooltip" data-placement="top" title="' . $tablecomment . '">
                                   <label class="control-label" for="table['.$i.'][tablename]">'. $table . ' </label>
+                            </span>
                             </div>
                             <div class="col-md-6">
                                      <input type="hidden" name="table['.$i.'][tablename]" value="'.$table.'"/>
+                                     <input type="hidden" name="table['.$i.'][tablecomment]" value="'.$tablecomment.'"/>
                                      <input id="textinput_'.$table. '" name="table['.$i.'][tabledisplay]" type="text" placeholder="Display table name in frontend" class="form-control rounded-0 shadow-sm">
                             </div>
                             <div class="col-md-3">
@@ -82,6 +83,9 @@
             var chb = $('.form-horizontal').find('input[type="checkbox"]');
             chb.prop('checked', !chb.prop('checked'));
         });
+    });
+    $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
     });
     </script>
     </body>

@@ -106,8 +106,9 @@
                                 $i=0;
                                 if (isset($table['tablecheckbox']) && $table['tablecheckbox'] == 1) {
                                     $tablename = $table['tablename'];
+                                    $tablecomment = $table['tablecomment'];
                                     $tabledisplay = $table['tabledisplay'];
-                                    echo "<div class='text-center mb-4'><b>Table: " . $tabledisplay . " (". $tablename .")</b></div>";
+                                    echo "<div class='text-center mb-4'><span data-toggle='tooltip' data-placement='top' title='$tablecomment'><b>Table: " . $tabledisplay . " (". $tablename .")</b></span></div>";
                                     $sql = "SHOW columns FROM $tablename";
                                     $primary_keys = get_primary_keys($tablename);
                                     $auto_keys = get_autoincrement_cols($tablename);
@@ -159,6 +160,7 @@
                                     <div class="col-md-6">
                                         <input type="hidden" name="'.$tablename.'columns['.$i.'][tablename]" value="'.$tablename.'"/>
                                         <input type="hidden" name="'.$tablename.'columns['.$i.'][tabledisplay]" value="'.$tabledisplay.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][tablecomment]" value="'.$tablecomment.'"/>
                                         <input type="hidden" name="'.$tablename.'columns['.$i.'][columnname]" value="'.$column[0].'"/>
                                         <input type="hidden" name="'.$tablename.'columns['.$i.'][columntype]" value="'.$column_type.'"/>
                                         <input type="hidden" name="'.$tablename.'columns['.$i.'][columncomment]" value="'.$column_comment.'"/>

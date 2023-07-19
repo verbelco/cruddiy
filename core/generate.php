@@ -14,6 +14,7 @@ require "app/config.php";
 require "templates.php";
 $tablename = '';
 $tabledisplay = '';
+$tablecomment = '';
 $columnname = '' ;
 $columndisplay = '';
 $columnvisible = '';
@@ -204,7 +205,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 }
 
 
-function generate_index($tablename,$tabledisplay,$index_table_headers,$index_table_rows,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
+function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
     global $indexfile;
     global $appname;
     global $CSS_REFS;
@@ -214,8 +215,9 @@ function generate_index($tablename,$tabledisplay,$index_table_headers,$index_tab
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
 
     $columns_available = implode("', '", $columns_available);
-    $step1 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step2 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step1);
+    $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
+    $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
+    $step2 = str_replace("{TABLE_COMMENT}", $tablecomment, $step1);
     $step3 = str_replace("{INDEX_TABLE_HEADERS}", $index_table_headers, $step2 );
     $step4 = str_replace("{INDEX_TABLE_ROWS}", $index_table_rows, $step3 );
     $step5 = str_replace("{COLUMN_ID}", $column_id, $step4 );
@@ -361,6 +363,7 @@ function generate($postdata) {
         $tables = array();
         $tablename = '';
         $tabledisplay = '';
+        $tablecomment = '';
         $columnname = '' ;
         $columndisplay = '';
         $columnvisible = '';
@@ -547,6 +550,10 @@ function generate($postdata) {
                             $tabledisplay = $columns['tabledisplay'];
                         } else {
                             $tabledisplay = $columns['tablename'];
+                        }
+
+                        if (!empty($columns['tablecomment'])) {
+                            $tablecomment = "<span class='font-italic font-weight-light ml-5 text-secondary'>". $columns['tablecomment'] . "</span>";
                         }
 
 
@@ -808,7 +815,7 @@ function generate($postdata) {
                     generate_navbar($value, $start_page, isset($_POST['keep_startpage']) && $_POST['keep_startpage'] == 'true' ? true : false, isset($_POST['append_links']) && $_POST['append_links'] == 'true' ? true : false, $tabledisplay);
                     generate_error();
                     generate_startpage();
-                    generate_index($tablename,$tabledisplay,$index_table_headers,$index_table_rows,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
+                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
                     generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);

@@ -22,7 +22,7 @@
 - [ ] Submit, view, back at constant postions.
 - [ ] Layout more efficient.
 - [ ] Default values from SQL as defaults in create.
-- [ ] Show SQL Table comments.
+- [x] Show SQL Table comments.
 - [ ] Pre-fill create form, to duplicate records.
 - [ ] Bulk updating of records.
 - [ ] Advanced searching (remember search parameters) (Mail 8 mei van Klaas).
