@@ -21,12 +21,13 @@
 - [ ] Move all config/validation to the top.
 - [ ] Submit, view, back at constant postions.
 - [ ] Layout more efficient.
-- [ ] Default values from SQL as defaults in create.
+- [x] Default values from SQL as defaults in create.
 - [x] Show SQL Table comments.
 - [ ] Pre-fill create form, to duplicate records.
 - [ ] Bulk updating of records.
 - [ ] Advanced searching (remember search parameters) (Mail 8 mei van Klaas).
 - [ ] Advanced Ordering.
+- [ ] Split files into folder of the table name.
 - [ ] Extend the generation form with a large table, allowing for more options.
 - [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
 - [ ] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).

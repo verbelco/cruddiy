@@ -382,6 +382,7 @@ $createfile = <<<'EOT'
 require_once "config.php";
 require_once "helpers.php";
 
+{CREATE_DEFAULT_VARIABLES}
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     {CREATE_POST_VARIABLES}

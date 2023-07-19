@@ -18,6 +18,7 @@ $tablecomment = '';
 $columnname = '' ;
 $columndisplay = '';
 $columnvisible = '';
+$columndefault_val = '';
 $index_table_rows = '';
 $index_table_headers = '';
 $sort = '';
@@ -269,7 +270,7 @@ function generate_delete($tablename, $column_id){
     echo "Generating $tablename Delete file<br><br>";
 }
 
-function generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars) {
+function generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars) {
     global $createfile;
     global $CSS_REFS;
     global $JS_REFS;
@@ -285,8 +286,9 @@ function generate_create($tablename,$create_records, $create_err_records, $creat
     $step5 = str_replace("{CREATE_SQL_PARAMS}", $create_sql_params, $step4 );
     $step6 = str_replace("{CREATE_HTML}", $create_html, $step5);
     $step7 = str_replace("{CREATE_POST_VARIABLES}", $create_postvars, $step6);
-    $step8 = str_replace("{COLUMN_ID}", $column_id, $step7);
-    if (!file_put_contents("app/".$tablename."-create.php", $step8, LOCK_EX)) {
+    $step8 = str_replace("{CREATE_DEFAULT_VARIABLES}", $create_default_vars, $step7);
+    $step9 = str_replace("{COLUMN_ID}", $column_id, $step8);
+    if (!file_put_contents("app/".$tablename."-create.php", $step9, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Create file<br>";
@@ -338,6 +340,24 @@ function count_index_colums($table) {
     return $i;
 }
 
+function get_default_value($table, $column){
+    // Get the default value of a column
+    global $link;
+
+    $sql = "SELECT DISTINCT DEFAULT(`$column`) AS def FROM `$table`;";
+    try{
+        $result = mysqli_query($link, $sql);
+        if(mysqli_num_rows($result) == 1)
+        {
+            return mysqli_fetch_assoc($result)['def']; 
+        } else {
+            return '';
+        }
+    } catch (Exception $e) {
+        return '';
+    }
+}
+
 function generate($postdata) {
     // echo "<pre>";
     // print_r($postdata);
@@ -366,6 +386,7 @@ function generate($postdata) {
         $tablecomment = '';
         $columnname = '' ;
         $columndisplay = '';
+        $columndefault_val = ''; // The default value of a column
         $columnvisible = '';
         $columns_available = array();
         $index_sql_search = array();
@@ -381,6 +402,7 @@ function generate($postdata) {
         $create_sqlcolumns = array();
         $create_html = array();
         $create_postvars = '';
+        $create_default_vars = '';
 
         $update_sql_params = array();
         $update_sql_columns = array();
@@ -526,7 +548,9 @@ function generate($postdata) {
                     if (!$columns['columnnullable'])
                     {
                         $columndisplay .= "*";
-                    }
+                    } 
+                    
+                    $columndefault_val = get_default_value($columns['tablename'], $columns['columnname']);
 
                     if (!empty($columns['columncomment'])){
                         $columndisplay = "<span data-toggle='tooltip' data-placement='top' title='" . $columns['columncomment'] . "'>" . $columndisplay . '</span>';
@@ -568,6 +592,10 @@ function generate($postdata) {
                         $create_err_record = "\$$columnname_var".'_err';
                         $create_sqlcolumns [] = "`$columnname`";
                         $create_sql_params [] = "\$$columnname_var";
+                        if($columndefault_val != '')
+                        {
+                            $create_default_vars .= "$$columnname_var = '$columndefault_val';\n";
+                        }
                         
                         // Process POST vars that can be null differently
                         if ($columns['columnnullable']){
@@ -576,6 +604,7 @@ function generate($postdata) {
                             $create_postvars .= "$$columnname_var = trim(\$_POST[\"$columnname\"]);\n\t\t";
                         }                        
                         
+
                         $update_sql_params [] = "`$columnname`".'=?';
                         $update_sql_id = "`$column_id`".'=?';
                         $update_column_rows .= "$$columnname_var = htmlspecialchars(\$row[\"$columnname\"] ?? \"\");\n\t\t\t\t\t";
@@ -816,7 +845,7 @@ function generate($postdata) {
                     generate_error();
                     generate_startpage();
                     generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
-                    generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars);
+                    generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);
                     generate_delete($tablename,$column_id);
