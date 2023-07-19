@@ -86,6 +86,13 @@ function print_error_if_exists($error)
     }
 }
 
+function print_message_if_exists($message)
+{
+    if (isset($message)) {
+        echo "<div class='alert alert-success' role='alert'>$message</div>";
+    }
+}
+
 function convert_date($date_str)
 {
     if (isset($date_str)) {

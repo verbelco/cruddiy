@@ -398,7 +398,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     if (!isset($error)){
         $new_id = mysqli_insert_id($link);
-        header("location: {TABLE_NAME}-read.php?{COLUMN_ID}=$new_id");
+        if(!isset($_POST['another'])){
+            header("location: {TABLE_NAME}-read.php?{COLUMN_ID}=$new_id");
+        } else {
+            $message = "Record with <a href='{TABLE_NAME}-read.php?{COLUMN_ID}=$new_id'>{COLUMN_ID}=$new_id</a> added to {TABLE_NAME}";
+        }
     }
 }
 ?>
@@ -419,13 +423,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <div class="page-header">
                         <h2>Create Record</h2>
                     </div>
-                    <?php print_error_if_exists($error); ?>
+                    <?php print_error_if_exists($error); print_message_if_exists($message); ?>
                     <p>Please fill this form and submit to add a record to the database.</p>
                     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
 
                         {CREATE_HTML}
 
-                        <input type="submit" class="btn btn-primary" value="Submit">
+                        <input type="submit" class="btn btn-primary" value="Create">
+                        <input type="submit" class="btn btn-info" name='another' value="Create another">
                         <a href="{TABLE_NAME}-index.php" class="btn btn-secondary">Cancel</a>
                     </form>
                     <p> * field can not be left empty </p>

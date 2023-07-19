@@ -30,7 +30,7 @@
 - [ ] Split files into folder of the table name.
 - [ ] Extend the generation form with a large table, allowing for more options.
 - [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
-- [ ] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
+- [x] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
 - [ ] Add a possibility for custom extensions to the view pages.
 
 
