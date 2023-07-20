@@ -86,7 +86,7 @@ function get_sql_concat_select($copy_columns, $table, $name){
     $array = $copy_columns;
     foreach($array as $key => $c)
     {
-        $array[$key] = '`'. $table .'`.`'. $array[$key] .'`'; 
+        $array[$key] = '`'. $table .'`.`'. $key .'`'; 
     }
     return "\n\t\t\t, CONCAT_WS(' | ',". implode(', ', $array) .') AS `'. $name .'`';
 }
@@ -95,7 +95,7 @@ function get_sql_select($copy_columns){
     $array = $copy_columns;
     foreach($array as $key => $c)
     {
-        $array[$key] = '`'.$array[$key].'`'; 
+        $array[$key] = '`'.$key.'`'; 
     }
     return implode(', ', $array);
 }
@@ -366,18 +366,21 @@ function generate($postdata) {
     // Every table is a key
     global $excluded_keys;
     
-    // Array with structure $preview_columns[TABLE_NAME] where each instance contains an array of columns that 
-    // are selected to be include in previews, such as select foreign keys and foreign key preview.
+    // Array with structure $preview_columns[TABLE_NAME] where each instance contains an array of tuples.
+    // These tuples have a columnname and a boolean that signals if they are a foreign key reference.
+    // This is used to select which columns should be included in previews, such as select foreign keys and foreign key preview.
     $preview_columns = array();
     foreach ($postdata as $key => $value){
         if (!in_array($key, $excluded_keys)) {
             foreach ($_POST[$key] as $columns ) {
                 if (isset($columns['columninpreview'])){
-                    $preview_columns[$columns['tablename']][] = $columns['columnname'];
+                    $preview_columns[$columns['tablename']][$columns['columnname']] = !empty($columns['fk']);
                 }
             }
         }
     }
+
+    var_dump($preview_columns);
 
     foreach ($postdata as $key => $value) {
         $tables = array();
@@ -648,7 +651,8 @@ function generate($postdata) {
                                 
                                 
                                 $fk_columns_select = get_sql_select($preview_columns[$fk_table]);
-                                
+                                echo $fk_columns_select;
+
                                 $join_name = $columnname .$fk_table;
                                 $join_column_name = $columnname . $fk_table . $fk_column;
 
@@ -658,7 +662,7 @@ function generate($postdata) {
                                 // Add the new columns to the search concat
                                 foreach($preview_columns[$fk_table] as $key => $c)
                                 {
-                                    $index_sql_search [] = '`'. $join_name .'`.`'. $preview_columns[$fk_table][$key] .'`'; 
+                                    $index_sql_search [] = '`'. $join_name .'`.`'. $key .'`'; 
                                 }
 
                                 $is_primary_ref = is_primary_key($fk_table, $fk_column);
