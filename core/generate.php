@@ -436,15 +436,18 @@ function generate($postdata) {
             if (mysqli_num_rows($result) > 0) {
                 while($row = mysqli_fetch_assoc($result)) {
                     $table = $row["Table"];
-                    $fk_column = $row["FK Column"];
-                    $column = $row["Column"];
-                    $foreign_key_references .= '
-                    $sql = "SELECT COUNT(*) AS count FROM `'. $table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
-                    $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $sql))["count"];
-                    if ($number_of_refs > 0)
+                    if(isset($preview_columns[$table]))
                     {
-                        $html .= \'<p><a href="../'. $table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
-                    }';
+                        $fk_column = $row["FK Column"];
+                        $column = $row["Column"];
+                        $foreign_key_references .= '
+                        $sql = "SELECT COUNT(*) AS count FROM `'. $table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
+                        $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $sql))["count"];
+                        if ($number_of_refs > 0)
+                        {
+                            $html .= \'<p><a href="../'. $table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
+                        }';
+                    }
                 }
             }
             $foreign_key_references = $foreign_key_references != "" ? '$html = "";' . $foreign_key_references . 'if ($html != "") {echo "<h3>References to this ' . $tablename . ':</h3>" . $html;}' : "";
@@ -502,9 +505,15 @@ function generate($postdata) {
                                     $fk_table = $row["FK Table"];
                                     $fk_column = $row["FK Column"];
                                 }
-                            $join_column_name = $columnname . $fk_table . $fk_column;
-                            $is_primary_ref = is_primary_key($fk_table, $fk_column);
-                            $index_table_rows .= 'echo "<td>" . get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', true) . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                                if (isset($preview_columns[$fk_table]))
+                                {
+                                    $join_column_name = $columnname . $fk_table . $fk_column;
+                                    $is_primary_ref = is_primary_key($fk_table, $fk_column);
+                                    $index_table_rows .= 'echo "<td>" . get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', true) . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                                } else {
+                                    // Foreign key reference found, but one of the tables is not selected
+                                    $index_table_rows .= 'echo "<td>" . htmlspecialchars($row['. "'" . $columnname . "'" . '] ?? "") . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                                }
                             }
                         }
                         else if ($type == 1) // Text
@@ -627,56 +636,60 @@ function generate($postdata) {
                                 $fk_column = $row["FK Column"];
                             }
 
-
-                            //Be careful code below is particular regarding single and double quotes.
-                            
-                            $html = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'">';
-                            if ($columns['columnnullable'])
+                            if(isset($preview_columns[$fk_table]))
                             {
-                                $html .= '<option value="">Null</option>';
+                                //Be careful code below is particular regarding single and double quotes.
+                            
+                                $html = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'">';
+                                if ($columns['columnnullable'])
+                                {
+                                    $html .= '<option value="">Null</option>';
+                                }
+                                
+                                
+                                $fk_columns_select = get_sql_select($preview_columns[$fk_table]);
+                                
+                                $join_name = $columnname .$fk_table;
+                                $join_column_name = $columnname . $fk_table . $fk_column;
+
+                                $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
+                                $join_columns .= get_sql_concat_select($preview_columns[$fk_table], $join_name, $join_column_name);
+                                
+                                // Add the new columns to the search concat
+                                foreach($preview_columns[$fk_table] as $key => $c)
+                                {
+                                    $index_sql_search [] = '`'. $join_name .'`.`'. $preview_columns[$fk_table][$key] .'`'; 
+                                }
+
+                                $is_primary_ref = is_primary_key($fk_table, $fk_column);
+
+                                $column_value = '<?php echo get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', false); ?>';
+
+                                $html .= ' <?php
+                                            $sql = "SELECT DISTINCT `'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` ORDER BY '. $fk_columns_select .'";
+                                            $result = mysqli_query($link, $sql);
+                                            while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                                                $duprow = $row;
+                                                unset($duprow["' . $fk_column . '"]);
+                                                $value = implode(" | ", $duprow);
+                                                if ($row["' . $fk_column . '"] == $' . $columnname_var . '){
+                                                echo \'<option value="\' . $row["'. $fk_column. '"] . \'"selected="selected">\' . $value . \'</option>\';
+                                                } else {
+                                                    echo \'<option value="\' . $row["'. $fk_column. '"] . \'">\' . $value . \'</option>\';
+                                            }
+                                            }
+                                        ?>
+                                        </select>';
+                                $column_input = $html;
+                                unset($html);
+                            } else {
+                                // Foreign key reference found, but one of the tables is not selected
+                                $column_value = '<?php echo htmlspecialchars($row["'.$columnname.'"] ?? ""); ?>';
+                                $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
                             }
-                            
-                            
-                            $fk_columns_select = get_sql_select($preview_columns[$fk_table]);
-                            
-                            $join_name = $columnname .$fk_table;
-                            $join_column_name = $columnname . $fk_table . $fk_column;
-
-                            $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
-                            $join_columns .= get_sql_concat_select($preview_columns[$fk_table], $join_name, $join_column_name);
-                            
-                            // Add the new columns to the search concat
-                            foreach($preview_columns[$fk_table] as $key => $c)
-                            {
-                                $index_sql_search [] = '`'. $join_name .'`.`'. $preview_columns[$fk_table][$key] .'`'; 
-                            }
-
-                            $is_primary_ref = is_primary_key($fk_table, $fk_column);
-
-                            $column_value = '<?php echo get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', false); ?>';
-
-                            $html .= ' <?php
-                                        $sql = "SELECT DISTINCT `'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` ORDER BY '. $fk_columns_select .'";
-                                        $result = mysqli_query($link, $sql);
-                                        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
-                                            $duprow = $row;
-                                            unset($duprow["' . $fk_column . '"]);
-                                            $value = implode(" | ", $duprow);
-                                            if ($row["' . $fk_column . '"] == $' . $columnname_var . '){
-                                            echo \'<option value="\' . $row["'. $fk_column. '"] . \'"selected="selected">\' . $value . \'</option>\';
-                                            } else {
-                                                echo \'<option value="\' . $row["'. $fk_column. '"] . \'">\' . $value . \'</option>\';
-                                        }
-                                        }
-                                    ?>
-                                    </select>';
-                            $column_input = $html;
-                            unset($html);
                         }
-
                 // No Foreign Keys, just regular columns from here on
                 } else {                        
-
                         // Display date in locale format
                         if ($type == 1) // Text
                         {
