@@ -651,7 +651,6 @@ function generate($postdata) {
                                 
                                 
                                 $fk_columns_select = get_sql_select($preview_columns[$fk_table]);
-                                echo $fk_columns_select;
 
                                 $join_name = $columnname .$fk_table;
                                 $join_column_name = $columnname . $fk_table . $fk_column;
