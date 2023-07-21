@@ -50,7 +50,7 @@ if(isset($_POST['index'])) {
 	$txt .= "\$db_password = '$password'; \n";
 	$txt .= "\$no_of_records_per_page = $numrecordsperpage; \n";
 	$txt .= "\$appname = '$appname'; \n\n";
-    $txt .= "\$protocol=(\$_SERVER['HTTPS'] == 'on' ? 'https' : 'http');";
+    $txt .= "\$protocol=(isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] == 'on' ? 'https' : 'http');";
     $txt .= "\$domain = \$protocol . '://' . \$_SERVER['SCRIPT_NAME'];";
 	$txt .= "\$link = mysqli_connect(\$db_server, \$db_user, \$db_password, \$db_name); \n";
 

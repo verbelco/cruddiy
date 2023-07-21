@@ -27,6 +27,7 @@ $generate_start_checked_links = array();
 $startpage_filename = "app/navbar.php";
 $forced_deletion = false;
 $buttons_delimiter = '<!-- TABLE_BUTTONS -->';
+$preview_columns = array();
 
 //$CSS_REFS = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">';
 $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
@@ -80,24 +81,6 @@ function is_primary_key($t, $c){
         }
     }
     return 0;
-}
-
-function get_sql_concat_select($copy_columns, $table, $name){
-    $array = $copy_columns;
-    foreach($array as $key => $c)
-    {
-        $array[$key] = '`'. $table .'`.`'. $key .'`'; 
-    }
-    return "\n\t\t\t, CONCAT_WS(' | ',". implode(', ', $array) .') AS `'. $name .'`';
-}
-
-function get_sql_select($copy_columns){
-    $array = $copy_columns;
-    foreach($array as $key => $c)
-    {
-        $array[$key] = '`'.$key.'`'; 
-    }
-    return implode(', ', $array);
 }
 
 function generate_error(){
@@ -358,18 +341,61 @@ function get_default_value($table, $column){
     }
 }
 
+function get_foreign_table_and_column($tablename, $columnname){
+    global $link;
+
+    $sql_getfk = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
+    k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
+    i.CONSTRAINT_NAME as 'Constraint Name'
+    FROM information_schema.TABLE_CONSTRAINTS i
+    LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+    WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND k.TABLE_NAME = '$tablename' AND k.COLUMN_NAME = '$columnname'";
+    $result = mysqli_query($link, $sql_getfk);
+    if (mysqli_num_rows($result) > 0) {
+        while($row = mysqli_fetch_assoc($result)) {
+            $fk_table = $row["FK Table"];
+            $fk_column = $row["FK Column"];
+        }
+        return [$fk_table, $fk_column];
+    }
+}
+
+function get_fk_preview_queries($table, $join_name, &$sql_concat_select, &$sql_select, &$join_clauses){
+    // This function goes over the preview columns of a table.
+    global $preview_columns;
+    foreach($preview_columns[$table] as $column => $fk)
+    {
+        if($fk)
+        {
+            // Reference is a foreign key to another table itself
+            [$fk_table, $fk_column] = get_foreign_table_and_column($table, $column);
+            if(isset($preview_columns[$fk_table]))
+            {
+                $new_join_name = $join_name . $fk_table;
+                $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$new_join_name` ON `$new_join_name`.`$fk_column` = `$join_name`.`$column`";
+                get_fk_preview_queries($fk_table, $new_join_name, $sql_concat_select, $sql_select, $join_clauses);
+            } else {
+                $sql_concat_select[] = '`'. $join_name .'`.`'. $column .'`';
+                $sql_select[] = '`'. $column .'`';
+            }            
+        } else {
+            $sql_concat_select[] = '`'. $join_name .'`.`'. $column .'`';
+            $sql_select[] = '`'. $column .'`';
+        }
+    }
+}
+
 function generate($postdata) {
     // echo "<pre>";
     // print_r($postdata);
     // echo "</pre>";
     // Go trough the POST array
     // Every table is a key
-    global $excluded_keys;
+    global $excluded_keys, $preview_columns;
     
     // Array with structure $preview_columns[TABLE_NAME] where each instance contains an array of tuples.
     // These tuples have a columnname and a boolean that signals if they are a foreign key reference.
     // This is used to select which columns should be included in previews, such as select foreign keys and foreign key preview.
-    $preview_columns = array();
     foreach ($postdata as $key => $value){
         if (!in_array($key, $excluded_keys)) {
             foreach ($_POST[$key] as $columns ) {
@@ -379,8 +405,6 @@ function generate($postdata) {
             }
         }
     }
-
-    var_dump($preview_columns);
 
     foreach ($postdata as $key => $value) {
         $tables = array();
@@ -438,17 +462,17 @@ function generate($postdata) {
             $result = mysqli_query($link, $sql_get_fk_ref);
             if (mysqli_num_rows($result) > 0) {
                 while($row = mysqli_fetch_assoc($result)) {
-                    $table = $row["Table"];
-                    if(isset($preview_columns[$table]))
+                    $fk_table = $row["Table"];
+                    if(isset($preview_columns[$fk_table]))
                     {
                         $fk_column = $row["FK Column"];
                         $column = $row["Column"];
                         $foreign_key_references .= '
-                        $sql = "SELECT COUNT(*) AS count FROM `'. $table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
+                        $sql = "SELECT COUNT(*) AS count FROM `'. $fk_table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
                         $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $sql))["count"];
                         if ($number_of_refs > 0)
                         {
-                            $html .= \'<p><a href="../'. $table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
+                            $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
                         }';
                     }
                 }
@@ -649,23 +673,23 @@ function generate($postdata) {
                                     $html .= '<option value="">Null</option>';
                                 }
                                 
-                                
-                                $fk_columns_select = get_sql_select($preview_columns[$fk_table]);
-
-                                $join_name = $columnname .$fk_table;
+                                // Go over the preview columns and add them to the JOIN recursively.
+                                $join_name = $columnname . $fk_table;
                                 $join_column_name = $columnname . $fk_table . $fk_column;
-
-                                $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
-                                $join_columns .= get_sql_concat_select($preview_columns[$fk_table], $join_name, $join_column_name);
+                                $sql_concat_select = array();
+                                $sql_select = array();
                                 
-                                // Add the new columns to the search concat
-                                foreach($preview_columns[$fk_table] as $key => $c)
-                                {
-                                    $index_sql_search [] = '`'. $join_name .'`.`'. $key .'`'; 
-                                }
+                                // We need may need multiple JOIN, but in any case we need to join our refered foreign key.
+                                $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
+                                
+                                get_fk_preview_queries($fk_table, $join_name, $sql_concat_select, $sql_select, $join_clauses);                               
+                                
+                                // implode all gathered values to make the joins and selects.
+                                $join_columns .= "\n\t\t\t, CONCAT_WS(' | ',". implode(', ', $sql_concat_select) .') AS `'. $join_column_name .'`';
+                                $fk_columns_select = implode(', ', $sql_select);
+                                $index_sql_search = array_merge($index_sql_search, $sql_concat_select);
 
                                 $is_primary_ref = is_primary_key($fk_table, $fk_column);
-
                                 $column_value = '<?php echo get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', false); ?>';
 
                                 $html .= ' <?php
