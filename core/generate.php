@@ -327,7 +327,13 @@ function get_default_value($table, $column){
     // Get the default value of a column
     global $link;
 
-    $sql = "SELECT DISTINCT DEFAULT(`$column`) AS def FROM `$table`;";
+    // if($table == 'peilstanden')
+    // // This table seems to cause issues
+    // {
+    //     return '';
+    // }
+
+    $sql = "SELECT DEFAULT(`$column`) AS def FROM `$table` LIMIT 1;";
     try{
         $result = mysqli_query($link, $sql);
         if(mysqli_num_rows($result) == 1)
@@ -363,6 +369,7 @@ function get_foreign_table_and_column($tablename, $columnname){
 function get_fk_preview_queries($table, $join_name, &$sql_concat_select, &$sql_select, &$join_clauses){
     // This function goes over the preview columns of a table.
     global $preview_columns;
+    error_log("Recursive call");
     foreach($preview_columns[$table] as $column => $fk)
     {
         if($fk)
@@ -603,7 +610,9 @@ function generate($postdata) {
                         }
 
                         if (!empty($columns['tablecomment'])) {
-                            $tablecomment = "<span class='font-italic font-weight-light ml-5 text-secondary'>". $columns['tablecomment'] . "</span>";
+                            $tablecomment = '<div class="clearfix">
+                                <p class="float-left font-italic font-weight-light text-secondary">'. $columns["tablecomment"] .'</p>
+                            </div>';
                         }
 
 
@@ -661,18 +670,22 @@ function generate($postdata) {
                                 // We need may need multiple JOIN, but in any case we need to join our refered foreign key.
                                 $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
                                 
-                                get_fk_preview_queries($fk_table, $join_name, $sql_concat_select, $sql_select, $join_clauses);                               
+                                $local_join_clauses = "";
+
+                                get_fk_preview_queries($fk_table, $join_name, $sql_concat_select, $sql_select, $local_join_clauses);  
+                                $join_clauses .= $local_join_clauses;                             
                                 
                                 // implode all gathered values to make the joins and selects.
                                 $join_columns .= "\n\t\t\t, CONCAT_WS(' | ',". implode(', ', $sql_concat_select) .') AS `'. $join_column_name .'`';
-                                $fk_columns_select = implode(', ', $sql_select);
+                                $fk_columns_select = implode(', ', $sql_concat_select);
                                 $index_sql_search = array_merge($index_sql_search, $sql_concat_select);
 
                                 $is_primary_ref = is_primary_key($fk_table, $fk_column);
                                 $column_value = '<?php echo get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', false); ?>';
 
                                 $html .= ' <?php
-                                            $sql = "SELECT DISTINCT `'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` ORDER BY '. $fk_columns_select .'";
+                                            $sql = "SELECT DISTINCT `'. $join_name .'`.`'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` AS `'. $join_name .'` '. $local_join_clauses .'
+                                                    ORDER BY '. $fk_columns_select .'";
                                             $result = mysqli_query($link, $sql);
                                             while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
                                                 $duprow = $row;
