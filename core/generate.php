@@ -520,27 +520,17 @@ function generate($postdata) {
                             //Get the Foreign Key
                             $tablename = $columns['tablename'];
                             $columnname = $columns['columnname'];
-                            $sql_getfk = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
-                                    k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
-                                    i.CONSTRAINT_NAME as 'Constraint Name'
-                                    FROM information_schema.TABLE_CONSTRAINTS i
-                                    LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
-                                    WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND k.TABLE_NAME = '$tablename' AND k.COLUMN_NAME = '$columnname'";
-                            $result = mysqli_query($link, $sql_getfk);
-                            if (mysqli_num_rows($result) > 0) {
-                                while($row = mysqli_fetch_assoc($result)) {
-                                    $fk_table = $row["FK Table"];
-                                    $fk_column = $row["FK Column"];
-                                }
-                                if (isset($preview_columns[$fk_table]))
-                                {
-                                    $join_column_name = $columnname . $fk_table . $fk_column;
-                                    $is_primary_ref = is_primary_key($fk_table, $fk_column);
-                                    $index_table_rows .= 'echo "<td>" . get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', true) . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
-                                } else {
-                                    // Foreign key reference found, but one of the tables is not selected
-                                    $index_table_rows .= 'echo "<td>" . htmlspecialchars($row['. "'" . $columnname . "'" . '] ?? "") . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
-                                }
+                            
+                            [$fk_table, $fk_column] = get_foreign_table_and_column($tablename, $columnname);
+                                
+                            if (isset($preview_columns[$fk_table]))
+                            {
+                                $join_column_name = $columnname . $fk_table . $fk_column;
+                                $is_primary_ref = is_primary_key($fk_table, $fk_column);
+                                $index_table_rows .= 'echo "<td>" . get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', true) . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                            } else {
+                                // Foreign key reference found, but one of the tables is not selected
+                                $index_table_rows .= 'echo "<td>" . htmlspecialchars($row['. "'" . $columnname . "'" . '] ?? "") . "</td>";'."\n\t\t\t\t\t\t\t\t\t\t";
                             }
                         }
                         else if ($type == 1) // Text
@@ -650,18 +640,7 @@ function generate($postdata) {
                         //Check if there are foreign keys to take into consideration
                         if(!empty($columns['fk'])){
                             //Get the Foreign Key
-                            $sql_getfk = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
-                                    k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
-                                    i.CONSTRAINT_NAME as 'Constraint Name'
-                                    FROM information_schema.TABLE_CONSTRAINTS i
-                                    LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
-                                    WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND k.TABLE_NAME = '$tablename' AND k.COLUMN_NAME = '$columnname'";
-                            $result = mysqli_query($link, $sql_getfk);
-                            if (mysqli_num_rows($result) > 0) {
-                            while($row = mysqli_fetch_assoc($result)) {
-                                $fk_table = $row["FK Table"];
-                                $fk_column = $row["FK Column"];
-                            }
+                            [$fk_table, $fk_column] = get_foreign_table_and_column($tablename, $columnname);
 
                             if(isset($preview_columns[$fk_table]))
                             {
@@ -714,7 +693,6 @@ function generate($postdata) {
                                 $column_value = '<?php echo htmlspecialchars($row["'.$columnname.'"] ?? ""); ?>';
                                 $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
                             }
-                        }
                 // No Foreign Keys, just regular columns from here on
                 } else {                        
                         // Display date in locale format
