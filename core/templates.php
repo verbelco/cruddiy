@@ -69,24 +69,7 @@ $indexfile = <<<'EOT'
 
                     //Column sorting on column name
                     $columns = array('{COLUMNS}');
-                    $order = '{COLUMN_ID}';
-                    if (isset($_GET['order']) && in_array($_GET['order'], $columns)) {
-                        $order = $_GET['order'];
-                    } else {
-                    // Order by primary key on default
-                        $order = $columns[0];
-                    }
-
-                    //Column sort order
-                    $sortBy = array('asc', 'desc'); $sort = 'asc';
-                    if (isset($_GET['sort']) && in_array($_GET['sort'], $sortBy)) {
-                          if($_GET['sort']=='asc') {
-                            $sort='desc';
-                            }
-                    else {
-                        $sort='asc';
-                        }
-                    }
+                    [$orderclause, $ordering_on] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
 
                     //Generate WHERE statements for param
                     $where_columns = array_intersect_key($_GET, array_flip($columns));
@@ -109,15 +92,16 @@ $indexfile = <<<'EOT'
                             FROM `{TABLE_NAME}` {JOIN_CLAUSES}
                             $where_statement
                             GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
-                            ORDER BY `$order` $sort
+                            ORDER BY $orderclause
                             LIMIT $offset, $no_of_records_per_page;";
-                    $count_pages = "SELECT COUNT(*) AS count FROM `{TABLE_NAME}` {JOIN_CLAUSES}
+                    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count FROM `{TABLE_NAME}` {JOIN_CLAUSES}
                             $where_statement";
 
                     if($result = mysqli_query($link, $sql)){
                         if(mysqli_num_rows($result) > 0){
                             $number_of_results = mysqli_fetch_assoc(mysqli_query($link, $count_pages))['count'];
                             $total_pages = ceil($number_of_results / $no_of_records_per_page);
+                            echo "Sorting on $ordering_on <br>";
                             echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
 
                             echo "<table class='table table-bordered table-striped'>";

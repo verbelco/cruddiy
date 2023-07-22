@@ -520,7 +520,7 @@ function generate($postdata) {
 
                         $columns_available [] = "$columnname";
                         $index_sql_search [] = "`$tablename`.`$columnname`";
-                        $index_table_headers .= 'echo "<th><a href=?search=$search&order='.$columnname.'&sort=$sort$get_param>'.$columndisplay.'</th>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                        $index_table_headers .= 'echo "<th><a href=?search=$search&order[]='.$columnname.'asc$get_param>'.$columndisplay.'</th>";'."\n\t\t\t\t\t\t\t\t\t\t";
                         
                         // Display date in locale format
                         if(!empty($columns['fk'])){

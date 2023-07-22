@@ -132,4 +132,27 @@ function get_fk_url($value, $fk_table, $fk_column, $representation, bool $pk=fal
         
     }
 }
+
+function get_orderby_clause($given_order_array, $columns, $column_id, $table_name)
+{
+    $sortBy = array('asc' => 'ASC', 'dsc' => 'DESC');
+    $orderclause = "";
+    $ordering_on = "";
+    if (isset($given_order_array)) {
+        foreach ($given_order_array as $i => $str) {
+            $column = substr($str, 0, -3);
+            if (in_array($column, $columns)) {
+                $sort = substr($str, -3);
+                if (isset($sortBy[$sort])) {
+                    $sort = $sortBy[$sort];
+                    $orderclause .= $orderclause == "" ? "`$table_name`.`$column` $sort" : ", `$table_name`.`$column` $sort";
+                    $ordering_on .= $ordering_on == "" ? "$column $sort" : ", $column $sort";
+                }
+            }
+        }
+    }
+    $orderclause = $orderclause != "" ? $orderclause : "`$table_name`.`$column_id` " .$sortBy['asc'] ; // Order by primary key on default    
+    $ordering_on = $ordering_on != "" ? $ordering_on : $column_id . ' ' . $sortBy['asc'] ; // Order by primary key on default
+    return [$orderclause, $ordering_on];
+}
 ?>
