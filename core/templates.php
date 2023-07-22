@@ -69,15 +69,15 @@ $indexfile = <<<'EOT'
 
                     //Column sorting on column name
                     $columns = array('{COLUMNS}');
-                    [$orderclause, $ordering_on] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
+                    [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
 
                     //Generate WHERE statements for param
                     $where_columns = array_intersect_key($_GET, array_flip($columns));
-                    $get_param = "";                    
+                    $get_param_where = "";                    
                     $where_statement = " WHERE 1=1 ";
                     foreach ( $where_columns as $key => $val ) {
                         $where_statement .= " AND `$key` = '" . mysqli_real_escape_string($link, $val) . "' ";
-                        $get_param .= "&$key=$val";
+                        $get_param_where .= "&$key=$val";
                     }
 
                     if (!empty($_GET['search'])) {

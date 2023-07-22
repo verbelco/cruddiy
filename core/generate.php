@@ -489,7 +489,7 @@ function generate($postdata) {
             //Specific INDEX page variables            
             foreach ( $_POST[$key] as $columns ) {
                 if (isset($columns['primary'])){
-                    $column_id =  $columns['columnname'];
+                    $column_id = $columns['columnname'];
                 }
 
                 // These variables contain the generated names, labels, input field and values for column.
@@ -520,7 +520,11 @@ function generate($postdata) {
 
                         $columns_available [] = "$columnname";
                         $index_sql_search [] = "`$tablename`.`$columnname`";
-                        $index_table_headers .= 'echo "<th><a href=?search=$search&order[]='.$columnname.'asc$get_param>'.$columndisplay.'</th>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                        $index_table_headers .= '[$get_param_order, $arrow] = get_order_parameters($order_param_array, "'.$columnname.'");'."\n\t\t\t\t\t\t\t\t\t\t";
+                        if (isset($columns['primary'])){
+                            $index_table_headers .= 'if($default_ordering) {unset($order_param_array["'.$columnname.'"]);}'."\n\t\t\t\t\t\t\t\t\t\t";
+                        }
+                        $index_table_headers .= 'echo "<th><a href=?search=$search$get_param_where$get_param_order>'.$columndisplay.'$arrow</a></th>";'."\n\t\t\t\t\t\t\t\t\t\t";
                         
                         // Display date in locale format
                         if(!empty($columns['fk'])){
