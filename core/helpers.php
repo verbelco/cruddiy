@@ -138,21 +138,52 @@ function get_orderby_clause($given_order_array, $columns, $column_id, $table_nam
     $sortBy = array('asc' => 'ASC', 'dsc' => 'DESC');
     $orderclause = "";
     $ordering_on = "";
+    $get_param_array = array();
+    $default_ordering = false;
     if (isset($given_order_array)) {
         foreach ($given_order_array as $i => $str) {
             $column = substr($str, 0, -3);
             if (in_array($column, $columns)) {
-                $sort = substr($str, -3);
-                if (isset($sortBy[$sort])) {
-                    $sort = $sortBy[$sort];
+                $s = substr($str, -3);
+                if (isset($sortBy[$s])) {
+                    $sort = $sortBy[$s];
                     $orderclause .= $orderclause == "" ? "`$table_name`.`$column` $sort" : ", `$table_name`.`$column` $sort";
                     $ordering_on .= $ordering_on == "" ? "$column $sort" : ", $column $sort";
+                    $get_param_array[$column] = $s;
                 }
             }
         }
     }
-    $orderclause = $orderclause != "" ? $orderclause : "`$table_name`.`$column_id` " .$sortBy['asc'] ; // Order by primary key on default    
-    $ordering_on = $ordering_on != "" ? $ordering_on : $column_id . ' ' . $sortBy['asc'] ; // Order by primary key on default
-    return [$orderclause, $ordering_on];
+    
+    // Default to ordering on the primary key
+    if($orderclause == "")
+    {
+        $orderclause = "`$table_name`.`$column_id` " . $sortBy['asc'];
+        $ordering_on = $column_id . ' ' . $sortBy['asc'];
+        $get_param_array[$column_id] = 'asc';
+        $default_ordering = true;
+    }
+     return [$orderclause, $ordering_on, $get_param_array, $default_ordering];
 }
+
+function get_order_parameters($get_array, $column)
+{
+    $arrow = "";
+    $result = "";
+    if (isset($get_array[$column])) {
+        $sort = $get_array[$column] == 'asc' ? 'dsc' : 'asc';
+        $arrow = $get_array[$column] == 'asc' ? '⇡' : '⇣';
+        unset($get_array[$column]); // Move the newly selected column to the back
+        $get_array[$column] = $sort;
+    } else {
+        $get_array[$column] = 'asc';
+    }
+
+    // Turn the array into a get string
+    foreach ($get_array as $col => $sort){
+        $result .= "&order[]=$col$sort";
+    }
+    return [$result, $arrow];
+}
+
 ?>
