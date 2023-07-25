@@ -1,6 +1,61 @@
 <?php
 
 $indexfile = <<<'EOT'
+<?php
+    // Include config file
+    require_once "../config.php";
+    require_once "../helpers.php";
+
+    //Get current URL and parameters for correct pagination
+    $script   = $_SERVER['SCRIPT_NAME'];
+    $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
+    $currenturl = $domain. $script . '?' . $parameters;
+
+    //Pagination
+    if (isset($_GET['pageno'])) {
+        $pageno = $_GET['pageno'];
+    } else {
+        $pageno = 1;
+    }
+
+    //$no_of_records_per_page is set on the index page. Default is 10.
+    $offset = ($pageno-1) * $no_of_records_per_page;
+
+    $total_pages_sql = "SELECT COUNT(*) FROM `{TABLE_NAME}`";
+    $result = mysqli_query($link,$total_pages_sql);
+    $total_rows = mysqli_fetch_array($result)[0];
+    $total_pages = ceil($total_rows / $no_of_records_per_page);
+
+    //Column sorting on column name
+    $columns = array('{COLUMNS}');
+    [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
+
+    //Generate WHERE statements for param
+    $where_columns = array_intersect_key($_GET, array_flip($columns));
+    $get_param_where = "";                    
+    $where_statement = " WHERE 1=1 ";
+    foreach ( $where_columns as $key => $val ) {
+        $where_statement .= " AND `{TABLE_NAME}`.`$key` = '" . mysqli_real_escape_string($link, $val) . "' ";
+        $get_param_where .= "&$key=$val";
+    }
+
+    if (!empty($_GET['search'])) {
+        $search = mysqli_real_escape_string($link, $_GET['search']);
+        $where_statement .= " AND CONCAT_WS ({INDEX_CONCAT_SEARCH_FIELDS}) LIKE '%$search%'";
+    } else {
+        $search = "";
+    }
+
+    // Prepare SQL queries
+    $sql = "SELECT `{TABLE_NAME}`.* {JOIN_COLUMNS}
+            FROM `{TABLE_NAME}` {JOIN_CLAUSES}
+            $where_statement
+            GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
+            ORDER BY $orderclause
+            LIMIT $offset, $no_of_records_per_page;";
+    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count FROM `{TABLE_NAME}` {JOIN_CLAUSES}
+            $where_statement";
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +82,10 @@ $indexfile = <<<'EOT'
             <div class="row">
                 <div class="col-md-12">
                     <div class="page-header clearfix">
-                        <h2 class="float-left">{TABLE_DISPLAY} Details </h2>
+                        <h2 class="float-left">{TABLE_DISPLAY} Details 
+                            <span id='showfilter' class='link' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>⇣</span>
+                            <span id='hidefilter' class='link' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>⇡</span>
+                        </h2>
                         <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-right">Add New Record</a>
                         <a href="../{TABLE_NAME}/index.php" class="btn btn-info float-right mr-2">Reset View</a>
                         <a href="javascript:history.back()" class="btn btn-secondary float-right mr-2">Back</a>
@@ -39,65 +97,22 @@ $indexfile = <<<'EOT'
                           <input type="text" class="form-control" placeholder="Search this table" name="search">
                         </div>
                     </div>
+                    <div class="form-row mt-2">   
                         </form>
+                        <div id="advancedfilter">
+                            <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
+                            <p class="h3">Advanced Filters
+                                <input type="submit" class="btn btn-primary btn-lg" name="target" value="Search">
+                            </p>
+                            {INDEX_FILTER} 
+                            </form>
+                        </div>
+                    </div>
                     <br>
 
                     <?php
-                    // Include config file
-                    require_once "../config.php";
-                    require_once "../helpers.php";
-
-                    //Get current URL and parameters for correct pagination
-                    $script   = $_SERVER['SCRIPT_NAME'];
-                    $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
-                    $currenturl = $domain. $script . '?' . $parameters;
-
-                    //Pagination
-                    if (isset($_GET['pageno'])) {
-                        $pageno = $_GET['pageno'];
-                    } else {
-                        $pageno = 1;
-                    }
-
-                    //$no_of_records_per_page is set on the index page. Default is 10.
-                    $offset = ($pageno-1) * $no_of_records_per_page;
-
-                    $total_pages_sql = "SELECT COUNT(*) FROM `{TABLE_NAME}`";
-                    $result = mysqli_query($link,$total_pages_sql);
-                    $total_rows = mysqli_fetch_array($result)[0];
-                    $total_pages = ceil($total_rows / $no_of_records_per_page);
-
-                    //Column sorting on column name
-                    $columns = array('{COLUMNS}');
-                    [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
-
-                    //Generate WHERE statements for param
-                    $where_columns = array_intersect_key($_GET, array_flip($columns));
-                    $get_param_where = "";                    
-                    $where_statement = " WHERE 1=1 ";
-                    foreach ( $where_columns as $key => $val ) {
-                        $where_statement .= " AND `$key` = '" . mysqli_real_escape_string($link, $val) . "' ";
-                        $get_param_where .= "&$key=$val";
-                    }
-
-                    if (!empty($_GET['search'])) {
-                        $search = mysqli_real_escape_string($link, $_GET['search']);
-                        $where_statement .= " AND CONCAT_WS ({INDEX_CONCAT_SEARCH_FIELDS}) LIKE '%$search%'";
-                    } else {
-                        $search = "";
-                    }
-
-                    // Prepare SQL queries
-                    $sql = "SELECT `{TABLE_NAME}`.* {JOIN_COLUMNS}
-                            FROM `{TABLE_NAME}` {JOIN_CLAUSES}
-                            $where_statement
-                            GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
-                            ORDER BY $orderclause
-                            LIMIT $offset, $no_of_records_per_page;";
-                    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count FROM `{TABLE_NAME}` {JOIN_CLAUSES}
-                            $where_statement";
-
-                    if($result = mysqli_query($link, $sql)){
+                    try{
+                        $result = mysqli_query($link, $sql);
                         if(mysqli_num_rows($result) > 0){
                             $number_of_results = mysqli_fetch_assoc(mysqli_query($link, $count_pages))['count'];
                             $total_pages = ceil($number_of_results / $no_of_records_per_page);
@@ -146,8 +161,8 @@ $indexfile = <<<'EOT'
                         } else{
                             echo "<p class='lead'><em>No records were found.</em></p>";
                         }
-                    } else{
-                        echo "ERROR: Could not able to execute $sql. " . mysqli_error($link);
+                    } catch (mysqli_sql_exception $e) {
+                        echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR: " . $e->getMessage() . "</div>";
                     }
 
                     if (file_exists(stream_resolve_include_path("extension.php"))){
@@ -165,6 +180,29 @@ $indexfile = <<<'EOT'
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
+        });
+        $("#hidefilter").click(function(){
+            $("#advancedfilter").hide();
+            $("#showfilter").show();
+            $("#hidefilter").hide();
+        });
+          
+        $("#showfilter").click(function(){
+            $("#advancedfilter").show();
+            $("#hidefilter").show();
+            $("#showfilter").hide();
+        });
+
+        $("#advancedfilter").hide();
+        $("#hidefilter").hide();
+        
+        $('#advancedfilterform').submit(function () {
+            $(this)
+                .find('input[name]')
+                .filter(function () {
+                    return !this.value;
+                })
+                .prop('name', '');
         });
     </script>
 </body>
