@@ -189,7 +189,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 }
 
 
-function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
+function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$index_filter,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
     global $indexfile;
     global $appname;
     global $CSS_REFS;
@@ -211,7 +211,8 @@ function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_he
     $step9 = str_replace("{APP_NAME}", $appname, $step8 );
     $step10 = str_replace("{JOIN_COLUMNS}", $join_columns, $step9 );
     $step11 = str_replace("{JOIN_CLAUSES}", $join_clauses, $step10 ); 
-    if (!file_put_contents("app/$tablename/index.php", $step11, LOCK_EX)) {
+    $step12 = str_replace("{INDEX_FILTER}", $index_filter, $step11 ); 
+    if (!file_put_contents("app/$tablename/index.php", $step12, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Index file<br>";
@@ -435,6 +436,7 @@ function generate($postdata) {
         $create_sql_params = array();
         $create_sqlcolumns = array();
         $create_html = array();
+        $index_filter = array();
         $create_postvars = '';
         $create_default_vars = '';
 
@@ -475,8 +477,8 @@ function generate($postdata) {
                         $fk_column = $row["FK Column"];
                         $column = $row["Column"];
                         $foreign_key_references .= '
-                        $sql = "SELECT COUNT(*) AS count FROM `'. $fk_table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
-                        $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $sql))["count"];
+                        $subsql = "SELECT COUNT(*) AS count FROM `'. $fk_table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
+                        $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $subsql))["count"];
                         if ($number_of_refs > 0)
                         {
                             $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
@@ -688,9 +690,9 @@ function generate($postdata) {
                                 $column_value = '<?php echo get_fk_url($row["'.$columnname.'"], "'.$fk_table.'", "'.$fk_column.'", $row["'.$join_column_name.'"], '. $is_primary_ref .', false); ?>';
 
                                 $html .= ' <?php
-                                            $sql = "SELECT DISTINCT `'. $join_name .'`.`'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` AS `'. $join_name .'` '. $local_join_clauses .'
+                                            $subsql = "SELECT DISTINCT `'. $join_name .'`.`'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` AS `'. $join_name .'` '. $local_join_clauses .'
                                                     ORDER BY '. $fk_columns_select .'";
-                                            $result = mysqli_query($link, $sql);
+                                            $result = mysqli_query($link, $subsql);
                                             while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
                                                 $duprow = $row;
                                                 unset($duprow["' . $fk_column . '"]);
@@ -819,6 +821,9 @@ function generate($postdata) {
                     $create_html [] = '<div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
                     <div class="col-sm-7">'. $column_input .'</div></div>';
+                    $index_filter [] = '<div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
+                    <div class="col-sm-7">'. $column_input .'</div></div>';
                     $read_records .= '<div class="form-group row">
                         <div class="col-sm-3 font-weight-bold">'.$columndisplay.'</div>
                         <div class="col-sm-7">'. $column_value .'</div></div>';
@@ -847,6 +852,7 @@ function generate($postdata) {
                     $create_sqlcolumns = implode(", ", $create_sqlcolumns);
                     $create_sql_params = implode(", ", $create_sql_params);
                     $create_html = implode("\n\t\t\t\t\t\t", $create_html);
+                    $index_filter = implode("\n\t\t\t\t\t\t", $index_filter);
 
                     $update_sql_params = implode(",", $update_sql_params);
 
@@ -884,7 +890,7 @@ function generate($postdata) {
                         mkdir("app/$tablename/", 0777, true);
                     }
 
-                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
+                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows, $index_filter,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
                     generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);
