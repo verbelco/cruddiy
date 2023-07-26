@@ -436,7 +436,7 @@ function generate($postdata) {
         $create_sql_params = array();
         $create_sqlcolumns = array();
         $create_html = array();
-        $index_filter = array();
+        $index_filters = array();
         $create_postvars = '';
         $create_default_vars = '';
 
@@ -571,10 +571,11 @@ function generate($postdata) {
                 }
             }
 
-            //DETAIL CREATE UPDATE AND DELETE pages variables
+            //DETAIL CREATE UPDATE DELETE and INDEX FILTER pages variables
             foreach ( $_POST[$key] as $columns ) {
                 if ($j < $total_columns) {
 
+                    $index_filter = array();
                     $type = column_type($columns['columntype']);
 
                     if (isset($columns['columndisplay'])){
@@ -601,25 +602,25 @@ function generate($postdata) {
                         $total_params--;
                     }
 
-                        //Get all tablenames in an array
-                        $tablename = $columns['tablename'];
-                        if (!in_array($tablename, $tables))
-                        {
-                            $tables[$tablename] = $tabledisplay;
-                        }
+                    //Get all tablenames in an array
+                    $tablename = $columns['tablename'];
+                    if (!in_array($tablename, $tables))
+                    {
+                        $tables[$tablename] = $tabledisplay;
+                    }
 
-                        $tablename = $columns['tablename'];
-                        if (!empty($columns['tabledisplay'])) {
-                            $tabledisplay = $columns['tabledisplay'];
-                        } else {
-                            $tabledisplay = $columns['tablename'];
-                        }
+                    $tablename = $columns['tablename'];
+                    if (!empty($columns['tabledisplay'])) {
+                        $tabledisplay = $columns['tabledisplay'];
+                    } else {
+                        $tabledisplay = $columns['tablename'];
+                    }
 
-                        if (!empty($columns['tablecomment'])) {
-                            $tablecomment = '<div class="clearfix">
-                                <p class="float-left font-italic font-weight-light text-secondary">'. $columns["tablecomment"] .'</p>
-                            </div>';
-                        }
+                    if (!empty($columns['tablecomment'])) {
+                        $tablecomment = '<div class="clearfix">
+                            <p class="float-left font-italic font-weight-light text-secondary">'. $columns["tablecomment"] .'</p>
+                        </div>';
+                    }
 
 
                     if(empty($columns['auto'])) {
@@ -697,7 +698,7 @@ function generate($postdata) {
                                                 $duprow = $row;
                                                 unset($duprow["' . $fk_column . '"]);
                                                 $value = implode(" | ", $duprow);
-                                                if ($row["' . $fk_column . '"] == $' . $columnname_var . '){
+                                                if ($row["' . $fk_column . '"] == ' . $create_record . '){
                                                 echo \'<option value="\' . $row["'. $fk_column. '"] . \'"selected="selected">\' . $value . \'</option>\';
                                                 } else {
                                                     echo \'<option value="\' . $row["'. $fk_column. '"] . \'">\' . $value . \'</option>\';
@@ -707,10 +708,37 @@ function generate($postdata) {
                                         </select>';
                                 $column_input = $html;
                                 unset($html);
+
+                                // Code to generate the index filter
+                                $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
+                                if ($columns['columnnullable'])
+                                {
+                                    $index_filter_text .= '<option value="">Null</option>';
+                                }
+                                $index_filter_text .= ' <?php
+                                            $subsql = "SELECT DISTINCT `'. $join_name .'`.`'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` AS `'. $join_name .'` '. $local_join_clauses .'
+                                                    ORDER BY '. $fk_columns_select .'";
+                                            $result = mysqli_query($link, $subsql);
+                                            while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                                                $duprow = $row;
+                                                unset($duprow["' . $fk_column . '"]);
+                                                $value = implode(" | ", $duprow);
+                                                if ($row["' . $fk_column . '"] == $filter["'. $columnname. '"]["="]){
+                                                echo \'<option value="\' . $row["'. $fk_column. '"] . \'"selected="selected">\' . $value . \'</option>\';
+                                                } else {
+                                                    echo \'<option value="\' . $row["'. $fk_column. '"] . \'">\' . $value . \'</option>\';
+                                            }
+                                            }
+                                        ?>
+                                        </select>';
+                                $index_filter['='] = $index_filter_text;
+                                unset($index_filter_text);
+                                
                             } else {
                                 // Foreign key reference found, but one of the tables is not selected
                                 $column_value = '<?php echo htmlspecialchars($row["'.$columnname.'"] ?? ""); ?>';
                                 $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
+                                $index_filter['='] = '<input type="text" name="'. $columnname .'[=]" id="'. $columnname .'" class="form-control" value="<?php echo $filter["'. $columnname. '"]["="]; ?>">';
                             }
                 // No Foreign Keys, just regular columns from here on
                 } else {                        
@@ -806,10 +834,19 @@ function generate($postdata) {
                         //DATE
                         case 7:
                             $column_input = '<input type="date" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
+
+                            $index_filter['='] = "<span id='hidefilter' data-toggle='tooltip' data-placement='bottom' title='Hide advanced search options'>▴</span>";
+                            $index_filter['='] = '<input type="date" name="'. $columnname .'[=]" data-toggle="tooltip" data-placement="bottom" title="Filter on this exact date" class="form-control" value="<?php echo $filter["'. $columnname. '"]["="]; ?>">';
+                            
+                            $index_filter['>'] = '<input type="date" name="'. $columnname .'[>]" data-toggle="tooltip" data-placement="bottom" title="After this date" class="form-control" value="<?php echo $filter["'. $columnname. '"][">"]; ?>">';
+                            $index_filter['<'] = '<input type="date" name="'. $columnname .'[<]" data-toggle="tooltip" data-placement="bottom" title="Before this date" class="form-control" value="<?php echo $filter["'. $columnname. '"]["<"]; ?>">';
                         break;
                         //DATETIME
                         case 8:
                             $column_input = '<input type="datetime-local" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo empty('. $create_record. ') ? "" : date("Y-m-d\TH:i:s", strtotime('. $create_record. ')); ?>">';
+                            $index_filter['='] = '<input type="datetime-local" name="'. $columnname .'[=]" class="form-control" value="<?php echo empty($filter["'. $columnname. '"]["="]) ? "" : date("Y-m-d\TH:i:s", strtotime($filter["'. $columnname. '"]["="])); ?>">';
+                            $index_filter['>'] = '<input type="datetime-local" name="'. $columnname .'[>]" class="form-control" value="<?php echo empty($filter["'. $columnname. '"][">"]) ? "" : date("Y-m-d\TH:i:s", strtotime($filter["'. $columnname. '"][">"])); ?>">';
+                            $index_filter['<'] = '<input type="datetime-local" name="'. $columnname .'[<]" class="form-control" value="<?php echo empty($filter["'. $columnname. '"]["<"]) ? "" : date("Y-m-d\TH:i:s", strtotime($filter["'. $columnname. '"]["<"])); ?>">';
                         break;
 
                         default:
@@ -818,12 +855,20 @@ function generate($postdata) {
                         }
                     }
 
+                    // Create the layout for advanced filters
+                    $temp = '<div class="form-group row"><label class="col-sm-2 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>';
+                    foreach($index_filter as $operand => $input)
+                    {
+                        $temp .= '<div class="col-sm-3">'. $input .'</div>';
+                    }
+                    $temp .= '</div>';
+                    $index_filters[] = $temp;
+
+
                     $create_html [] = '<div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
                     <div class="col-sm-7">'. $column_input .'</div></div>';
-                    $index_filter [] = '<div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
-                    <div class="col-sm-7">'. $column_input .'</div></div>';
+                    
                     $read_records .= '<div class="form-group row">
                         <div class="col-sm-3 font-weight-bold">'.$columndisplay.'</div>
                         <div class="col-sm-7">'. $column_value .'</div></div>';
@@ -852,7 +897,7 @@ function generate($postdata) {
                     $create_sqlcolumns = implode(", ", $create_sqlcolumns);
                     $create_sql_params = implode(", ", $create_sql_params);
                     $create_html = implode("\n\t\t\t\t\t\t", $create_html);
-                    $index_filter = implode("\n\t\t\t\t\t\t", $index_filter);
+                    $index_filter = implode("\n\t\t\t\t\t\t", $index_filters);
 
                     $update_sql_params = implode(",", $update_sql_params);
 
