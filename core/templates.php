@@ -192,6 +192,7 @@ $indexfile = <<<'EOT'
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
         });
+        
         $("#hidefilter").click(function(){
             $("#advancedfilter").hide();
             $("#showfilter").show();
