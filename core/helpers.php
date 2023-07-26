@@ -116,20 +116,17 @@ function convert_bool($var)
     }
 }
 
-function get_fk_url($value, $fk_table, $fk_column, $representation, bool $pk=false, bool $index=false)
+function get_fk_url($value, $fk_table, $fk_column, $representation, bool $pk = false, bool $index = false)
 // Gets a URL to the foreign key parents read page
 {
     if (isset($value)) {
         $value = htmlspecialchars($value);
-        if($pk)
-        {
+        if ($pk) {
             return '<a href="../' . $fk_table . '/read.php?' . $fk_column . '=' . $value . '">' . $representation . '</a>';
+        } else {
+            return '<a href="../' . $fk_table . '/index.php?' . $fk_column . '[]=' . $value . '">' . $representation . '</a>';
         }
-        else
-        {
-            return '<a href="../' . $fk_table . '/index.php?' . $fk_column . '=' . $value . '">' . $representation . '</a>';
-        }
-        
+
     }
 }
 
@@ -154,19 +151,18 @@ function get_orderby_clause($given_order_array, $columns, $column_id, $table_nam
             }
         }
     }
-    
+
     // Default to ordering on the primary key
-    if($orderclause == "")
-    {
+    if ($orderclause == "") {
         $orderclause = "`$table_name`.`$column_id` " . $sortBy['asc'];
         $ordering_on = $column_id . ' ' . $sortBy['asc'];
         $get_param_array[$column_id] = 'asc';
         $default_ordering = true;
     }
-     return [$orderclause, $ordering_on, $get_param_array, $default_ordering];
+    return [$orderclause, $ordering_on, $get_param_array, $default_ordering];
 }
 
-function get_order_parameters($get_array, $column)
+function get_order_parameters($get_array, $column = null)
 {
     $arrow = "";
     $result = "";
@@ -175,12 +171,12 @@ function get_order_parameters($get_array, $column)
         $arrow = $get_array[$column] == 'asc' ? '⇡' : '⇣';
         unset($get_array[$column]); // Move the newly selected column to the back
         $get_array[$column] = $sort;
-    } else {
+    } elseif (isset($column)) {
         $get_array[$column] = 'asc';
     }
 
     // Turn the array into a get string
-    foreach ($get_array as $col => $sort){
+    foreach ($get_array as $col => $sort) {
         $result .= "&order[]=$col$sort";
     }
     return [$result, $arrow];
@@ -193,6 +189,9 @@ function create_sql_filter_array($where_columns)
     foreach ($where_columns as $column => $f_array) {
         // Loop over all restrictions per column
         foreach ($f_array as $operand => $val) {
+            if ($operand == 0) {
+                $operand = '=';
+            }
             if (in_array($operand, ['=', '>', '<', '%'])) {
                 $filter[$column][$operand] = $val;
             }
