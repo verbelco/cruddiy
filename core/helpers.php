@@ -186,4 +186,40 @@ function get_order_parameters($get_array, $column)
     return [$result, $arrow];
 }
 
+function create_sql_filter_array($where_columns)
+{
+    $filter = array();
+    // Loop over all columns
+    foreach ($where_columns as $column => $f_array) {
+        // Loop over all restrictions per column
+        foreach ($f_array as $operand => $val) {
+            if (in_array($operand, ['=', '>', '<', '%'])) {
+                $filter[$column][$operand] = $val;
+            }
+        }
+    }
+    return $filter;
+}
+
+function create_sql_where($filter, $table_name, $link)
+{
+    $get_param_where = "";
+    $where_statement = " WHERE 1=1 ";
+    // Loop over all columns
+    foreach ($filter as $column => $f_array) {
+        // Loop over all restrictions per column
+        foreach ($f_array as $operand => $val) {
+            if ($operand == '%') {
+                $where_statement .= " AND `$table_name`.`$column` LIKE '%" . mysqli_real_escape_string($link, $val) . "%' ";
+            } elseif ($operand == '=' && $val == 'null') {
+                $where_statement .= " AND `$table_name`.`$column` IS NULL";
+            } else {
+                $where_statement .= " AND `$table_name`.`$column` $operand '" . mysqli_real_escape_string($link, $val) . "' ";
+            }
+            $get_param_where .= "&$column" . '[' . $operand . "]=$val";
+        }
+    }
+    return [$get_param_where, $where_statement];
+}
+
 ?>
