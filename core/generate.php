@@ -481,7 +481,7 @@ function generate($postdata) {
                         $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $subsql))["count"];
                         if ($number_of_refs > 0)
                         {
-                            $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
+                            $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '[=]=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
                         }';
                     }
                 }
@@ -526,7 +526,7 @@ function generate($postdata) {
                         if (isset($columns['primary'])){
                             $index_table_headers .= 'if($default_ordering) {unset($order_param_array["'.$columnname.'"]);}'."\n\t\t\t\t\t\t\t\t\t\t";
                         }
-                        $index_table_headers .= 'echo "<th><a href=?search=$search$get_param_where$get_param_order>'.$columndisplay.'$arrow</a></th>";'."\n\t\t\t\t\t\t\t\t\t\t";
+                        $index_table_headers .= 'echo "<th><a href=\'$get_param_search$get_param_where$get_param_order\'>'.$columndisplay.'$arrow</a></th>";'."\n\t\t\t\t\t\t\t\t\t\t";
                         
                         // Display date in locale format
                         if(!empty($columns['fk'])){
@@ -713,7 +713,7 @@ function generate($postdata) {
                                 $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
                                 if ($columns['columnnullable'])
                                 {
-                                    $index_filter_text .= '<option value="">Null</option>';
+                                    $index_filter_text .= '<option value="null">Null</option>';
                                 }
                                 $index_filter_text .= ' <?php
                                             $subsql = "SELECT DISTINCT `'. $join_name .'`.`'. $fk_column .'`, '. $fk_columns_select .' FROM `'. $fk_table . '` AS `'. $join_name .'` '. $local_join_clauses .'
@@ -767,91 +767,128 @@ function generate($postdata) {
                         //$type = column_type($columns['columntype']);
 
                         switch($type) {
-                        //TEXT
-                        case 1:
-                            $column_input = '<textarea name="'. $columnname .'" id="'. $columnname .'" class="form-control"><?php echo '. $create_record. '; ?></textarea>';
-                        break;
+                            //TEXT
+                            case 1:
+                                $column_input = '<textarea name="'. $columnname .'" id="'. $columnname .'" class="form-control"><?php echo '. $create_record. '; ?></textarea>';
+                            break;
 
-                        //ENUM types
-                        case 2:
-                        //Make sure on the update form that the previously selected type is also selected from the list
-                         
-                            $html = '<select name="'.$columnname.'" class="form-control" id="'.$columnname .'">';
-                            if ($columns['columnnullable'])
-                            {
-                                $html .= '<option value="">Null</option>';
-                            }
-
-                            $sql_enum = "SELECT COLUMN_TYPE as AllPossibleEnumValues
-                            FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tablename' AND COLUMN_NAME = '$columnname';";
-                            $result = mysqli_query($link, $sql_enum);
-                            $row = mysqli_fetch_array($result, MYSQLI_NUM);
-                            preg_match('/enum\((.*)\)$/', $row[0], $matches);
-                            $html .= "<?php \n\t\t\t\t\t\t\t \$enum_$columnname = array(" . $matches[1] . ");";
-                            $html .= "
-                                foreach (\$enum_$columnname as " . ' $val){
-                                    if ($val == $'.$columnname.'){
-                                    echo \'<option value="\' . $val . \'" selected="selected">\' . $val . \'</option>\';
-                                    } else
-                                    echo \'<option value="\' . $val . \'">\' . $val . \'</option>\';
-                                            }
-                            ?></select>';
-
-                            $column_input = $html;
-                            unset($html);
-                        break;
-                        //VARCHAR
-                        case 3:
-                            preg_match('#\((.*?)\)#', $columns['columntype'], $match);
-                            $maxlength = $match[1];
-                            $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" maxlength="'.$maxlength.'"class="form-control" value="<?php echo '. $create_record. '; ?>">';
-                        break;
-
-                        //TINYINT (bool)
-                        case 4:
-                            $regex = "/'(.*?)'/";
-                            preg_match_all( $regex , $columns['columntype'] , $enum_array );
-                            $html = '<select name="'.$columnname.'" id="'. $columnname .'" class="form-control" id="'.$columnname .'">';
+                            //ENUM types
+                            case 2:
+                            //Make sure on the update form that the previously selected type is also selected from the list
+                            
+                                $html = '<select name="'.$columnname.'" class="form-control" id="'.$columnname .'">';
                                 if ($columns['columnnullable'])
                                 {
                                     $html .= '<option value="">Null</option>';
                                 }
-                            $html   .= '    <option value="0" <?php echo !' . $create_record . ' ? "selected": ""; ?> >False</option>';
-                            $html   .= '    <option value="1" <?php echo ' . $create_record . ' ? "selected": ""; ?> >True</option>';
-                            $html   .= '</select>';
+
+                                $sql_enum = "SELECT COLUMN_TYPE as AllPossibleEnumValues
+                                FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tablename' AND COLUMN_NAME = '$columnname';";
+                                $result = mysqli_query($link, $sql_enum);
+                                $row = mysqli_fetch_array($result, MYSQLI_NUM);
+                                preg_match('/enum\((.*)\)$/', $row[0], $matches);
+                                $html .= "<?php \n\t\t\t\t\t\t\t \$enum_$columnname = array(" . $matches[1] . ");";
+                                $html .= "
+                                    foreach (\$enum_$columnname as " . ' $val){
+                                        if ($val == $'.$columnname.'){
+                                        echo \'<option value="\' . $val . \'" selected="selected">\' . $val . \'</option>\';
+                                        } else
+                                        echo \'<option value="\' . $val . \'">\' . $val . \'</option>\';
+                                                }
+                                ?></select>';
+
                                 $column_input = $html;
-                            unset($html);
-                        break;
-                        //INT
-                        case 5:
-                            $column_input = '<input type="number" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
-                        break;
+                                unset($html);
 
-                        //DECIMAL
-                        case 6:
-                            $column_input = '<input type="number" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>" step="any">';
-                        break;
-                        //DATE
-                        case 7:
-                            $column_input = '<input type="date" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
+                                // INDEX filter
+                                $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
+                                if ($columns['columnnullable'])
+                                {
+                                    $index_filter_text .= '<option value="null">Null</option>';
+                                }
+                                $index_filter_text .= "<?php \n\t\t\t\t\t\t\t \$enum_$columnname = array(" . $matches[1] . ");";
+                                $index_filter_text .= "
+                                    foreach (\$enum_$columnname as " . ' $val){
+                                        if ($val == $filter["'. $columnname. '"]["="]){
+                                        echo \'<option value="\' . $val . \'" selected="selected">\' . $val . \'</option>\';
+                                        } else
+                                        echo \'<option value="\' . $val . \'">\' . $val . \'</option>\';
+                                                }
+                                ?></select>';
+                                $index_filter['='] = $index_filter_text;
+                                unset($index_filter_text);
+                            break;
+                            //VARCHAR
+                            case 3:
+                                preg_match('#\((.*?)\)#', $columns['columntype'], $match);
+                                $maxlength = $match[1];
+                                $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" maxlength="'.$maxlength.'"class="form-control" value="<?php echo '. $create_record. '; ?>">';
+                            break;
 
-                            $index_filter['='] = "<span id='hidefilter' data-toggle='tooltip' data-placement='bottom' title='Hide advanced search options'>▴</span>";
+                            //TINYINT (bool)
+                            case 4:
+                                $regex = "/'(.*?)'/";
+                                preg_match_all( $regex , $columns['columntype'] , $enum_array );
+                                $html = '<select name="'.$columnname.'" id="'. $columnname .'" class="form-control" id="'.$columnname .'">';
+                                    if ($columns['columnnullable'])
+                                    {
+                                        $html .= '<option value="">Null</option>';
+                                    }
+                                $html   .= '    <option value="0" <?php echo !' . $create_record . ' ? "selected": ""; ?> >False</option>';
+                                $html   .= '    <option value="1" <?php echo ' . $create_record . ' ? "selected": ""; ?> >True</option>';
+                                $html   .= '</select>';
+                                    $column_input = $html;
+                                unset($html);
+
+                                // INDEX filter
+                                $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
+                                if ($columns['columnnullable'])
+                                {
+                                    $index_filter_text .= '<option value="null">Null</option>';
+                                }
+                                $index_filter_text   .= '    <option value="0" <?php echo isset($filter["'. $columnname. '"]["="]) && !$filter["'. $columnname. '"]["="] ? "selected": ""; ?> >False</option>';
+                                $index_filter_text   .= '    <option value="1" <?php echo $filter["'. $columnname. '"]["="] ? "selected": ""; ?> >True</option>';
+                                $index_filter_text   .= '</select>';
+                                $index_filter['='] = $index_filter_text;
+                                unset($index_filter_text);
+                            break;
+                            //INT
+                            case 5:
+                                $column_input = '<input type="number" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
+                            break;
+
+                            //DECIMAL
+                            case 6:
+                                $column_input = '<input type="number" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>" step="any">';
+                            break;
+                            //DATE
+                            case 7:
+                                $column_input = '<input type="date" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
+                            break;
+                            //DATETIME
+                            case 8:
+                                $column_input = '<input type="datetime-local" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo empty('. $create_record. ') ? "" : date("Y-m-d\TH:i:s", strtotime('. $create_record. ')); ?>">';
+                            break;
+
+                            default:
+                                $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
+                            break;
+                        }
+
+                        if($type == 7 || $type == 8){
+                            // DATE and DATETIME
                             $index_filter['='] = '<input type="date" name="'. $columnname .'[=]" data-toggle="tooltip" data-placement="bottom" title="Filter on this exact date" class="form-control" value="<?php echo $filter["'. $columnname. '"]["="]; ?>">';
-                            
                             $index_filter['>'] = '<input type="date" name="'. $columnname .'[>]" data-toggle="tooltip" data-placement="bottom" title="After this date" class="form-control" value="<?php echo $filter["'. $columnname. '"][">"]; ?>">';
                             $index_filter['<'] = '<input type="date" name="'. $columnname .'[<]" data-toggle="tooltip" data-placement="bottom" title="Before this date" class="form-control" value="<?php echo $filter["'. $columnname. '"]["<"]; ?>">';
-                        break;
-                        //DATETIME
-                        case 8:
-                            $column_input = '<input type="datetime-local" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo empty('. $create_record. ') ? "" : date("Y-m-d\TH:i:s", strtotime('. $create_record. ')); ?>">';
-                            $index_filter['='] = '<input type="datetime-local" name="'. $columnname .'[=]" class="form-control" value="<?php echo empty($filter["'. $columnname. '"]["="]) ? "" : date("Y-m-d\TH:i:s", strtotime($filter["'. $columnname. '"]["="])); ?>">';
-                            $index_filter['>'] = '<input type="datetime-local" name="'. $columnname .'[>]" class="form-control" value="<?php echo empty($filter["'. $columnname. '"][">"]) ? "" : date("Y-m-d\TH:i:s", strtotime($filter["'. $columnname. '"][">"])); ?>">';
-                            $index_filter['<'] = '<input type="datetime-local" name="'. $columnname .'[<]" class="form-control" value="<?php echo empty($filter["'. $columnname. '"]["<"]) ? "" : date("Y-m-d\TH:i:s", strtotime($filter["'. $columnname. '"]["<"])); ?>">';
-                        break;
-
-                        default:
-                            $column_input = '<input type="text" name="'. $columnname .'" id="'. $columnname .'" class="form-control" value="<?php echo '. $create_record. '; ?>">';
-                        break;
+                        } elseif($type == 0 || $type == 1 || $type == 3) {
+                            // TEXT and VARCHAR   
+                            $index_filter['='] = '<input type="text" name="'. $columnname .'[=]" data-toggle="tooltip" data-placement="bottom" title="Filter on this exact string" class="form-control" placeholder="Equal to" step="any" value="<?php echo $filter["'. $columnname. '"]["="]; ?>">';
+                            $index_filter['%'] = '<input type="text" name="'. $columnname .'[%]" data-toggle="tooltip" data-placement="bottom" title="Like this string" class="form-control" placeholder="Like (%)" step="any" value="<?php echo $filter["'. $columnname. '"]["%"]; ?>">';                        
+                        } elseif($type == 5 || $type == 6) {
+                            // INT and DECIMAL
+                            $index_filter['='] = '<input type="number" name="'. $columnname .'[=]" class="form-control" placeholder="Equal to" step="any" value="<?php echo $filter["'. $columnname. '"]["="]; ?>">';
+                            $index_filter['>'] = '<input type="number" name="'. $columnname .'[>]" class="form-control" placeholder="Larger than" step="any" value="<?php echo $filter["'. $columnname. '"][">"]; ?>">';
+                            $index_filter['<'] = '<input type="number" name="'. $columnname .'[<]" class="form-control" placeholder="Smaller than" step="any" value="<?php echo $filter["'. $columnname. '"]["<"]; ?>">';
                         }
                     }
 
@@ -859,7 +896,7 @@ function generate($postdata) {
                     $temp = '<div class="form-group row"><label class="col-sm-2 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>';
                     foreach($index_filter as $operand => $input)
                     {
-                        $temp .= '<div class="col-sm-3">'. $input .'</div>';
+                        $temp .= '<div class="col-sm-3">'. $input ."</div>\n";
                     }
                     $temp .= '</div>';
                     $index_filters[] = $temp;

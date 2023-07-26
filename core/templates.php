@@ -29,31 +29,33 @@ $indexfile = <<<'EOT'
     //Column sorting on column name
     $columns = array('{COLUMNS}');
     [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
+    [$get_param_ordering, $temp] = get_order_parameters($order_param_array);
 
     //Generate WHERE statements for param
-    // if(isset($_GET['target']) && $_GET['target'] == "Search")
-    {
-        $where_columns = array_intersect_key($_GET, array_flip($columns));
-        $get_param_where = "";                    
-        $where_statement = " WHERE 1=1 ";
-        // Loop over all columns
-        foreach ($where_columns as $column => $f_array ) {
-            // Loop over all restrictions per column
-            foreach ($f_array as $operand => $val)
-            {
-                if(in_array($operand, ['=', '>', '<'])){
-                    $where_statement .= " AND `{TABLE_NAME}`.`$column` $operand '" . mysqli_real_escape_string($link, $val) . "' ";
-                    $get_param_where .= "&$column" . '[' . $operand . "]=$val";
-                    $filter[$column][$operand] = $val;
-                }
-            }
+    $where_columns = array_intersect_key($_GET, array_flip($columns));
+    $filter = create_sql_filter_array($where_columns);
+
+    if(isset($_GET["target"])){
+        if($_GET["target"] == "Search"){
+            // Write the filter to the session
+            $_SESSION["filter"]["{TABLE_NAME}"] = $filter;
+        } else if($_GET["target"] == "empty"){
+            // Remove the filter from the session
+            $_SESSION["filter"]["{TABLE_NAME}"] = array();
         }
+    } else if(count($filter) == 0) {
+        // Use the filter from the session if no other filter is used
+        $filter = $_SESSION["filter"]["{TABLE_NAME}"];
     }
+
+    [$get_param_where, $where_statement] = create_sql_where($filter, "{TABLE_NAME}", $link);
 
     if (!empty($_GET['search'])) {
         $search = mysqli_real_escape_string($link, $_GET['search']);
+        $get_param_search = "?search=$search";
         $where_statement .= " AND CONCAT_WS ({INDEX_CONCAT_SEARCH_FIELDS}) LIKE '%$search%'";
     } else {
+        $get_param_search = "?";
         $search = "";
     }
 
@@ -95,21 +97,23 @@ $indexfile = <<<'EOT'
                     <div class="page-header clearfix">
                         <h2 class="float-left">{TABLE_DISPLAY} Details 
                             <span id='showfilter' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>▾</span>
-                            <span id='hidefilter' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>▴</span>
+                            <span id='hidefilter' style='display:none;' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>▴</span>
                         </h2>
                         <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-right">Add New Record</a>
-                        <a href="../{TABLE_NAME}/index.php" class="btn btn-info float-right mr-2">Reset View</a>
+                        <a href="../{TABLE_NAME}/index.php?target=empty<?php echo $get_param_ordering; ?>" class="btn btn-dark float-right mr-2">Reset Filters</a>
+                        <a href="../{TABLE_NAME}/index.php<?php echo $get_param_search . $get_param_where; ?>" class="btn btn-primary float-right mr-2">Reset Ordering</a>
+                        <a href="../{TABLE_NAME}/index.php?target=empty" class="btn btn-info float-right mr-2">Reset View</a>
                         <a href="javascript:history.back()" class="btn btn-secondary float-right mr-2">Back</a>
                     </div>
                     {TABLE_COMMENT}
                     <div class="form-row">
                         <form action="../{TABLE_NAME}/index.php" method="get">
                         <div class="col">
-                          <input type="text" class="form-control" placeholder="Search this table" name="search">
+                          <input type="text" class="form-control" placeholder="Search this table" name="search" value="<?php echo $search; ?>">
                         </div>  
                         </form>
                     </div>
-                    <div class="form-row mt-2" id="advancedfilter">
+                    <div class="form-row mt-2" id="advancedfilter"  style="display:none;">
                         <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
                         <p class="h3">Advanced Filters
                             <input type="submit" class="btn btn-primary btn-lg" name="target" value="Search">
@@ -117,8 +121,6 @@ $indexfile = <<<'EOT'
                         {INDEX_FILTER} 
                         </form>
                     </div>
-                    <br>
-
                     <?php
                     try{
                         $result = mysqli_query($link, $sql);
@@ -201,13 +203,11 @@ $indexfile = <<<'EOT'
             $("#hidefilter").show();
             $("#showfilter").hide();
         });
-
         $("#advancedfilter").hide();
-        $("#hidefilter").hide();
-        
+        $("#hidefilter").hide();        
         $('#advancedfilterform').submit(function () {
             $(this)
-                .find('input[name]')
+                .find('input[name], select[name]')
                 .filter(function () {
                     return !this.value;
                 })
