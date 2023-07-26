@@ -116,7 +116,7 @@ $indexfile = <<<'EOT'
                     <div class="form-row mt-2" id="advancedfilter"  style="display:none;">
                         <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
                         <p class="h3">Advanced Filters
-                            <input type="submit" class="btn btn-primary btn-lg" name="target" value="Search">
+                            <input type="submit" class="btn btn-success btn-lg" name="target" value="Search">
                         </p>
                         {INDEX_FILTER} 
                         </form>
@@ -144,6 +144,7 @@ $indexfile = <<<'EOT'
                                         echo "<td>";
                                             echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip'><i class='far fa-eye'></i></a>";
                                             echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'><i class='far fa-edit'></i></a>";
+                                            echo "<a href='../{TABLE_NAME}/create.php?duplicate=". $row['{COLUMN_NAME}'] ."' title='Create a duplicate of this record' data-toggle='tooltip'><i class='fa fa-copy'></i></a>";
                                             echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
                                         echo "</td>";
                                     echo "</tr>";
@@ -290,6 +291,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                      {RECORDS_READ_FORM}
                     <p>
                         <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
+                        <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{TABLE_ID}"]; ?>" class="btn btn-info">Duplicate</a>
                         <a href="../{TABLE_NAME}/delete.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-warning">Delete</a>
                         <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                     </p> 
@@ -449,6 +451,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $message = "Record with <a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=$new_id'>{COLUMN_ID}=$new_id</a> added to {TABLE_NAME}";
         }
     }
+} else if (isset($_GET['duplicate'])){
+    $duplicate_{COLUMN_ID} = trim($_GET['duplicate']);
+
+    $stmt = $link->prepare("SELECT {CREATE_COLUMN_NAMES} FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?");
+    $stmt->execute([ $duplicate_{COLUMN_ID} ]);
+    $stmt->bind_result({CREATE_SQL_PARAMS});
+    $stmt->fetch();
+    $stmt->close();    
 }
 ?>
 
@@ -604,7 +614,8 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
                             <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
                         </p>
                         <p>
-                            <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-info">View</a>
+                            <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-primary">View</a>
+                            <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{TABLE_ID}"]; ?>" class="btn btn-info">Duplicate</a>
                             <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-warning">Delete</a>
                             <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                         </p>
@@ -701,5 +712,3 @@ $navbarfile = <<<'EOT'
   </div>
 </nav>
 EOT;
-
-

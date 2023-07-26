@@ -481,7 +481,7 @@ function generate($postdata) {
                         $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $subsql))["count"];
                         if ($number_of_refs > 0)
                         {
-                            $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '[=]=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
+                            $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '[]=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
                         }';
                     }
                 }
