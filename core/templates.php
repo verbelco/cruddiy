@@ -31,12 +31,23 @@ $indexfile = <<<'EOT'
     [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
 
     //Generate WHERE statements for param
-    $where_columns = array_intersect_key($_GET, array_flip($columns));
-    $get_param_where = "";                    
-    $where_statement = " WHERE 1=1 ";
-    foreach ( $where_columns as $key => $val ) {
-        $where_statement .= " AND `{TABLE_NAME}`.`$key` = '" . mysqli_real_escape_string($link, $val) . "' ";
-        $get_param_where .= "&$key=$val";
+    // if(isset($_GET['target']) && $_GET['target'] == "Search")
+    {
+        $where_columns = array_intersect_key($_GET, array_flip($columns));
+        $get_param_where = "";                    
+        $where_statement = " WHERE 1=1 ";
+        // Loop over all columns
+        foreach ($where_columns as $column => $f_array ) {
+            // Loop over all restrictions per column
+            foreach ($f_array as $operand => $val)
+            {
+                if(in_array($operand, ['=', '>', '<'])){
+                    $where_statement .= " AND `{TABLE_NAME}`.`$column` $operand '" . mysqli_real_escape_string($link, $val) . "' ";
+                    $get_param_where .= "&$column" . '[' . $operand . "]=$val";
+                    $filter[$column][$operand] = $val;
+                }
+            }
+        }
     }
 
     if (!empty($_GET['search'])) {
@@ -83,8 +94,8 @@ $indexfile = <<<'EOT'
                 <div class="col-md-12">
                     <div class="page-header clearfix">
                         <h2 class="float-left">{TABLE_DISPLAY} Details 
-                            <span id='showfilter' class='link' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>⇣</span>
-                            <span id='hidefilter' class='link' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>⇡</span>
+                            <span id='showfilter' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>▾</span>
+                            <span id='hidefilter' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>▴</span>
                         </h2>
                         <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-right">Add New Record</a>
                         <a href="../{TABLE_NAME}/index.php" class="btn btn-info float-right mr-2">Reset View</a>
@@ -95,18 +106,16 @@ $indexfile = <<<'EOT'
                         <form action="../{TABLE_NAME}/index.php" method="get">
                         <div class="col">
                           <input type="text" class="form-control" placeholder="Search this table" name="search">
-                        </div>
-                    </div>
-                    <div class="form-row mt-2">   
+                        </div>  
                         </form>
-                        <div id="advancedfilter">
-                            <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
-                            <p class="h3">Advanced Filters
-                                <input type="submit" class="btn btn-primary btn-lg" name="target" value="Search">
-                            </p>
-                            {INDEX_FILTER} 
-                            </form>
-                        </div>
+                    </div>
+                    <div class="form-row mt-2" id="advancedfilter">
+                        <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
+                        <p class="h3">Advanced Filters
+                            <input type="submit" class="btn btn-primary btn-lg" name="target" value="Search">
+                        </p>
+                        {INDEX_FILTER} 
+                        </form>
                     </div>
                     <br>
 
