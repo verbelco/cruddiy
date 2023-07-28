@@ -75,6 +75,7 @@ $indexfile = <<<'EOT'
     <meta charset="UTF-8">
     <title>{APP_NAME}</title>
     {CSS_REFS}
+    {JS_REFS}
     <script src="https://kit.fontawesome.com/6b773fe9e4.js" crossorigin="anonymous"></script>
     <style type="text/css">
         .page-header h2{
@@ -90,105 +91,103 @@ $indexfile = <<<'EOT'
 </head>
 <?php require_once('../navbar.php'); ?>
 <body>
-    <section class="pt-5">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="page-header clearfix">
-                        <h2 class="float-left">{TABLE_DISPLAY} Details 
-                            <span id='showfilter' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>▾</span>
-                            <span id='hidefilter' style='display:none;' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>▴</span>
-                        </h2>
-                        <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-right">Add New Record</a>
-                        <a href="../{TABLE_NAME}/index.php?target=empty<?php echo $get_param_ordering; ?>" class="btn btn-dark float-right mr-2">Reset Filters</a>
-                        <a href="../{TABLE_NAME}/index.php<?php echo $get_param_search . $get_param_where; ?>" class="btn btn-primary float-right mr-2">Reset Ordering</a>
-                        <a href="../{TABLE_NAME}/index.php?target=empty" class="btn btn-info float-right mr-2">Reset View</a>
-                        <a href="javascript:history.back()" class="btn btn-secondary float-right mr-2">Back</a>
-                    </div>
-                    {TABLE_COMMENT}
-                    <div class="form-row">
-                        <form action="../{TABLE_NAME}/index.php" method="get">
-                        <div class="col">
-                          <input type="text" class="form-control" placeholder="Search this table" name="search" value="<?php echo $search; ?>">
-                        </div>  
-                        </form>
-                    </div>
-                    <div class="form-row mt-2" id="advancedfilter"  style="display:none;">
-                        <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
-                        <p class="h3">Advanced Filters
-                            <input type="submit" class="btn btn-success btn-lg" name="target" value="Search">
-                        </p>
-                        {INDEX_FILTER} 
-                        </form>
-                    </div>
-                    <?php
-                    try{
-                        $result = mysqli_query($link, $sql);
-                        if(mysqli_num_rows($result) > 0){
-                            $number_of_results = mysqli_fetch_assoc(mysqli_query($link, $count_pages))['count'];
-                            $total_pages = ceil($number_of_results / $no_of_records_per_page);
-                            echo "Sorting on $ordering_on <br>";
-                            echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
-
-                            echo "<table class='table table-bordered table-striped'>";
-                                echo "<thead class='thead-light'>";
-                                    echo "<tr>";
-                                        {INDEX_TABLE_HEADERS}
-                                        echo "<th>Action</th>";
-                                    echo "</tr>";
-                                echo "</thead>";
-                                echo "<tbody>";
-                                while($row = mysqli_fetch_array($result)){
-                                    echo "<tr>";
-                                    {INDEX_TABLE_ROWS}
-                                        echo "<td>";
-                                            echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip'><i class='far fa-eye'></i></a>";
-                                            echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'><i class='far fa-edit'></i></a>";
-                                            echo "<a href='../{TABLE_NAME}/create.php?duplicate=". $row['{COLUMN_NAME}'] ."' title='Create a duplicate of this record' data-toggle='tooltip'><i class='fa fa-copy'></i></a>";
-                                            echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
-                                        echo "</td>";
-                                    echo "</tr>";
-                                }
-                                echo "</tbody>";
-                            echo "</table>";
-?>
-                                <ul class="pagination fixed-bottom" align-right>
-                                <?php
-                                    $new_url = preg_replace('/&?pageno=[^&]*/', '', $currenturl);
-                                 ?>
-                                    <li class="page-item"><a class="page-link" href="<?php echo $new_url .'&pageno=1' ?>">First</a></li>
-                                    <li class="page-item <?php if($pageno <= 1){ echo 'disabled'; } ?>">
-                                        <a class="page-link" href="<?php if($pageno <= 1){ echo '#'; } else { echo $new_url ."&pageno=".($pageno - 1); } ?>">Prev</a>
-                                    </li>
-                                    <li class="page-item <?php if($pageno >= $total_pages){ echo 'disabled'; } ?>">
-                                        <a class="page-link" href="<?php if($pageno >= $total_pages){ echo '#'; } else { echo $new_url . "&pageno=".($pageno + 1); } ?>">Next</a>
-                                    </li>
-                                    <li class="page-item <?php if($pageno >= $total_pages){ echo 'disabled'; } ?>">
-                                        <a class="page-item"><a class="page-link" href="<?php echo $new_url .'&pageno=' . $total_pages; ?>">Last</a>
-                                    </li>
-                                </ul>
-<?php
-                            // Free result set
-                            mysqli_free_result($result);
-                        } else{
-                            echo "<p class='lead'><em>No records were found.</em></p>";
-                        }
-                    } catch (mysqli_sql_exception $e) {
-                        echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR: " . $e->getMessage() . "</div>";
-                    }
-
-                    if (file_exists(stream_resolve_include_path("extension.php"))){
-                        include("extension.php");
-                    }
-
-                    // Close connection
-                    mysqli_close($link);
-                    ?>
+    <div class="container-xxl py-5">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header clearfix">
+                    <h2 class="float-start">{TABLE_DISPLAY} Details 
+                        <span id='showfilter' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>▾</span>
+                        <span id='hidefilter' style='display:none;' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>▴</span>
+                    </h2>
+                    <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-end">Add New Record</a>
+                    <a href="../{TABLE_NAME}/index.php?target=empty<?php echo $get_param_ordering; ?>" class="btn btn-dark float-end me-2">Reset Filters</a>
+                    <a href="../{TABLE_NAME}/index.php<?php echo $get_param_search . $get_param_where; ?>" class="btn btn-primary float-end me-2">Reset Ordering</a>
+                    <a href="../{TABLE_NAME}/index.php?target=empty" class="btn btn-info float-end me-2">Reset View</a>
+                    <a href="javascript:history.back()" class="btn btn-secondary float-end me-2">Back</a>
                 </div>
+                {TABLE_COMMENT}
+                <div class="form-row">
+                    <form action="../{TABLE_NAME}/index.php" method="get">
+                    <div class="form-floating col-sm-3">
+                        <input type="text" id="quicksearch" class="form-control" placeholder="Search this table" name="search" value="<?php echo $search; ?>">
+                        <label for="quicksearch">Search this table</label>
+                    </div>  
+                    </form>
+                </div>
+                <div class="form-row mt-2 alert alert-light" id="advancedfilter"  style="display:none;">
+                    <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
+                    <p class="h3">Advanced Filters
+                        <input type="submit" class="btn btn-success btn-lg" name="target" value="Search">
+                    </p>
+                    {INDEX_FILTER} 
+                    </form>
+                </div>
+                <?php
+                try{
+                    $result = mysqli_query($link, $sql);
+                    if(mysqli_num_rows($result) > 0){
+                        $number_of_results = mysqli_fetch_assoc(mysqli_query($link, $count_pages))['count'];
+                        $total_pages = ceil($number_of_results / $no_of_records_per_page);
+                        echo "Sorting on $ordering_on <br>";
+                        echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
+
+                        echo "<table class='table table-bordered table-striped'>";
+                            echo "<thead class='table-primary'>";
+                                echo "<tr>";
+                                    {INDEX_TABLE_HEADERS}
+                                    echo "<th>Action</th>";
+                                echo "</tr>";
+                            echo "</thead>";
+                            echo "<tbody>";
+                            while($row = mysqli_fetch_array($result)){
+                                echo "<tr>";
+                                {INDEX_TABLE_ROWS}
+                                    echo "<td class='text-nowrap'>";
+                                        echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip'><i class='far fa-eye'></i></a>";
+                                        echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'><i class='far fa-edit'></i></a>";
+                                        echo "<a href='../{TABLE_NAME}/create.php?duplicate=". $row['{COLUMN_NAME}'] ."' title='Create a duplicate of this record' data-toggle='tooltip'><i class='fa fa-copy'></i></a>";
+                                        echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
+                                    echo "</td>";
+                                echo "</tr>";
+                            }
+                            echo "</tbody>";
+                        echo "</table>";
+?>
+                            <ul id="pagination" class="pagination fixed-bottom" align-right>
+                            <?php
+                                $new_url = preg_replace('/&?pageno=[^&]*/', '', $currenturl);
+                                ?>
+                                <li class="page-item"><a class="page-link" href="<?php echo $new_url .'&pageno=1' ?>">First</a></li>
+                                <li class="page-item <?php if($pageno <= 1){ echo 'disabled'; } ?>">
+                                    <a class="page-link" href="<?php if($pageno <= 1){ echo '#'; } else { echo $new_url ."&pageno=".($pageno - 1); } ?>">Prev</a>
+                                </li>
+                                <li class="page-item <?php if($pageno >= $total_pages){ echo 'disabled'; } ?>">
+                                    <a class="page-link" href="<?php if($pageno >= $total_pages){ echo '#'; } else { echo $new_url . "&pageno=".($pageno + 1); } ?>">Next</a>
+                                </li>
+                                <li class="page-item <?php if($pageno >= $total_pages){ echo 'disabled'; } ?>">
+                                    <a class="page-item"><a class="page-link" href="<?php echo $new_url .'&pageno=' . $total_pages; ?>">Last</a>
+                                </li>
+                            </ul>
+<?php
+                        // Free result set
+                        mysqli_free_result($result);
+                    } else{
+                        echo "<p class='lead'><em>No records were found.</em></p>";
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR: " . $e->getMessage() . "</div>";
+                }
+
+                if (file_exists(stream_resolve_include_path("extension.php"))){
+                    include("extension.php");
+                }
+
+                // Close connection
+                mysqli_close($link);
+                ?>
             </div>
         </div>
-    </section>
-{JS_REFS}
+    </div>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -279,41 +278,40 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
-<body>
-    <section class="pt-5">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-8 mx-auto">
-                    <div class="page-header">
-                        <h1>View Record</h1>
-                    </div>
-
-                     {RECORDS_READ_FORM}
-                    <p>
-                        <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
-                        <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{TABLE_ID}"]; ?>" class="btn btn-info">Duplicate</a>
-                        <a href="../{TABLE_NAME}/delete.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-warning">Delete</a>
-                        <a href="javascript:history.back()" class="btn btn-primary">Back</a>
-                    </p> 
-                    <?php
-                    {FOREIGN_KEY_REFS}
-
-                    if (file_exists(stream_resolve_include_path("extension.php"))){
-                        include("extension.php");
-                    }
-
-                    // Close connection
-                    mysqli_close($link);
-                    ?>
+<body class="bg-light">
+    <div class="container-lg bg-white py-5 shadow">
+        <div class="row">
+            <div class="col-md-7 mx-auto">
+                <div class="page-header">
+                    <h1>View Record</h1>
                 </div>
+                <div>
+                    {RECORDS_READ_FORM}
+                </div>
+                <div class="mt-3 mb-5">
+                    <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
+                    <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{TABLE_ID}"]; ?>" class="btn btn-info">Duplicate</a>
+                    <a href="../{TABLE_NAME}/delete.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-warning">Delete</a>
+                    <a href="javascript:history.back()" class="btn btn-primary">Back</a>
+                </div> 
+                <?php
+                {FOREIGN_KEY_REFS}
+
+                if (file_exists(stream_resolve_include_path("extension.php"))){
+                    include("extension.php");
+                }
+
+                // Close connection
+                mysqli_close($link);
+                ?>
             </div>
         </div>
-    </section>
-        <script type="text/javascript">
-            $(document).ready(function(){
-                $('[data-toggle="tooltip"]').tooltip();
-            });
-        </script>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
     </body>
 </html>
 EOT;
@@ -346,7 +344,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
             mysqli_stmt_execute($stmt);
         } catch (Exception $e) {
             error_log($e->getMessage());
-            $error = "<p class='font-weight-bold'>Er zijn nog verwijzingen naar dit record, zie de view pagina voor meer informatie:</p>";
+            $error = "<p class='fw-bold'>Er zijn nog verwijzingen naar dit record, zie de view pagina voor meer informatie:</p>";
             $error .= $e->getMessage();
         }
     
@@ -380,39 +378,37 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
-<body>
-    <section class="pt-5">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6 mx-auto">
-                    <div class="page-header">
-                        <h1>Delete Record</h1>
+<body class="bg-light">
+    <div class="container-lg bg-white py-5 shadow">
+        <div class="row">
+            <div class="col-md-7 mx-auto">
+                <div class="page-header">
+                    <h1>Delete Record</h1>
+                </div>
+                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $_GET["{TABLE_ID}"]; ?>" method="post">
+                <?php print_error_if_exists($error); ?>
+                    <div class="alert alert-danger fade-in">
+                        <input type="hidden" name="{TABLE_ID}" value="<?php echo trim($_GET["{TABLE_ID}"]); ?>"/>
+                        <p>Are you sure you want to delete this record?</p><br>
+                        <p>
+                            <input type="submit" value="Yes" class="btn btn-danger">
+                            <a href="javascript:history.back()" class="btn btn-secondary">No</a>
+                        </p>
                     </div>
-                    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $_GET["{TABLE_ID}"]; ?>" method="post">
-                    <?php print_error_if_exists($error); ?>
-                        <div class="alert alert-danger fade-in">
-                            <input type="hidden" name="{TABLE_ID}" value="<?php echo trim($_GET["{TABLE_ID}"]); ?>"/>
-                            <p>Are you sure you want to delete this record?</p><br>
-                            <p>
-                                <input type="submit" value="Yes" class="btn btn-danger">
-                                <a href="javascript:history.back()" class="btn btn-secondary">No</a>
-                            </p>
-                        </div>
-                    </form>
-                    <p>
-                        <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-info">View</a>
-                        <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
-                        <a href="javascript:history.back()" class="btn btn-primary">Back</a>
-                    </p>
+                </form>
+                <div class="mt-3 mb-5">
+                    <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-info">View</a>
+                    <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
+                    <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                 </div>
             </div>
         </div>
-        <?php
-            if (file_exists(stream_resolve_include_path("extension.php"))){
-                include("extension.php");
-            }
-        ?>
-    </section>
+    </div>
+    <?php
+        if (file_exists(stream_resolve_include_path("extension.php"))){
+            include("extension.php");
+        }
+    ?>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -471,34 +467,34 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
-<body>
-    <section class="pt-5">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6 mx-auto">
-                    <div class="page-header">
-                        <h2>Create Record</h2>
-                    </div>
-                    <?php print_error_if_exists($error); print_message_if_exists($message); ?>
-                    <p>Please fill this form and submit to add a record to the database.</p>
-                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-
-                        {CREATE_HTML}
-
-                        <input type="submit" class="btn btn-primary" value="Create">
-                        <input type="submit" class="btn btn-info" name='another' value="Create another">
-                        <a href="../{TABLE_NAME}/index.php" class="btn btn-secondary">Cancel</a>
-                    </form>
-                    <p> * field can not be left empty </p>
+<body class="bg-light">
+    <div class="container-lg bg-white py-5 shadow">
+        <div class="row">
+            <div class="col-md-7 mx-auto">
+                <div class="page-header">
+                    <h2>Create Record</h2>
                 </div>
+                <?php print_error_if_exists($error); print_message_if_exists($message); ?>
+                <p>Please fill this form and submit to add a record to the database.</p>
+                <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                <div>
+                    {CREATE_HTML}
+                </div>
+                <div class="mt-3 mb-3">
+                    <input type="submit" class="btn btn-primary" value="Create">
+                    <input type="submit" class="btn btn-info" name='another' value="Create another">
+                    <a href="../{TABLE_NAME}/index.php" class="btn btn-secondary">Cancel</a>
+                </div>
+                </form>
+                <p> * field can not be left empty </p>
             </div>
         </div>
-        <?php
-            if (file_exists(stream_resolve_include_path("extension.php"))){
-                include("extension.php");
-            }
-        ?>
-    </section>
+    </div>
+    <?php
+        if (file_exists(stream_resolve_include_path("extension.php"))){
+            include("extension.php");
+        }
+    ?>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -594,43 +590,40 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
     {JS_REFS}
 </head>
 <?php require_once('../navbar.php'); ?>
-<body>
-    <section class="pt-5">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6 mx-auto">
-                    <div class="page-header">
-                        <h2>Update Record</h2>
-                    </div>
-                    <?php print_error_if_exists($error); ?>
-                    <p>Please edit the input values and submit to update the record.</p>
-                    <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
-
-                        {CREATE_HTML}
-
-                        <input type="hidden" name="{COLUMN_ID}" value="<?php echo ${COLUMN_ID}; ?>"/>
-                        <p>
-                            <input type="submit" class="btn btn-primary" value="Submit">
-                            <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
-                        </p>
-                        <p>
-                            <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-primary">View</a>
-                            <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{TABLE_ID}"]; ?>" class="btn btn-info">Duplicate</a>
-                            <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-warning">Delete</a>
-                            <a href="javascript:history.back()" class="btn btn-primary">Back</a>
-                        </p>
-                        <p> * field can not be left empty </p>
-                    </form>
+<body class="bg-light">
+    <div class="container-lg bg-white py-5 shadow">
+        <div class="row">
+            <div class="col-md-7 mx-auto">
+                <div class="page-header">
+                    <h2>Update Record</h2>
                 </div>
+                <?php print_error_if_exists($error); ?>
+                <p>Please edit the input values and submit to update the record.</p>
+                <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
+
+                    {CREATE_HTML}
+
+                    <input type="hidden" name="{COLUMN_ID}" value="<?php echo ${COLUMN_ID}; ?>"/>
+                    <p>
+                        <input type="submit" class="btn btn-primary" value="Submit">
+                        <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+                    </p>
+                    <p> * field can not be left empty </p>
+                    <div class="mt-5 mb-5">
+                        <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-primary">View</a>
+                        <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{COLUMN_ID}"]; ?>" class="btn btn-info">Duplicate</a>
+                        <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-warning">Delete</a>
+                        <a href="javascript:history.back()" class="btn btn-primary">Back</a>
+                    </div>
+                </form>
             </div>
         </div>
-        <?php
-            if (file_exists(stream_resolve_include_path("extension.php"))){
-                include("extension.php");
-            }
-        ?>
-    </section>
-</body>
+    </div>
+    <?php
+        if (file_exists(stream_resolve_include_path("extension.php"))){
+            include("extension.php");
+        }
+    ?>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -650,21 +643,19 @@ $errorfile = <<<'EOT'
     {CSS_REFS}
     {JS_REFS}
 </head>
-<body>
-    <section class="pt-5">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="page-header">
-                        <h1>Invalid Request</h1>
-                    </div>
-                    <div class="alert alert-danger fade-in">
-                        <p>Sorry, you've made an invalid request. Please <a href="index.php" class="alert-link">go back</a> and try again.</p>
-                    </div>
+<body class="bg-light">
+    <div class="container-lg bg-white py-5 shadow">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header">
+                    <h1>Invalid Request</h1>
+                </div>
+                <div class="alert alert-danger fade-in">
+                    <p>Sorry, you've made an invalid request. Please <a href="index.php" class="alert-link">go back</a> and try again.</p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 </body>
 </html>
 EOT;
@@ -692,23 +683,26 @@ EOT;
 
 $navbarfile = <<<'EOT'
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand nav-link disabled" href="#">{APP_NAME}</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Select Page
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-        {TABLE_BUTTONS}                                                                                                                                                                                                     
-        <!-- TABLE_BUTTONS -->
-        </div>
-      </li>
-    </ul>
+  <div class="container-fluid">
+    <span class="navbar-brand" href="#">
+      {APP_NAME}
+    </span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Select page
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            {TABLE_BUTTONS}                                                                                                                                                                                           
+            <!-- TABLE_BUTTONS -->
+          </ul>
+        </li>
+      </ul>
+    </div>
   </div>
 </nav>
 EOT;

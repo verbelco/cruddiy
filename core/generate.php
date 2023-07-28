@@ -29,17 +29,29 @@ $forced_deletion = false;
 $buttons_delimiter = '<!-- TABLE_BUTTONS -->';
 $preview_columns = array();
 
-//$CSS_REFS = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">';
-$CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
-<link rel="stylesheet" href="../css/bootstrap.min.css" type="text/css"/>';
+// $CSS_REFS = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">';
+// $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
+// <link rel="stylesheet" href="../css/bootstrap.min.css" type="text/css"/>';
 
 // $JS_REFS = '<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 // <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 // <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>';
-$JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>';
-    
+// $JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
+// <script src="../js/popper.min.js"></script>
+// <script src="../js/bootstrap.min.js"></script>';
+
+
+// New bootstrap version
+// $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
+// <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">';
+$CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
+<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text/css"/>';
+
+// $JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
+// <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+// <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>';
+$JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>';
 
 function column_type($columnname){
     switch ($columnname) {
@@ -175,7 +187,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
                 } else {
                     echo '- Appending '.$start_page_link.'<br>';
                     array_push($navbarfile_links[1], $start_page_link);
-                    $button_string = "\t".'<a class="dropdown-item" href="'.$start_page_link.'">'.$td.'</a>'."\n\t".$buttons_delimiter;
+                    $button_string = "\t".'<li><a class="dropdown-item" href="'.$start_page_link.'">'.$td.'</a></i>'."\n\t".$buttons_delimiter;
                     $step0 = str_replace($buttons_delimiter, $button_string, $navbarfile);
                     $step1 = str_replace("{APP_NAME}", $appname, $step0 );
                     if (!file_put_contents($startpage_filename, $step1, LOCK_EX)) {
@@ -618,7 +630,7 @@ function generate($postdata) {
 
                     if (!empty($columns['tablecomment'])) {
                         $tablecomment = '<div class="clearfix">
-                            <p class="float-left font-italic font-weight-light text-secondary">'. $columns["tablecomment"] .'</p>
+                            <p class="float-start fst-italic fw-light text-secondary">'. $columns["tablecomment"] .'</p>
                         </div>';
                     }
 
@@ -893,7 +905,7 @@ function generate($postdata) {
                     }
 
                     // Create the layout for advanced filters
-                    $temp = '<div class="form-group row"><label class="col-sm-2 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>';
+                    $temp = '<div class="form-group row my-1"><label class="col-sm-2 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>';
                     foreach($index_filter as $operand => $input)
                     {
                         $temp .= '<div class="col-sm-3">'. $input ."</div>\n";
@@ -902,13 +914,13 @@ function generate($postdata) {
                     $index_filters[] = $temp;
 
 
-                    $create_html [] = '<div class="form-group row">
+                    $create_html [] = '<div class="form-group row my-2">
                     <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
-                    <div class="col-sm-7">'. $column_input .'</div></div>';
+                    <div class="col">'. $column_input .'</div></div>';
                     
-                    $read_records .= '<div class="form-group row">
-                        <div class="col-sm-3 font-weight-bold">'.$columndisplay.'</div>
-                        <div class="col-sm-7">'. $column_value .'</div></div>';
+                    $read_records .= '<div class="form-group row my-3">
+                        <div class="col-sm-4 fw-bold">'.$columndisplay.'</div>
+                        <div class="col">'. $column_value .'</div></div>';
                      
                     // OLD LAYOUT    
                     // $create_html [] = '<div class="form-group">
