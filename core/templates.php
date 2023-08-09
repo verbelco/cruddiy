@@ -76,18 +76,6 @@ $indexfile = <<<'EOT'
     <title>{APP_NAME}</title>
     {CSS_REFS}
     {JS_REFS}
-    <script src="https://kit.fontawesome.com/6b773fe9e4.js" crossorigin="anonymous"></script>
-    <style type="text/css">
-        .page-header h2{
-            margin-top: 0;
-        }
-        table tr td:last-child a{
-            margin-right: 5px;
-        }
-        body {
-            font-size: 14px;
-        }
-    </style>
 </head>
 <?php require_once('../navbar.php'); ?>
 <body>
@@ -114,7 +102,7 @@ $indexfile = <<<'EOT'
                     </div>  
                     </form>
                 </div>
-                <div class="form-row mt-2 alert alert-light" id="advancedfilter"  style="display:none;">
+                <div class="form-row mt-2 form-control" id="advancedfilter" style="display:none;">
                     <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
                     <p class="h3">Advanced Filters
                         <input type="submit" class="btn btn-success btn-lg" name="target" value="Search">
