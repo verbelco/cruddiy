@@ -131,9 +131,9 @@ $indexfile = <<<'EOT'
                                 echo "<tr>";
                                 {INDEX_TABLE_ROWS}
                                     echo "<td class='text-nowrap'>";
-                                        echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip'><i class='far fa-eye'></i></a>";
-                                        echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'><i class='far fa-edit'></i></a>";
-                                        echo "<a href='../{TABLE_NAME}/create.php?duplicate=". $row['{COLUMN_NAME}'] ."' title='Create a duplicate of this record' data-toggle='tooltip'><i class='fa fa-copy'></i></a>";
+                                        echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip' class='me-1'><i class='far fa-eye'></i></a>";
+                                        echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'class='me-1'><i class='far fa-edit'></i></a>";
+                                        echo "<a href='../{TABLE_NAME}/create.php?duplicate=". $row['{COLUMN_NAME}'] ."' title='Create a duplicate of this record' data-toggle='tooltip' class='me-1'><i class='fa fa-copy'></i></a>";
                                         echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
                                     echo "</td>";
                                 echo "</tr>";
