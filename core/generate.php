@@ -1,5 +1,4 @@
 <?php
-
 $total_postvars = count($_POST, COUNT_RECURSIVE);
 $max_postvars = ini_get("max_input_vars"); 
 if ($total_postvars >= $max_postvars) {
@@ -12,6 +11,9 @@ if ($total_postvars >= $max_postvars) {
 
 require "app/config.php";
 require "templates.php";
+
+require "save_config.php";
+
 $tablename = '';
 $tabledisplay = '';
 $tablecomment = '';
@@ -35,10 +37,12 @@ $preview_columns = array();
 
 // $JS_REFS = '<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 // <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-// <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>';
+// <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+// <script src="https://kit.fontawesome.com/6b773fe9e4.js" crossorigin="anonymous"></script>';
 // $JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
 // <script src="../js/popper.min.js"></script>
-// <script src="../js/bootstrap.min.js"></script>';
+// <script src="../js/bootstrap.min.js"></script>
+// <script src="https://kit.fontawesome.com/6b773fe9e4.js" crossorigin="anonymous"></script>';
 
 
 // New bootstrap version
@@ -51,7 +55,8 @@ $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
 // <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
 // <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>';
 $JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
-<script src="../js/bootstrap.bundle.min.js"></script>';
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/emojis.js"></script>';
 
 function column_type($columnname){
     switch ($columnname) {
@@ -470,7 +475,7 @@ function generate($postdata) {
             $max = count_index_colums($key)+1;
             $total_columns = count($_POST[$key]);
             $total_params = count($_POST[$key]);
-            $tablename = $_POST[$key][0]['tablename'];
+            $tablename = $_POST[$key][array_keys($_POST[$key])[0]]['tablename'];
 
             // Find foreign key references to this table
             $foreign_key_references = "";
@@ -1010,7 +1015,13 @@ function generate($postdata) {
     <div class="container bg-white py-5 shadow">
         <div class="row">
             <div class="col-md-12 mx-auto px-5">
-                <?php generate($_POST); ?>
+                <?php 
+                if(isset($response)){
+                    echo "<p class='alert alert-primary'>$response</p>";
+                }
+
+                generate($_POST);
+                ?>
                 <hr>
                 <br>Your app has been created! It is completely self contained in the /app folder. You can move this folder anywhere on your server.<br><br>
                 <a href="app/index.php" target="_blank" rel="noopener noreferrer">Go to your app</a> (this will open your app in a new tab).<br><br>

@@ -1,3 +1,12 @@
+<?php
+
+include "app/config.php";
+$config_folder = "temp/";
+if (!is_dir($config_folder)) {
+    mkdir($config_folder, 0777, true);
+}
+
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -14,10 +23,26 @@
                 <div class="text-center">
                     <h4 class="h1 border-bottom pb-2">All Available Columns</h4>
                 </div>
+                <div class="row">
+                    <div class="col-3 text-right">
+                        <label for="config_select">Choose a saved config</label>
+                    </div>
+                    <div class="col-5 custom-control">
+                        <select class="custom-select" id="config_select" name="config_id">
+                            <option selected></option>
+                            <?php
+                            $configs = scandir($config_folder);
+                            unset($configs[0]);
+                            unset($configs[1]);
 
-                <div class="col-md-10 mx-atuo text-right pr-5 ml-4">
+                            foreach ($configs as $k => $fname) {
+                                $name = pathinfo($fname, PATHINFO_FILENAME);
+                                echo "<option value='$name'>$name</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
                 </div>
-
                 <div class="mx-atuo text-right ml-4">
                     <input type="checkbox" id="checkall-1" checked>
                     <label for="checkall-1">Check/uncheck all</label>
@@ -25,13 +50,10 @@
                     <input type="checkbox" id="checkall-2" checked>
                     <label for="checkall-2">Check/uncheck all</label>
                 </div>
-
-                <form class="form-horizontal" action="generate.php" method="post">
-                    <fieldset>
+                
+                <form class="form-horizontal" action="generate.php" id="cruddiy_data" method="post">
+                    <fieldset>                  
                         <?php
-
-                        include "app/config.php";
-
                         function get_primary_keys($table){
                             global $link;
                             $sql = "SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'";
@@ -103,7 +125,6 @@
                         {
                             foreach ( $_POST['table'] as $table )
                             {
-                                $i=0;
                                 if (isset($table['tablecheckbox']) && $table['tablecheckbox'] == 1) {
                                     $tablename = $table['tablename'];
                                     $tablecomment = $table['tablecomment'];
@@ -120,10 +141,11 @@
                                         $column_type = get_col_types($tablename,$column[0]);
                                         $column_comment = get_col_comments($tablename,$column[0]);
                                         $column_nullable = get_col_nullable($tablename,$column[0]);
+                                        $columnname = $column[0];
 
                                         if (in_array ("$column[0]", $primary_keys)) {
                                             $primary = "🔑";
-                                            echo '<input type="hidden" name="'.$tablename.'columns['.$i.'][primary]" value="'.$primary.'"/>';
+                                            echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][primary]" value="'.$primary.'"/>';
                                         }
                                         else {
                                             $primary = "";
@@ -131,7 +153,7 @@
 
                                         if (in_array ("$column[0]", $auto_keys)) {
                                             $auto = "🔒";
-                                            echo '<input type="hidden" name="'.$tablename.'columns['.$i.'][auto]" value="'.$auto.'"/>';
+                                            echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][auto]" value="'.$auto.'"/>';
                                         }
                                         else {
                                             $auto = "";
@@ -139,7 +161,7 @@
 
                                         if (in_array ("$column[0]", $foreign_keys)) {
                                             $fk = "🛅";
-                                            echo '<input type="hidden" name="'.$tablename.'columns['.$i.'][fk]" value="'.$fk.'"/>';
+                                            echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][fk]" value="'.$fk.'"/>';
                                         }
                                         else {
                                             $fk = "";
@@ -154,27 +176,26 @@
 
                                         echo "<span data-toggle='tooltip' data-placement='top' title='$column_comment'>";
                                         echo '<div class="row align-items-center mb-2">
-                                    <div class="col-2 text-right"
+                                    <div class="col-2 text-right">
                                         <label class="col-form-label" for="'.$tablename.'">'. $primary . $auto . $fk . $nb . $column[0] . ' </label>
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][tablename]" value="'.$tablename.'"/>
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][tabledisplay]" value="'.$tabledisplay.'"/>
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][tablecomment]" value="'.$tablecomment.'"/>
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][columnname]" value="'.$column[0].'"/>
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][columntype]" value="'.$column_type.'"/>
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][columncomment]" value="'.$column_comment.'"/>
-                                        <input type="hidden" name="'.$tablename.'columns['.$i.'][columnnullable]" value="'.$column_nullable.'"/>
-                                        <input id="textinput_'.$tablename. '-'.$i.'"name="'. $tablename. 'columns['.$i.'][columndisplay]" type="text" placeholder="Display field name in frontend" class="form-control rounded-0">
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][tablename]" value="'.$tablename.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][tabledisplay]" value="'.$tabledisplay.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][tablecomment]" value="'.$tablecomment.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columnname]" value="'.$columnname.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columntype]" value="'.$column_type.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columncomment]" value="'.$column_comment.'"/>
+                                        <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columnnullable]" value="'.$column_nullable.'"/>
+                                        <input id="textinput_'.$tablename. '-'.$columnname.'"name="'. $tablename. 'columns['.$columnname.'][columndisplay]" type="text" placeholder="Display field name in frontend" class="form-control rounded-0">
                                     </div>
                                     <div class="col-md-2">
-                                        <input type="checkbox"  name="'.$tablename.'columns['.$i.'][columnvisible]" id="checkboxes-'.$checked_tables_counter.'-'.$i.'" value="1" checked>
-                                <label for="checkboxes-'.$checked_tables_counter.'-'.$i.'">Visible in overview?</label></div>
+                                        <input type="checkbox"  name="'.$tablename.'columns['.$columnname.'][columnvisible]" id="checkboxes-'.$checked_tables_counter.'-'.$columnname.'" value="1" checked>
+                                <label for="checkboxes-'.$checked_tables_counter.'-'.$columnname.'">Visible in overview?</label></div>
                                     <div class="col-md-2">
-                                        <input type="checkbox"  name="'.$tablename.'columns['.$i.'][columninpreview]" id="checkboxes-'.$checked_tables_counter.'-'.$i.'-2" value="1" checked>
-                                <label for="checkboxes-'.$checked_tables_counter.'-'.$i.'-2">Visible in preview?</label></div>
+                                        <input type="checkbox"  name="'.$tablename.'columns['.$columnname.'][columninpreview]" id="checkboxes-'.$checked_tables_counter.'-'.$columnname.'-2" value="1" checked>
+                                <label for="checkboxes-'.$checked_tables_counter.'-'.$columnname.'-2">Visible in preview?</label></div>
                      </div></span>';
-                                        $i++;
                                     }
                                     $checked_tables_counter++;
                                 }
@@ -229,6 +250,32 @@ $(document).ready(function () {
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 });
+
+<?php echo "const config_folder = '$config_folder';";
+?>
+
+    // Switch configs bij generic peilstanden
+    function fill_config() {
+        config = $("#config_select").val();
+        $.ajax({
+            cache: false,
+            url: config_folder + config + ".json",
+            dataType: "json",
+            success: function (data) {
+                var inputs = $('#cruddiy_data input,select');
+
+                inputs.prop('checked', false);
+                $.each(data, function (key, value) {
+                    inputs.filter(function () {
+                        return key == this.name;
+                    }).val(value).prop('checked', true);
+                });
+
+            }
+        });
+    }
+    $("#config_select").change(fill_config);
+
 </script>
 </body>
 </html>
