@@ -21,17 +21,19 @@
 - [x] Move all config/validation to the top.?
 - [ ] Submit, view, back at constant postions.
 - [ ] Layout more efficient.
+- [ ] Flexible columns on the index
+- [ ] Bulk updating of records.
 - [x] Default values from SQL as defaults in create.
+- [x] Remember cruddiy configuration
 - [x] Show SQL Table comments.
 - [x] Pre-fill create form, to duplicate records.
-- [ ] Bulk updating of records.
 - [x] Advanced searching (remember search parameters) (Mail 8 mei van Klaas).
 - [x] Advanced Ordering.
 - [x] Split files into folder of the table name.
 - [ ] Extend the generation form with a large table, allowing for more options.
 - [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
 - [x] Update bootstrap to the newest version.
-- [ ] Multiple ordering displayed with 1st column, 2nd column.
+- [x] Multiple ordering displayed with 1st column, 2nd column.
 - [x] Extend the previews recursively.
 - [x] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
 - [x] Add a possibility for custom extensions to the view pages.
