@@ -389,14 +389,14 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
                     <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
                     <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                 </div>
+                <?php
+                if (file_exists(stream_resolve_include_path("extension.php"))){
+                    include("extension.php");
+                }
+                ?>
             </div>
         </div>
     </div>
-    <?php
-        if (file_exists(stream_resolve_include_path("extension.php"))){
-            include("extension.php");
-        }
-    ?>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -475,14 +475,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 </div>
                 </form>
                 <p> * field can not be left empty </p>
+                <?php
+                if (file_exists(stream_resolve_include_path("extension.php"))) {
+                    include("extension.php");
+                }
+                ?>
             </div>
         </div>
     </div>
-    <?php
-        if (file_exists(stream_resolve_include_path("extension.php"))){
-            include("extension.php");
-        }
-    ?>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
@@ -604,14 +604,14 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
                         <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                     </div>
                 </form>
+                <?php
+                if (file_exists(stream_resolve_include_path("extension.php"))) {
+                    include("extension.php");
+                }
+                ?>
             </div>
         </div>
     </div>
-    <?php
-        if (file_exists(stream_resolve_include_path("extension.php"))){
-            include("extension.php");
-        }
-    ?>
     <script type="text/javascript">
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip();
