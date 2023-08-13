@@ -537,7 +537,6 @@ function generate($postdata) {
                             $columndisplay = "<span data-toggle='tooltip' data-placement='top' title='" . $columns['columncomment'] . "'>" . $columndisplay . '</span>';
                         }
 
-                        $columns_available [] = "$columnname";
                         $index_sql_search [] = "`$tablename`.`$columnname`";
                         $index_table_headers .= '[$get_param_order, $arrow] = get_order_parameters($order_param_array, "'.$columnname.'");'."\n\t\t\t\t\t\t\t\t\t\t";
                         if (isset($columns['primary'])){
@@ -593,6 +592,7 @@ function generate($postdata) {
                 if ($j < $total_columns) {
 
                     $index_filter = array();
+                    $columns_available [] = $columns['columnname'];
                     $type = column_type($columns['columntype']);
 
                     if (isset($columns['columndisplay'])){
