@@ -38,6 +38,7 @@
 - [x] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
 - [x] Add a possibility for custom extensions to the view pages.
 - [ ] Automatic NAV-bar generation is broken.
+- [ ] For delete, check for external references before deletion.
 
 
 ## Setup

@@ -380,7 +380,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
                         <p>Are you sure you want to delete this record?</p><br>
                         <p>
                             <input type="submit" value="Yes" class="btn btn-danger">
-                            <a href="javascript:history.back()" class="btn btn-secondary">No</a>
+                            <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">No</a>
                         </p>
                     </div>
                 </form>
