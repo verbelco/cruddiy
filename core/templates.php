@@ -122,6 +122,10 @@ $indexfile = <<<'EOT'
                         echo "<table class='table table-bordered table-striped'>";
                             echo "<thead class='table-primary'>";
                                 echo "<tr>";
+                                    [$get_param_order, $arrow] = get_order_parameters($order_param_array, "{COLUMN_ID}");
+                                    if ($default_ordering) {
+                                        unset($order_param_array["{COLUMN_ID}"]);
+                                    }
                                     {INDEX_TABLE_HEADERS}
                                     echo "<th>Action</th>";
                                 echo "</tr>";

@@ -538,10 +538,12 @@ function generate($postdata) {
                         }
 
                         $index_sql_search [] = "`$tablename`.`$columnname`";
-                        $index_table_headers .= '[$get_param_order, $arrow] = get_order_parameters($order_param_array, "'.$columnname.'");'."\n\t\t\t\t\t\t\t\t\t\t";
-                        if (isset($columns['primary'])){
-                            $index_table_headers .= 'if($default_ordering) {unset($order_param_array["'.$columnname.'"]);}'."\n\t\t\t\t\t\t\t\t\t\t";
+                        
+                        // For the primary key, this information gets filled in by the template.
+                        if (!isset($columns['primary'])){
+                            $index_table_headers .= '[$get_param_order, $arrow] = get_order_parameters($order_param_array, "'.$columnname.'");'."\n\t\t\t\t\t\t\t\t\t\t";
                         }
+                        
                         $index_table_headers .= 'echo "<th><a href=\'$get_param_search$get_param_where$get_param_order\'>'.$columndisplay.'$arrow</a></th>";'."\n\t\t\t\t\t\t\t\t\t\t";
                         
                         // Display date in locale format
