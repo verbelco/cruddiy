@@ -39,6 +39,7 @@
 - [x] Add a possibility for custom extensions to the view pages.
 - [ ] Automatic NAV-bar generation is broken.
 - [ ] For delete, check for external references before deletion.
+- [ ] Filters should be more advanced (null, filter on previews)
 
 
 ## Setup
