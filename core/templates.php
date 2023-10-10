@@ -120,7 +120,7 @@ $indexfile = <<<'EOT'
                         echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
 
                         echo "<table class='table table-bordered table-striped'>";
-                            echo "<thead class='table-primary'>";
+                            echo "<thead class='table-primary sticky-top'>";
                                 echo "<tr>";
                                     [$get_param_order, $arrow] = get_order_parameters($order_param_array, "{COLUMN_ID}");
                                     if ($default_ordering) {
