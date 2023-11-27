@@ -56,7 +56,8 @@ $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
 // <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>';
 $JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
 <script src="../js/bootstrap.bundle.min.js"></script>
-<script src="../js/emojis.js"></script>';
+<script src="../js/emojis.js"></script>
+<script src="../js/custom.js"></script>';
 
 function column_type($columnname){
     switch ($columnname) {
