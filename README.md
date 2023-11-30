@@ -1,4 +1,8 @@
-# Crud forms generator for WaterWeb
+# CRUD forms generator for WaterWeb
+This repository contains the CRUD generator that is used to generate pages in WaterWeb. It is a fork from [cruddiy](https://github.com/jan-vandenberg/cruddiy/) by jan-vandenberg.
+
+Since only one person is working on this repository, two checklist are used to show what features / bugs are worked on and also what features are implemented. 
+I have no intention of merging this back into the original repository, since the differences have become too big.
 
 ## New features compared to cruddiy
 - [x] Show Column Comments from SQL as Tooltips for the column name.
@@ -11,14 +15,15 @@
 - [x] Abstract the date view using a helper function.
 - [x] Fix PHP variables names with invalid characters, also escape SQL queries with `` to allow for all possible names.
 - [x] Add support for nullable columns.
-- [ ] Gebruik valuelist/datalist ipv select bij grote tabellen
 - [x] Make css/js files choosable
 - [x] Generate enum select statically at creation.
 - [x] Replace 0/1 with True False
 - [x] Create an abstraction for the html syntax of columns in the read, edit and create pages.
+- [x] Save the configuration (column names, checked checkboxes, etc) that were used to generate cruddiy last time.
 
 ## TODO
 - [x] Move all config/validation to the top.?
+- [ ] Gebruik valuelist/datalist ipv select bij grote tabellen
 - [ ] Submit, view, back at constant postions.
 - [ ] Layout of the create form more efficient.
 - [ ] Flexible columns on the index (Let the user choose which columns of the table are visible)
