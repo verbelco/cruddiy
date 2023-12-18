@@ -79,6 +79,9 @@ function column_type($columnname){
         case (preg_match("/decimal/i", $columnname) ? true : false) :
             return 6;
         break;
+        case (preg_match("/float/i", $columnname) ? true : false) :
+            return 6;
+        break;
         case (preg_match("/datetime/i", $columnname) ? true : false) :
             return 8;
         break;
