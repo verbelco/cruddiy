@@ -11,7 +11,7 @@ if ($total_postvars >= $max_postvars) {
 
 require "app/config.php";
 require "templates.php";
-
+require_once "helpers.php";
 require "save_config.php";
 
 $tablename = '';
@@ -538,7 +538,7 @@ function generate($postdata) {
                         }
 
                         if (!empty($columns['columncomment'])){
-                            $columndisplay = "<span data-toggle='tooltip' data-placement='top' title='" . $columns['columncomment'] . "'>" . $columndisplay . '</span>';
+                            $columndisplay = "<span data-toggle='tooltip' data-placement='top' data-bs-html='true' title=". prepare_text_for_tooltip($columns['columncomment']) .">" . $columndisplay . '</span>';
                         }
 
                         $index_sql_search [] = "`$tablename`.`$columnname`";
@@ -616,7 +616,7 @@ function generate($postdata) {
                     $columndefault_val = get_default_value($columns['tablename'], $columns['columnname']);
 
                     if (!empty($columns['columncomment'])){
-                        $columndisplay = "<span data-toggle='tooltip' data-placement='top' title='" . $columns['columncomment'] . "'>" . $columndisplay . '</span>';
+                        $columndisplay = "<span data-toggle='tooltip' data-placement='top' data-bs-html='true' title=". prepare_text_for_tooltip($columns['columncomment']) .">" . $columndisplay . '</span>';
                     }
                     
                     if (!empty($columns['auto'])){

@@ -1,6 +1,7 @@
 <?php
 
 include "app/config.php";
+include "helpers.php";
 $config_folder = "temp/";
 if (!is_dir($config_folder)) {
     mkdir($config_folder, 0777, true);
@@ -174,7 +175,7 @@ if (!is_dir($config_folder)) {
                                             $nb = "";
                                         }
 
-                                        echo "<span data-toggle='tooltip' data-placement='top' title='$column_comment'>";
+                                        echo "<span data-toggle='tooltip' data-placement='top' data-bs-html=\"true\" title=" . prepare_text_for_tooltip($column_comment) . ">";
                                         echo '<div class="row align-items-center mb-2">
                                     <div class="col-2 text-right">
                                         <label class="col-form-label" for="'.$tablename.'">'. $primary . $auto . $fk . $nb . $column[0] . ' </label>
