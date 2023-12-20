@@ -5,20 +5,37 @@ $indexfile = <<<'EOT'
     // Include config file
     require_once "../config.php";
     require_once "../helpers.php";
+    require_once "../bulk_updates.php";
 
     //Get current URL and parameters for correct pagination
     $script   = $_SERVER['SCRIPT_NAME'];
     $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
     $currenturl = $domain. $script . '?' . $parameters;
 
-    //Pagination
+    $columns = array('{COLUMNS}');
+
+    // Handle bulk updates
+    if (isset($_POST['target']) && in_array($_POST['target'], ['Update', 'Update_all', 'Delete', 'Delete_all'])) {
+        $ids = str_contains($_POST['target'], 'all') ? explode(';', $_POST['all_ids']) : $_POST['bulk-update'];
+        $values = array_intersect_key($_POST, array_flip($columns));
+
+        if(is_array($ids) && count($ids) > 0){
+            if(str_contains($_POST['target'], 'Update') && count($values) > 0){
+                $result_html = bulk_update_crud("{TABLE_NAME}", "{COLUMN_ID}", $values, $ids);
+            } else if(str_contains($_POST['target'], 'Delete')){
+                $result_html = bulk_delete_crud("{TABLE_NAME}", "{COLUMN_ID}", $ids);
+            }
+        }
+    }
+
+    // Pagination
     if (isset($_GET['pageno'])) {
         $pageno = $_GET['pageno'];
     } else {
         $pageno = 1;
     }
 
-    //$no_of_records_per_page is set on the index page. Default is 10.
+    // $no_of_records_per_page is set on the index page. Default is 10.
     $offset = ($pageno-1) * $no_of_records_per_page;
 
     $total_pages_sql = "SELECT COUNT(*) FROM `{TABLE_NAME}`";
@@ -26,12 +43,11 @@ $indexfile = <<<'EOT'
     $total_rows = mysqli_fetch_array($result)[0];
     $total_pages = ceil($total_rows / $no_of_records_per_page);
 
-    //Column sorting on column name
-    $columns = array('{COLUMNS}');
+    // Column sorting on column name
     [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
     [$get_param_ordering, $temp] = get_order_parameters($order_param_array);
 
-    //Generate WHERE statements for param
+    // Generate WHERE statements for param
     $where_columns = array_intersect_key($_GET, array_flip($columns));
     $filter = create_sql_filter_array($where_columns);
 
@@ -111,6 +127,11 @@ $indexfile = <<<'EOT'
                     </div>  
                     </form>
                 </div>
+                <?php
+                    if(!empty($result_html)){
+                        echo "<div class='alert alert-primary my-3'>$result_html</div>";
+                    }
+                ?>
                 <div class="my-2">                
                     <ul class="nav nav-tabs nav-fill subnav">
                         <li class="nav-item">
@@ -145,7 +166,6 @@ $indexfile = <<<'EOT'
                                 <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete">Delete</button>
                                 <button type="submit" class="btn btn-outline-warning btn-lg" name="target" value="Delete_all">Delete all <?php echo $number_of_results;?> records</button>
                             </div>
-                            <input type="hidden" name="all_ids" value="<?php echo $all_ids;?>">
                         </form>
                     </div>
                 </div>
@@ -162,6 +182,7 @@ $indexfile = <<<'EOT'
                                 echo "<tr>";
                                     echo '<th class="text-center" title="Select all" data-toggle="tooltip" style="display:none;">
                                         Bulk updates <input type="checkbox" id="select_all_checkboxes">
+                                        <input type="hidden" form="bulkupdatesform" name="all_ids" value="'. $all_ids .'">
                                     </th>';
                                     [$get_param_order, $arrow] = get_order_parameters($order_param_array, "{COLUMN_ID}");
                                     if ($default_ordering) {
