@@ -48,8 +48,8 @@ $preview_columns = array();
 // New bootstrap version
 // $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
 // <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">';
-$CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
-<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text/css"/>';
+$CSS_REFS = '<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text/css"/>
+<link rel="stylesheet" href="../css/style.css" type="text/css"/>';
 
 // $JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
 // <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
@@ -210,7 +210,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 }
 
 
-function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$index_filter,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
+function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$index_filter, $bulk_update_form,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
     global $indexfile;
     global $appname;
     global $CSS_REFS;
@@ -233,7 +233,8 @@ function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_he
     $step10 = str_replace("{JOIN_COLUMNS}", $join_columns, $step9 );
     $step11 = str_replace("{JOIN_CLAUSES}", $join_clauses, $step10 ); 
     $step12 = str_replace("{INDEX_FILTER}", $index_filter, $step11 ); 
-    if (!file_put_contents("app/$tablename/index.php", $step12, LOCK_EX)) {
+    $step13 = str_replace("{BULK_UPDATE_FORM}", $bulk_update_form, $step12 );     
+    if (!file_put_contents("app/$tablename/index.php", $step13, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Index file<br>";
@@ -457,6 +458,7 @@ function generate($postdata) {
         $create_sql_params = array();
         $create_sqlcolumns = array();
         $create_html = array();
+        $bulk_update_form = array();
         $index_filters = array();
         $create_postvars = '';
         $create_default_vars = '';
@@ -733,7 +735,7 @@ function generate($postdata) {
                                 unset($html);
 
                                 // Code to generate the index filter
-                                $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
+                                $index_filter_text = '<select class="form-control" name="'. $columnname .'[=]"><option value=""></option>';
                                 if ($columns['columnnullable'])
                                 {
                                     $index_filter_text .= '<option value="null">Null</option>';
@@ -824,7 +826,7 @@ function generate($postdata) {
                                 unset($html);
 
                                 // INDEX filter
-                                $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
+                                $index_filter_text = '<select class="form-control" name="'. $columnname .'[=]"><option value=""></option>';
                                 if ($columns['columnnullable'])
                                 {
                                     $index_filter_text .= '<option value="null">Null</option>';
@@ -864,7 +866,7 @@ function generate($postdata) {
                                 unset($html);
 
                                 // INDEX filter
-                                $index_filter_text = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'[=]"><option value=""></option>';
+                                $index_filter_text = '<select class="form-control" name="'. $columnname .'[=]"><option value=""></option>';
                                 if ($columns['columnnullable'])
                                 {
                                     $index_filter_text .= '<option value="null">Null</option>';
@@ -916,7 +918,7 @@ function generate($postdata) {
                     }
 
                     // Create the layout for advanced filters
-                    $temp = '<div class="form-group row my-1"><label class="col-sm-2 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>';
+                    $temp = '<div class="form-group row my-1"><label class="col-sm-2 col-form-label">'.$columndisplay.'</label>';
                     foreach($index_filter as $operand => $input)
                     {
                         $temp .= '<div class="col-sm-3">'. $input ."</div>\n";
@@ -929,6 +931,17 @@ function generate($postdata) {
                     <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
                     <div class="col">'. $column_input .'</div></div>';
                     
+                    $bulk_update_form [] = '<div class="form-group row my-2 text-center">
+                        <div class="col-md-1">
+                                <input type="checkbox" id="bulkupdates-'. $columnname .'-visible" value="1">
+                                <label for="bulkupdates-'. $columnname .'-visible">Edit</label>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="'.$columnname.'">'.$columndisplay.'</label>
+                        </div>
+                        <div class="col">'. $column_input .'</div>
+                    </div>';
+
                     $read_records .= '<div class="form-group row my-3">
                         <div class="col-sm-4 fw-bold">'.$columndisplay.'</div>
                         <div class="col">'. $column_value .'</div></div>';
@@ -958,6 +971,7 @@ function generate($postdata) {
                     $create_sql_params = implode(", ", $create_sql_params);
                     $create_html = implode("\n\t\t\t\t\t\t", $create_html);
                     $index_filter = implode("\n\t\t\t\t\t\t", $index_filters);
+                    $bulk_update_form = implode("\n\t\t\t\t\t\t", $bulk_update_form);
 
                     $update_sql_params = implode(",", $update_sql_params);
 
@@ -995,7 +1009,7 @@ function generate($postdata) {
                         mkdir("app/$tablename/", 0777, true);
                     }
 
-                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows, $index_filter,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
+                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows, $index_filter, $bulk_update_form,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
                     generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);
