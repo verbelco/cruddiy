@@ -66,8 +66,17 @@ $indexfile = <<<'EOT'
             GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
             ORDER BY $orderclause
             LIMIT $offset, $no_of_records_per_page;";
-    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count FROM `{TABLE_NAME}` {JOIN_CLAUSES}
+    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` {JOIN_CLAUSES}
             $where_statement";
+
+    try{
+        $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
+        $number_of_results = $count_result['count'];
+        $all_ids = $count_result['all_ids'];
+    } catch (mysqli_sql_exception $e) {
+        echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN COUNT QUERY: " . $e->getMessage() . "</div>";
+    }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,19 +111,48 @@ $indexfile = <<<'EOT'
                     </div>  
                     </form>
                 </div>
-                <div class="form-row mt-2 form-control" id="advancedfilter" style="display:none;">
-                    <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
-                    <p class="h3">Advanced Filters
-                        <input type="submit" class="btn btn-success btn-lg" name="target" value="Search">
-                    </p>
-                    {INDEX_FILTER} 
-                    </form>
+                <div class="my-2">                
+                    <ul class="nav nav-tabs nav-fill subnav">
+                        <li class="nav-item">
+                            <a class="nav-link" id="Advanced_filters_T" href="#">Advanced filters</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="Bulk_updates_T" href="#">Bulk updates</a>
+                        </li>
+                    </ul>
+                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Advanced_filters">
+                        <form action="../berichten/index.php" id="advancedfilterform" method="get">
+                            <div class="h3 text-center">    
+                                Advanced Filters
+                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Search">Search</button>
+                            </div>
+                            <div>
+                                {INDEX_FILTER}
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Bulk_updates">
+                        <form action="../berichten/index.php" id="bulkupdatesform" method="post">
+                            <h3 class="text-center">Bulk Updates</h3>
+                            <div>
+                                {BULK_UPDATE_FORM}
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Update">Update</button>
+                                <button type="submit" class="btn btn-outline-success btn-lg" name="target" value="Update_all">Update all <?php echo $number_of_results;?> records</button>
+
+                                <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete">Delete</button>
+                                <button type="submit" class="btn btn-outline-warning btn-lg" name="target" value="Delete_all">Delete all <?php echo $number_of_results;?> records</button>
+                            </div>
+                            <input type="hidden" name="all_ids" value="<?php echo $all_ids;?>">
+                        </form>
+                    </div>
                 </div>
                 <?php
                 try{
                     $result = mysqli_query($link, $sql);
                     if(mysqli_num_rows($result) > 0){
-                        $number_of_results = mysqli_fetch_assoc(mysqli_query($link, $count_pages))['count'];
                         $total_pages = ceil($number_of_results / $no_of_records_per_page);
                         echo "Sorting on $ordering_on <br>";
                         echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
@@ -122,6 +160,9 @@ $indexfile = <<<'EOT'
                         echo "<table class='table table-bordered table-striped'>";
                             echo "<thead class='table-primary sticky-top'>";
                                 echo "<tr>";
+                                    echo '<th class="text-center" title="Select all" data-toggle="tooltip" style="display:none;">
+                                        Bulk updates <input type="checkbox" id="select_all_checkboxes">
+                                    </th>';
                                     [$get_param_order, $arrow] = get_order_parameters($order_param_array, "{COLUMN_ID}");
                                     if ($default_ordering) {
                                         unset($order_param_array["{COLUMN_ID}"]);
@@ -133,6 +174,9 @@ $indexfile = <<<'EOT'
                             echo "<tbody>";
                             while($row = mysqli_fetch_array($result)){
                                 echo "<tr>";
+                                echo '<td class="text-center" style="display:none;">
+                                        <input type="checkbox" form="bulkupdatesform" name="bulk-update[]" value="'. $row['{COLUMN_NAME}'] .'">
+                                    </td>';
                                 {INDEX_TABLE_ROWS}
                                     echo "<td class='text-nowrap'>";
                                         echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip' class='me-1'><i class='far fa-eye'></i></a>";
@@ -167,7 +211,7 @@ $indexfile = <<<'EOT'
                         echo "<p class='lead'><em>No records were found.</em></p>";
                     }
                 } catch (mysqli_sql_exception $e) {
-                    echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR: " . $e->getMessage() . "</div>";
+                    echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN MAIN QUERY: " . $e->getMessage() . "</div>";
                 }
 
                 if (file_exists(stream_resolve_include_path("extension.php"))){
@@ -180,31 +224,22 @@ $indexfile = <<<'EOT'
             </div>
         </div>
     </div>
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-        
-        $("#hidefilter").click(function(){
-            $("#advancedfilter").hide();
-            $("#showfilter").show();
-            $("#hidefilter").hide();
-        });
-          
-        $("#showfilter").click(function(){
-            $("#advancedfilter").show();
-            $("#hidefilter").show();
-            $("#showfilter").hide();
-        });
-        $("#advancedfilter").hide();
-        $("#hidefilter").hide();        
-        $('#advancedfilterform').submit(function () {
-            $(this)
-                .find('input[name], select[name]')
-                .filter(function () {
-                    return !this.value;
-                })
-                .prop('name', '');
+    <script type="text/javascript">        
+        $(".subnav .nav-link").click(function () {
+            $(".subpage").hide();
+            id = $(this).attr('id').slice(0, -2);
+            
+            if(!$(this).hasClass("active")){
+                $("#" + id).css('display', 'block');
+                $(".nav-link").removeClass("active");
+                $(this).addClass("active");
+            } else {
+                $(this).removeClass("active");
+            }
+
+            if(id == 'Bulk_updates') {
+                $('td:nth-child(1),th:nth-child(1)').show();
+            }
         });
     </script>
 </body>
