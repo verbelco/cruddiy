@@ -19,12 +19,18 @@ $indexfile = <<<'EOT'
         $ids = str_contains($_POST['target'], 'all') ? explode(';', $_POST['all_ids']) : $_POST['bulk-update'];
         $values = array_intersect_key($_POST, array_flip($columns));
 
-        if(is_array($ids) && count($ids) > 0){
-            if(str_contains($_POST['target'], 'Update') && count($values) > 0){
-                $result_html = bulk_update_crud("{TABLE_NAME}", "{COLUMN_ID}", $values, $ids);
-            } else if(str_contains($_POST['target'], 'Delete')){
+        if (is_array($ids) && count($ids) > 0) {
+            if (str_contains($_POST['target'], 'Update')) {
+                if(count($values) > 0){
+                    $result_html = bulk_update_crud("{TABLE_NAME}", "{COLUMN_ID}", $values, $ids);
+                } else {
+                    $result_html = "Bulk updates was started, but no columns to update were selected.";
+                }
+            } else if (str_contains($_POST['target'], 'Delete')) {
                 $result_html = bulk_delete_crud("{TABLE_NAME}", "{COLUMN_ID}", $ids);
             }
+        } else {
+            $result_html = "Bulk updates was started, but no records were selected.";
         }
     }
 
@@ -142,7 +148,7 @@ $indexfile = <<<'EOT'
                         </li>
                     </ul>
                     <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Advanced_filters">
-                        <form action="../berichten/index.php" id="advancedfilterform" method="get">
+                        <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
                             <div class="h3 text-center">    
                                 Advanced Filters
                                 <button type="submit" class="btn btn-success btn-lg" name="target" value="Search">Search</button>
@@ -154,16 +160,16 @@ $indexfile = <<<'EOT'
                     </div>
 
                     <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Bulk_updates">
-                        <form action="../berichten/index.php" id="bulkupdatesform" method="post">
+                        <form action="../{TABLE_NAME}/index.php" id="bulkupdatesform" method="post">
                             <h3 class="text-center">Bulk Updates</h3>
                             <div>
                                 {BULK_UPDATE_FORM}
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Update">Update</button>
+                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Update" id="bulkupdate-update-button">Update</button>
                                 <button type="submit" class="btn btn-outline-success btn-lg" name="target" value="Update_all">Update all <?php echo $number_of_results;?> records</button>
 
-                                <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete">Delete</button>
+                                <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete" id="bulkupdate-delete-button">Delete</button>
                                 <button type="submit" class="btn btn-outline-warning btn-lg" name="target" value="Delete_all">Delete all <?php echo $number_of_results;?> records</button>
                             </div>
                         </form>
@@ -262,6 +268,8 @@ $indexfile = <<<'EOT'
                 $('td:nth-child(1),th:nth-child(1)').show();
             }
         });
+
+        $("tbody input[type=checkbox]").change(count_checked_boxes);
     </script>
 </body>
 </html>
