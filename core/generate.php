@@ -666,7 +666,7 @@ function generate($postdata) {
                         
                         // Process POST vars that can be null differently
                         if ($columns['columnnullable']){
-                            $create_postvars .= "$$columnname_var = \$_POST[\"$columnname\"] == \"\" ? null : trim(\$_POST[\"$columnname\"]);\n\t\t";
+                            $create_postvars .= "$$columnname_var = in_array(\$_POST[\"$columnname\"], [\"\", \"null\"]) ? null : trim(\$_POST[\"$columnname\"]);\n\t\t";
                         } else {
                             $create_postvars .= "$$columnname_var = trim(\$_POST[\"$columnname\"]);\n\t\t";
                         }                        
@@ -690,7 +690,7 @@ function generate($postdata) {
                                 $html = '<select class="form-control" id="'. $columnname .'" name="'. $columnname .'">';
                                 if ($columns['columnnullable'])
                                 {
-                                    $html .= '<option value="">Null</option>';
+                                    $html .= '<option value="null">Null</option>';
                                 }
                                 
                                 // Go over the preview columns and add them to the JOIN recursively.
@@ -804,7 +804,7 @@ function generate($postdata) {
                                 $html = '<select name="'.$columnname.'" class="form-control" id="'.$columnname .'">';
                                 if ($columns['columnnullable'])
                                 {
-                                    $html .= '<option value="">Null</option>';
+                                    $html .= '<option value="null">Null</option>';
                                 }
 
                                 $sql_enum = "SELECT COLUMN_TYPE as AllPossibleEnumValues
@@ -857,7 +857,7 @@ function generate($postdata) {
                                 $html = '<select name="'.$columnname.'" id="'. $columnname .'" class="form-control" id="'.$columnname .'">';
                                     if ($columns['columnnullable'])
                                     {
-                                        $html .= '<option value="">Null</option>';
+                                        $html .= '<option value="null">Null</option>';
                                     }
                                 $html   .= '    <option value="0" <?php echo !' . $create_record . ' ? "selected": ""; ?> >False</option>';
                                 $html   .= '    <option value="1" <?php echo ' . $create_record . ' ? "selected": ""; ?> >True</option>';
@@ -931,16 +931,29 @@ function generate($postdata) {
                     <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
                     <div class="col">'. $column_input .'</div></div>';
                     
-                    $bulk_update_form [] = '<div class="form-group row my-2 text-center">
-                        <div class="col-md-1">
-                                <input type="checkbox" id="bulkupdates-'. $columnname .'-visible" value="1">
-                                <label for="bulkupdates-'. $columnname .'-visible">Edit</label>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="'.$columnname.'">'.$columndisplay.'</label>
-                        </div>
-                        <div class="col">'. $column_input .'</div>
+                    $bulk_update_html = '<div class="form-group row my-2 text-center">
+                    <div class="col-md-1">
+                            <input type="checkbox" id="bulkupdates-'. $columnname .'-visible" value="1">
+                            <label class="col-form-label" for="bulkupdates-'. $columnname .'-visible">Edit</label>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="col-form-label"  for="'.$columnname.'">'.$columndisplay.'</label>
                     </div>';
+                    
+                    if($columns['columnnullable']){
+                        $bulk_update_html .= '<div class="col-md-1">
+                        <input type="checkbox" id="bulkupdates-'. $columnname .'-null" name="'. $columnname .'" value="null">
+                        <label class="col-form-label" for="bulkupdates-'. $columnname .'-null">null</label>
+                    </div>';
+                    } else {
+                        $bulk_update_html .= '<div class="col-md-1">
+                    </div>';
+                    }
+
+                    $bulk_update_html .= '<div class="col">'. $column_input .'</div>
+                            </div>';
+
+                    $bulk_update_form [] = $bulk_update_html;
 
                     $read_records .= '<div class="form-group row my-3">
                         <div class="col-sm-4 fw-bold">'.$columndisplay.'</div>
