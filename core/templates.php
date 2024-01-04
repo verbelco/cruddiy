@@ -114,10 +114,7 @@ $indexfile = <<<'EOT'
         <div class="row">
             <div class="col-md-12">
                 <div class="page-header clearfix">
-                    <h2 class="float-start">{TABLE_DISPLAY} Details 
-                        <span id='showfilter' data-toggle='tooltip' data-placement='top' title='Show advanced search options'>▾</span>
-                        <span id='hidefilter' style='display:none;' data-toggle='tooltip' data-placement='top' title='Hide advanced search options'>▴</span>
-                    </h2>
+                <h2 class="float-start">{TABLE_DISPLAY} Details</h2>
                     <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-end">Add New Record</a>
                     <a href="../{TABLE_NAME}/index.php?target=empty<?php echo $get_param_ordering; ?>" class="btn btn-dark float-end me-2">Reset Filters</a>
                     <a href="../{TABLE_NAME}/index.php<?php echo $get_param_search . $get_param_where; ?>" class="btn btn-primary float-end me-2">Reset Ordering</a>
