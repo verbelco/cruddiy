@@ -395,11 +395,26 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     mysqli_close($link);
 } else{
     // Check existence of id parameter
-	$_GET["{TABLE_ID}"] = trim($_GET["{TABLE_ID}"]);
-    if(empty($_GET["{TABLE_ID}"])){
+	$param_id = trim($_GET["{TABLE_ID}"]);
+    if(empty($param_id)){
         // URL doesn't contain id parameter. Redirect to error page
         header("location: ../error.php");
         exit();
+    }
+
+    // Look for references to this record
+    $references = [];
+    $subsqls = [{FOREIGN_KEY_REFS}];
+    foreach($subsqls as $subsql){
+        $stmt = $link->prepare($subsql);
+        $stmt->execute([$param_id]);
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if($row['count'] > 0){
+            $row['value'] = $param_id;
+            $references[] = $row;
+        }
     }
 }
 ?>
@@ -419,20 +434,21 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
                 <div class="page-header">
                     <h1>Delete Record</h1>
                 </div>
-                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $_GET["{TABLE_ID}"]; ?>" method="post">
+                <?php echo html_delete_references($references); ?>
+                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $param_id; ?>" method="post">
                 <?php print_error_if_exists($error); ?>
                     <div class="alert alert-danger fade-in">
-                        <input type="hidden" name="{TABLE_ID}" value="<?php echo trim($_GET["{TABLE_ID}"]); ?>"/>
+                        <input type="hidden" name="{TABLE_ID}" value="<?php echo trim($param_id); ?>"/>
                         <p>Are you sure you want to delete this record?</p><br>
                         <p>
                             <input type="submit" value="Yes" class="btn btn-danger">
-                            <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">No</a>
+                            <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $param_id;?>" class="btn btn-secondary">No</a>
                         </p>
                     </div>
                 </form>
                 <div class="mt-3 mb-5">
-                    <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-info">View</a>
-                    <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
+                    <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $param_id;?>" class="btn btn-info">View</a>
+                    <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $param_id;?>" class="btn btn-secondary">Edit</a>
                     <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                 </div>
                 <?php

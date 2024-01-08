@@ -260,7 +260,7 @@ function generate_read($tablename, $column_id, $read_records, $foreign_key_refer
     echo "Generating $tablename Read file<br>";
 }
 
-function generate_delete($tablename, $column_id){
+function generate_delete($tablename, $column_id, $foreign_key_references){
     global $deletefile;
     global $CSS_REFS;
     global $JS_REFS;
@@ -270,7 +270,8 @@ function generate_delete($tablename, $column_id){
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    if (!file_put_contents("app/$tablename/delete.php", $step1, LOCK_EX)) {
+    $step2 = str_replace("{FOREIGN_KEY_REFS}", $foreign_key_references, $step1 );
+    if (!file_put_contents("app/$tablename/delete.php", $step2, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Delete file<br><br>";
@@ -485,6 +486,7 @@ function generate($postdata) {
 
             // Find foreign key references to this table
             $foreign_key_references = "";
+            $foreign_key_delete_references = [];
             $sql_get_fk_ref = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
                                 k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
                                 i.CONSTRAINT_NAME as 'Constraint Name'
@@ -494,18 +496,24 @@ function generate($postdata) {
             $result = mysqli_query($link, $sql_get_fk_ref);
             if (mysqli_num_rows($result) > 0) {
                 while($row = mysqli_fetch_assoc($result)) {
-                    $fk_table = $row["Table"];
-                    if(isset($preview_columns[$fk_table]))
+                    $table = $row["Table"];
+                    $fk_table = $row["FK Table"];
+                    if(isset($preview_columns[$table]))
                     {
                         $fk_column = $row["FK Column"];
-                        $column = $row["Column"];
+                        $column = $row["Column"];                        
                         $foreign_key_references .= '
-                        $subsql = "SELECT COUNT(*) AS count FROM `'. $fk_table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
+                        $subsql = "SELECT COUNT(*) AS count FROM `'. $table .'` WHERE `'. $column .'` = ". $row["'.$fk_column.'"] . ";";
                         $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $subsql))["count"];
                         if ($number_of_refs > 0)
                         {
-                            $html .= \'<p><a href="../'. $fk_table . '/index.php?'. $column . '[]=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $fk_table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
+                            $html .= \'<p><a href="../'. $table . '/index.php?'. $column . '[]=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
                         }';
+
+                        // Only primary keys can be used when checking for deletion
+                        if(isset($_POST[$key][$fk_column]['primary'])){
+                            $foreign_key_delete_references[] = "\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`  FROM `$table` WHERE `$column` = ?;\"";
+                        }
                     }
                 }
             }
@@ -987,6 +995,7 @@ function generate($postdata) {
                     $bulk_update_form = implode("\n\t\t\t\t\t\t", $bulk_update_form);
 
                     $update_sql_params = implode(",", $update_sql_params);
+                    $foreign_key_delete_references = implode(",", $foreign_key_delete_references);
 
                     //Generate everything
                     $start_page = "";
@@ -1026,7 +1035,7 @@ function generate($postdata) {
                     generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);
-                    generate_delete($tablename,$column_id);
+                    generate_delete($tablename,$column_id, $foreign_key_delete_references);
                 }
             }
 
