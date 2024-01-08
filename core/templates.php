@@ -288,20 +288,10 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
             WHERE `{TABLE_NAME}`.`{TABLE_ID}` = ?
             GROUP BY `{TABLE_NAME}`.`{TABLE_ID}`;";
 
-    $stmt = mysqli_prepare($link, $sql);
-    // Set parameters
+    $stmt = $link->prepare($sql);
     $param_id = trim($_GET["{TABLE_ID}"]);
-
-    // Bind variables to the prepared statement as parameters
-    if (is_int($param_id)) $__vartype = "i";
-    elseif (is_string($param_id)) $__vartype = "s";
-    elseif (is_numeric($param_id)) $__vartype = "d";
-    else $__vartype = "b"; // blob
-    mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
-
-    // Attempt to execute the prepared statement
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+    $stmt->execute([$param_id]);
+    $result = $stmt->get_result();
 
     if(mysqli_num_rows($result) == 1){
         /* Fetch result row as an associative array. Since the result set
@@ -382,29 +372,20 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     // Prepare a delete statement
     $sql = "DELETE FROM `{TABLE_NAME}` WHERE `{TABLE_ID}` = ?";
 
-    if($stmt = mysqli_prepare($link, $sql)){
-        // Set parameters
-        $param_id = trim($_POST["{TABLE_ID}"]);
-
-        // Bind variables to the prepared statement as parameters
-		if (is_int($param_id)) $__vartype = "i";
-		elseif (is_string($param_id)) $__vartype = "s";
-		elseif (is_numeric($param_id)) $__vartype = "d";
-		else $__vartype = "b"; // blob
-        mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
-
-        try {
-            mysqli_stmt_execute($stmt);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            $error = "<p class='fw-bold'>Er zijn nog verwijzingen naar dit record, zie de view pagina voor meer informatie:</p>";
-            $error .= $e->getMessage();
-        }
+    $stmt = $link->prepare($sql);
+    $param_id = trim($_POST["{TABLE_ID}"]);
     
-        if (!isset($error)){
-            // Records deleted successfully. Redirect to landing page
-            header("location: ../{TABLE_NAME}/index.php");
-        }
+    try {
+        $stmt->execute([$param_id]);
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        $error = "<p class='fw-bold'>Er zijn nog verwijzingen naar dit record, zie de view pagina voor meer informatie:</p>";
+        $error .= $e->getMessage();
+    }
+    
+    if (!isset($error)){
+        // Records deleted successfully. Redirect to landing page
+        header("location: ../{TABLE_NAME}/index.php");
     }
 
     // Close statement

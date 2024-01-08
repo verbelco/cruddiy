@@ -12,7 +12,7 @@ $config = $_POST;
 
 $fields_to_save = ['columndisplay', 'columnvisible', 'columninpreview',];
 
-$config_name = "config-cruddiy-" . date("d-m-Y_H:i:s");
+$config_name = "config-cruddiy-" . date("Y-m-d_H:i:s");
 
 unset($config['singlebutton']);
 
