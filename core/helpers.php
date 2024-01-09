@@ -34,7 +34,7 @@ function create_column_object($name, $comments, $sqlname, $nullable, $type){
         $name = $sqlname;
     }
 
-    $comments = empty($comments) ? "null" : "'$comments'";
+    $comments = empty($comments) ? "null" : prepare_text_for_tooltip($comments);
 
     $required = $nullable ? "False" : "True";
     $type = type_to_str($type);
