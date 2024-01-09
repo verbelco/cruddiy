@@ -6,6 +6,8 @@ $indexfile = <<<'EOT'
     require_once "../config.php";
     require_once "../helpers.php";
     require_once "../bulk_updates.php";
+    require_once "../Column.php";
+    require_once "class.php";
 
     //Get current URL and parameters for correct pagination
     $script   = $_SERVER['SCRIPT_NAME'];
@@ -187,11 +189,13 @@ $indexfile = <<<'EOT'
                                         Bulk updates <input type="checkbox" id="select_all_checkboxes">
                                         <input type="hidden" form="bulkupdatesform" name="all_ids" value="'. $all_ids .'">
                                     </th>';
-                                    [$get_param_order, $arrow] = get_order_parameters($order_param_array, "{COLUMN_ID}");
-                                    if ($default_ordering) {
-                                        unset($order_param_array["{COLUMN_ID}"]);
+                                    foreach($column_list as $c){
+                                        [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
+                                        if($default_ordering && $c->get_name() == "{COLUMN_ID}"){
+                                            unset($order_param_array["{COLUMN_ID}"]);
+                                        }
+                                        echo $c->html_index_table_header($get_param_search, $get_param_where, $get_param_order, $arrow);
                                     }
-                                    {INDEX_TABLE_HEADERS}
                                     echo "<th>Action</th>";
                                 echo "</tr>";
                             echo "</thead>";
@@ -201,7 +205,9 @@ $indexfile = <<<'EOT'
                                 echo '<td class="text-center" style="display:none;">
                                         <input type="checkbox" form="bulkupdatesform" name="bulk-update[]" value="'. $row['{COLUMN_NAME}'] .'">
                                     </td>';
-                                {INDEX_TABLE_ROWS}
+                                    foreach ($column_list as $c) {
+                                        echo $c->html_index_table_element($row);
+                                    }
                                     echo "<td class='text-nowrap'>";
                                         echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='View Record' data-toggle='tooltip' class='me-1'><i class='far fa-eye'></i></a>";
                                         echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=". $row['{COLUMN_NAME}'] ."' title='Update Record' data-toggle='tooltip'class='me-1'><i class='far fa-edit'></i></a>";
@@ -755,4 +761,11 @@ $navbarfile = <<<'EOT'
     </div>
   </div>
 </nav>
+EOT;
+
+$crud_class_file = <<<'EOT'
+<?php
+
+$column_list = [{COLUMNS_CLASSES}];
+
 EOT;

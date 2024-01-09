@@ -19,6 +19,7 @@ $tabledisplay = '';
 $tablecomment = '';
 $columnname = '' ;
 $columndisplay = '';
+$columnwithpopup = '';
 $columnvisible = '';
 $columndefault_val = '';
 $index_table_rows = '';
@@ -260,6 +261,17 @@ function generate_read($tablename, $column_id, $read_records, $foreign_key_refer
     echo "Generating $tablename Read file<br>";
 }
 
+function generate_crud_class($tablename, $column_id, $column_classes){
+    global $crud_class_file;
+
+    $step0 = str_replace("{COLUMNS_CLASSES}", $column_classes, $crud_class_file);
+    if (!file_put_contents("app/$tablename/class.php", $step0, LOCK_EX)) {
+        die("Unable to open file!");
+    }
+    echo "Generating $tablename class file<br><br>";
+}
+
+
 function generate_delete($tablename, $column_id, $foreign_key_references){
     global $deletefile;
     global $CSS_REFS;
@@ -274,7 +286,7 @@ function generate_delete($tablename, $column_id, $foreign_key_references){
     if (!file_put_contents("app/$tablename/delete.php", $step2, LOCK_EX)) {
         die("Unable to open file!");
     }
-    echo "Generating $tablename Delete file<br><br>";
+    echo "Generating $tablename Delete file<br>";
 }
 
 function generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars) {
@@ -444,6 +456,7 @@ function generate($postdata) {
         $tablecomment = '';
         $columnname = '' ;
         $columndisplay = '';
+        $columnwithpopup = '';
         $columndefault_val = ''; // The default value of a column
         $columnvisible = '';
         $columns_available = array();
@@ -471,6 +484,8 @@ function generate($postdata) {
 
         $join_columns = '';
         $join_clauses = '';
+
+        $column_classes = array();
 
         global $sort;
         global $link;
@@ -604,6 +619,7 @@ function generate($postdata) {
             }
 
             //DETAIL CREATE UPDATE DELETE and INDEX FILTER pages variables
+            // Also create the classes for this table
             foreach ( $_POST[$key] as $columns ) {
                 if ($j < $total_columns) {
 
@@ -626,7 +642,9 @@ function generate($postdata) {
                     $columndefault_val = get_default_value($columns['tablename'], $columns['columnname']);
 
                     if (!empty($columns['columncomment'])){
-                        $columndisplay = "<span data-toggle='tooltip' data-placement='top' data-bs-html='true' title=". prepare_text_for_tooltip($columns['columncomment']) .">" . $columndisplay . '</span>';
+                        $columnwithpopup = "<span data-toggle='tooltip' data-placement='top' data-bs-html='true' title=". prepare_text_for_tooltip($columns['columncomment']) .">" . $columndisplay . '</span>';
+                    } else {
+                        $columnwithpopup = $columndisplay;
                     }
                     
                     if (!empty($columns['auto'])){
@@ -655,6 +673,7 @@ function generate($postdata) {
                         </div>';
                     }
 
+                    $column_classes[] = create_column_object($columns['columndisplay'], $columns['columncomment'], $columns['columnname'], $columns['columnnullable'], $type);
 
                     if(empty($columns['auto'])) {
 
@@ -926,7 +945,7 @@ function generate($postdata) {
                     }
 
                     // Create the layout for advanced filters
-                    $temp = '<div class="form-group row my-1"><label class="col-sm-2 col-form-label">'.$columndisplay.'</label>';
+                    $temp = '<div class="form-group row my-1"><label class="col-sm-2 col-form-label">'.$columnwithpopup.'</label>';
                     foreach($index_filter as $operand => $input)
                     {
                         $temp .= '<div class="col-sm-3">'. $input ."</div>\n";
@@ -936,7 +955,7 @@ function generate($postdata) {
 
 
                     $create_html [] = '<div class="form-group row my-2">
-                    <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columndisplay.'</label>
+                    <label class="col-sm-4 col-form-label" for="'.$columnname.'">'.$columnwithpopup.'</label>
                     <div class="col">'. $column_input .'</div></div>';
                     
                     $bulk_update_html = '<div class="form-group row my-2 text-center">
@@ -945,7 +964,7 @@ function generate($postdata) {
                             <label class="col-form-label" for="bulkupdates-'. $columnname .'-visible">Edit</label>
                     </div>
                     <div class="col-md-2">
-                        <label class="col-form-label"  for="'.$columnname.'">'.$columndisplay.'</label>
+                        <label class="col-form-label"  for="'.$columnname.'">'.$columnwithpopup.'</label>
                     </div>';
                     
                     if($columns['columnnullable']){
@@ -964,15 +983,15 @@ function generate($postdata) {
                     $bulk_update_form [] = $bulk_update_html;
 
                     $read_records .= '<div class="form-group row my-3">
-                        <div class="col-sm-4 fw-bold">'.$columndisplay.'</div>
+                        <div class="col-sm-4 fw-bold">'.$columnwithpopup.'</div>
                         <div class="col">'. $column_value .'</div></div>';
                      
                     // OLD LAYOUT    
                     // $create_html [] = '<div class="form-group">
-                    // <label for="'.$columnname.'">'.$columndisplay.'</label>
+                    // <label for="'.$columnname.'">'.$columnwithpopup.'</label>
                     // '. $column_input .'</div>';
                     // $read_records .= '<div class="form-group">
-                    //     <h4>'.$columndisplay.'</h4>
+                    //     <h4>'.$columnwithpopup.'</h4>
                     //     <p class="form-control-static">' . $column_value .'</p></div>';
                     
                     $j++;
@@ -996,6 +1015,7 @@ function generate($postdata) {
 
                     $update_sql_params = implode(",", $update_sql_params);
                     $foreign_key_delete_references = implode(",", $foreign_key_delete_references);
+                    $column_classes = implode(",\n", $column_classes);
 
                     //Generate everything
                     $start_page = "";
@@ -1036,6 +1056,7 @@ function generate($postdata) {
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);
                     generate_delete($tablename,$column_id, $foreign_key_delete_references);
+                    generate_crud_class($tablename,$column_id, $column_classes);
                 }
             }
 
