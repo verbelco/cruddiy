@@ -211,7 +211,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 }
 
 
-function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$index_filter, $bulk_update_form,$column_id, $columns_available, $index_sql_search, $join_columns, $join_clauses) {
+function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$index_filter, $bulk_update_form,$column_id, $columns_selected, $index_sql_search, $join_columns, $join_clauses) {
     global $indexfile;
     global $appname;
     global $CSS_REFS;
@@ -220,7 +220,7 @@ function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_he
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $indexfile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
 
-    $columns_available = implode("', '", $columns_available);
+    $columns_selected = implode("', '", $columns_selected);
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
     $step2 = str_replace("{TABLE_COMMENT}", $tablecomment, $step1);
@@ -228,7 +228,7 @@ function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_he
     $step4 = str_replace("{INDEX_TABLE_ROWS}", $index_table_rows, $step3 );
     $step5 = str_replace("{COLUMN_ID}", $column_id, $step4 );
     $step6 = str_replace("{COLUMN_NAME}", $column_id, $step5 );
-    $step7 = str_replace("{COLUMNS}", $columns_available, $step6 );
+    $step7 = str_replace("{COLUMNS}", $columns_selected, $step6 );
     $step8 = str_replace("{INDEX_CONCAT_SEARCH_FIELDS}", $index_sql_search, $step7 );
     $step9 = str_replace("{APP_NAME}", $appname, $step8 );
     $step10 = str_replace("{JOIN_COLUMNS}", $join_columns, $step9 );
@@ -460,6 +460,7 @@ function generate($postdata) {
         $columndefault_val = ''; // The default value of a column
         $columnvisible = '';
         $columns_available = array();
+        $columns_selected = array();
         $index_sql_search = array();
         $index_table_rows = '';
         $index_table_headers = '';
@@ -555,6 +556,7 @@ function generate($postdata) {
                     if ($columns['columnvisible'] == 1 &&  $i < $max) {
 
                         $columnname = $columns['columnname'];
+                        $columns_selected[] = $columnname;
 
                         if (!empty($columns['columndisplay'])){
                             $columndisplay = $columns['columndisplay'];
@@ -673,7 +675,7 @@ function generate($postdata) {
                         </div>';
                     }
 
-                    $column_classes[] = create_column_object($columns['columndisplay'], $columns['columncomment'], $columns['columnname'], $columns['columnnullable'], $type);
+                    $column_classes[] = create_column_object($columns['columnname'], $columns['columndisplay'], $columns['columncomment'], $columns['tablename'], "", $columns['columnnullable'], empty($columns['auto']), $type);
 
                     if(empty($columns['auto'])) {
 
@@ -1051,7 +1053,7 @@ function generate($postdata) {
                         mkdir("app/$tablename/", 0777, true);
                     }
 
-                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows, $index_filter, $bulk_update_form,$column_id, $columns_available,$index_sql_search, $join_columns, $join_clauses);
+                    generate_index($tablename,$tabledisplay,$tablecomment,$index_table_headers,$index_table_rows, $index_filter, $bulk_update_form,$column_id, $columns_selected,$index_sql_search, $join_columns, $join_clauses);
                     generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars);
                     generate_read($tablename,$column_id,$read_records,$foreign_key_references, $join_columns, $join_clauses);
                     generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns);

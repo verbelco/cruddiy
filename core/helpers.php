@@ -11,7 +11,7 @@ function prepare_text_for_tooltip($string){
 
 function type_to_str($type){
     $type_to_str = array(
-        1 => "string",
+        1 => "text",
         2 => "enum",
         3 => "string",
         4 => "bool",
@@ -28,16 +28,35 @@ function type_to_str($type){
 }
 
 
-function create_column_object($name, $comments, $sqlname, $nullable, $type){
+function create_column_object($name, $displayname, $comments, $table, $sql_join, $nullable, $primary_key, $type){
 
-    if(empty($name)){
-        $name = $sqlname;
+    if(empty($displayname)){
+        $displayname = $name;
     }
 
     $comments = empty($comments) ? "null" : prepare_text_for_tooltip($comments);
+    $sql_join = empty($sql_join) ? "null" : $sql_join;
 
     $required = $nullable ? "False" : "True";
+    $primary_key = $primary_key ? "False" : "True";
     $type = type_to_str($type);
 
-    return "new Column('$name',$comments,'$sqlname',$required,'$type')";
+    if($type == "text"){
+        return "new TextColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } elseif($type == "enum"){
+        return "new EnumColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } elseif($type == "bool"){
+        return "new BoolColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } elseif($type == "int"){
+        return "new IntColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } elseif($type == "float"){
+        return "new FloatColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } elseif($type == "date"){
+        return "new DateColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } elseif($type == "DateTime"){
+        return "new DateTimeColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    } else {
+        // Default, usually strings
+        return "new Column('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+    }
 }

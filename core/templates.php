@@ -6,7 +6,7 @@ $indexfile = <<<'EOT'
     require_once "../config.php";
     require_once "../helpers.php";
     require_once "../bulk_updates.php";
-    require_once "../Column.php";
+    require_once "../shared/Column.php";
     require_once "class.php";
 
     //Get current URL and parameters for correct pagination
@@ -14,7 +14,10 @@ $indexfile = <<<'EOT'
     $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
     $currenturl = $domain. $script . '?' . $parameters;
 
-    $columns = array('{COLUMNS}');
+    $selected_columns = ['{COLUMNS}'];
+    $columns = array_map(function ($c) { return $c->get_name(); }, $column_list);
+
+    $selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) { return in_array($c->get_name(), $selected_columns); });
 
     // Handle bulk updates
     if (isset($_POST['target']) && in_array($_POST['target'], ['Update', 'Update_all', 'Delete', 'Delete_all'])) {
@@ -74,24 +77,28 @@ $indexfile = <<<'EOT'
 
     [$get_param_where, $where_statement] = create_sql_where($filter, "{TABLE_NAME}", $link);
 
+    $sql_select = implode(", ", array_map(function ($c) { return $c->get_sql_select(); }, $column_list));
+    $sql_values = implode(", ", array_map(function ($c) { return $c->get_sql_value(); }, $column_list));
+    $sql_join = implode("", array_map(function ($c) { return $c->get_sql_join(); }, $column_list));
+
     if (!empty($_GET['search'])) {
         $search = mysqli_real_escape_string($link, $_GET['search']);
         $get_param_search = "?search=$search";
-        $where_statement .= " AND CONCAT_WS ({INDEX_CONCAT_SEARCH_FIELDS}) LIKE '%$search%'";
+        $where_statement .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
     } else {
         $get_param_search = "?";
         $search = "";
     }
 
     // Prepare SQL queries
-    $sql = "SELECT `{TABLE_NAME}`.* {JOIN_COLUMNS}
-            FROM `{TABLE_NAME}` {JOIN_CLAUSES}
-            $where_statement
+    $sql = "SELECT $sql_select
+            FROM `{TABLE_NAME}`
+            $sql_join $where_statement  
             GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
             ORDER BY $orderclause
             LIMIT $offset, $no_of_records_per_page;";
-    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` {JOIN_CLAUSES}
-            $where_statement";
+    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` 
+            $sql_join $where_statement";
 
     try{
         $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
@@ -153,7 +160,11 @@ $indexfile = <<<'EOT'
                                 <button type="submit" class="btn btn-success btn-lg" name="target" value="Search">Search</button>
                             </div>
                             <div>
-                                {INDEX_FILTER}
+                                <?php
+                                foreach ($column_list as $c) {
+                                    echo $c->html_index_advanced_filter($filter);
+                                }
+                                ?>
                             </div>
                         </form>
                     </div>
@@ -162,7 +173,11 @@ $indexfile = <<<'EOT'
                         <form action="../{TABLE_NAME}/index.php" id="bulkupdatesform" method="post">
                             <h3 class="text-center">Bulk Updates</h3>
                             <div>
-                                {BULK_UPDATE_FORM}
+                                <?php
+                                foreach ($column_list as $c) {
+                                    echo $c->html_index_bulk_update();
+                                }
+                                ?>
                             </div>
                             <div class="text-center">
                                 <button type="submit" class="btn btn-success btn-lg" name="target" value="Update" id="bulkupdate-update-button">Update</button>
@@ -189,7 +204,7 @@ $indexfile = <<<'EOT'
                                         Bulk updates <input type="checkbox" id="select_all_checkboxes">
                                         <input type="hidden" form="bulkupdatesform" name="all_ids" value="'. $all_ids .'">
                                     </th>';
-                                    foreach($column_list as $c){
+                                    foreach($selected_columns_list as $c){
                                         [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
                                         if($default_ordering && $c->get_name() == "{COLUMN_ID}"){
                                             unset($order_param_array["{COLUMN_ID}"]);
@@ -205,7 +220,7 @@ $indexfile = <<<'EOT'
                                 echo '<td class="text-center" style="display:none;">
                                         <input type="checkbox" form="bulkupdatesform" name="bulk-update[]" value="'. $row['{COLUMN_NAME}'] .'">
                                     </td>';
-                                    foreach ($column_list as $c) {
+                                    foreach ($selected_columns_list as $c) {
                                         echo $c->html_index_table_element($row);
                                     }
                                     echo "<td class='text-nowrap'>";
@@ -287,10 +302,16 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     // Include config file
     require_once "../config.php";
     require_once "../helpers.php";
+    require_once "../shared/Column.php";
+    require_once "class.php";
 
     // Prepare a select statement
-    $sql = "SELECT `{TABLE_NAME}`.* {JOIN_COLUMNS}
-            FROM `{TABLE_NAME}` {JOIN_CLAUSES}
+    $sql_select = implode(", ", array_map(function ($c) { return $c->get_sql_select(); }, $column_list));
+    $sql_join = implode("", array_map(function ($c) { return $c->get_sql_join(); }, $column_list));
+
+    $sql = "SELECT $sql_select
+            FROM `{TABLE_NAME}`
+            $sql_join
             WHERE `{TABLE_NAME}`.`{TABLE_ID}` = ?
             GROUP BY `{TABLE_NAME}`.`{TABLE_ID}`;";
 
@@ -335,7 +356,11 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                     <h1>View Record</h1>
                 </div>
                 <div>
-                    {RECORDS_READ_FORM}
+                    <?php
+                        foreach ($column_list as $c) {
+                            echo $c->html_read_row($row);
+                        } 
+                    ?>
                 </div>
                 <div class="mt-3 mb-5">
                     <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
