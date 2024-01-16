@@ -883,7 +883,7 @@ function generate($postdata) {
                             case 4:
                                 $regex = "/'(.*?)'/";
                                 preg_match_all( $regex , $columns['columntype'] , $enum_array );
-                                $html = '<select name="'.$columnname.'" id="'. $columnname .'" class="form-control" id="'.$columnname .'">';
+                                $html = '<select name="'.$columnname.'" id="'. $columnname .'" class="form-control">';
                                     if ($columns['columnnullable'])
                                     {
                                         $html .= '<option value="null">Null</option>';

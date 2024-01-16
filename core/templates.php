@@ -75,7 +75,7 @@ $indexfile = <<<'EOT'
         $filter = $_SESSION["filter"]["{TABLE_NAME}"];
     }
 
-    [$get_param_where, $where_statement] = create_sql_where($filter, "{TABLE_NAME}", $link);
+    [$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
     $sql_select = implode(", ", array_map(function ($c) { return $c->get_sql_select(); }, $column_list));
     $sql_values = implode(", ", array_map(function ($c) { return $c->get_sql_value(); }, $column_list));
@@ -84,7 +84,7 @@ $indexfile = <<<'EOT'
     if (!empty($_GET['search'])) {
         $search = mysqli_real_escape_string($link, $_GET['search']);
         $get_param_search = "?search=$search";
-        $where_statement .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
+        $where_clause .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
     } else {
         $get_param_search = "?";
         $search = "";
@@ -93,12 +93,12 @@ $indexfile = <<<'EOT'
     // Prepare SQL queries
     $sql = "SELECT $sql_select
             FROM `{TABLE_NAME}`
-            $sql_join $where_statement  
+            $sql_join $where_clause  
             GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
             ORDER BY $orderclause
             LIMIT $offset, $no_of_records_per_page;";
     $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` 
-            $sql_join $where_statement";
+            $sql_join $where_clause";
 
     try{
         $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
