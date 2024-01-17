@@ -3,7 +3,7 @@
 /** Prepares a string for a tooltip (replaces ' with ", replaces newlines with <br> and  surrounds with '') */
 function prepare_text_for_tooltip($string){
     if(isset($string)){
-        return "'" . nl2br(str_replace("'", '"', $string)) . "'";
+        return "'" . str_replace("'", '"', $string) . "'";
     } else {
         return "''";
     }
@@ -27,6 +27,19 @@ function type_to_str($type){
     }
 }
 
+/** Returns a string with a php list with enum values, such as:
+ * ['UTC', 'Wintertijd (UTC+1)', 'Zomertijd (UTC+2)', 'Kalendertijd(UTC+1/UTC+2)']
+ */
+function get_enum_list($tablename, $columnname){
+    global $link;
+
+    $sql = "SELECT COLUMN_TYPE as AllPossibleEnumValues
+            FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tablename' AND COLUMN_NAME = '$columnname';";
+    $result = mysqli_query($link, $sql);
+    $row = mysqli_fetch_array($result, MYSQLI_NUM);
+    preg_match('/enum\((.*)\)$/', $row[0], $matches);
+    return "[" . $matches[1] . "]";
+}
 
 function create_column_object($name, $displayname, $comments, $table, $sql_join, $nullable, $primary_key, $type){
 
@@ -44,7 +57,9 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
     if($type == "text"){
         return "new TextColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "enum"){
-        return "new EnumColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        $enum_list = get_enum_list($table, $name);
+        $enum_dict = "array_combine($enum_list, $enum_list)";
+        return "new EnumColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key, $enum_dict)";
     } elseif($type == "bool"){
         return "new BoolColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "int"){
@@ -53,7 +68,7 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
         return "new FloatColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "date"){
         return "new DateColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
-    } elseif($type == "DateTime"){
+    } elseif($type == "datetime"){
         return "new DateTimeColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } else {
         // Default, usually strings
