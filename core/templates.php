@@ -14,8 +14,16 @@ $indexfile = <<<'EOT'
     $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
     $currenturl = $domain. $script . '?' . $parameters;
 
-    $selected_columns = ['{COLUMNS}'];
-    $columns = array_map(function ($c) { return $c->get_name(); }, $column_list);
+    $columns = array_keys($column_list);
+
+    if (isset($_POST['flexible-columns'])) {
+        $selected_columns = array_intersect($_POST['flexible-columns'], $columns);
+        $_SESSION["selected_columns"]["{TABLE_NAME}"] = $selected_columns;
+    } else if (isset($_SESSION["selected_columns"]["{TABLE_NAME}"])) {
+        $selected_columns = $_SESSION["selected_columns"]["{TABLE_NAME}"];
+    } else {
+        $selected_columns = ['{COLUMNS}'];
+    }
 
     $selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) { return in_array($c->get_name(), $selected_columns); });
 
@@ -69,6 +77,7 @@ $indexfile = <<<'EOT'
         } else if($_GET["target"] == "empty"){
             // Remove the filter from the session
             $_SESSION["filter"]["{TABLE_NAME}"] = array();
+            $_SESSION["selected_columns"]["{TABLE_NAME}"] = null;
         }
     } else if(count($filter) == 0) {
         // Use the filter from the session if no other filter is used
@@ -152,6 +161,9 @@ $indexfile = <<<'EOT'
                         <li class="nav-item">
                             <a class="nav-link" id="Bulk_updates_T" href="#">Bulk updates</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="Flexible_columns_T" href="#">Flexible Columns</a>
+                        </li>
                     </ul>
                     <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Advanced_filters">
                         <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
@@ -185,6 +197,27 @@ $indexfile = <<<'EOT'
 
                                 <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete" id="bulkupdate-delete-button">Delete</button>
                                 <button type="submit" class="btn btn-outline-warning btn-lg" name="target" value="Delete_all">Delete all <?php echo $number_of_results;?> records</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage"
+                        id="Flexible_columns">
+                        <form action="../{TABLE_NAME}/index.php" id="flexiblecolumnsform" method="post">
+                            <h3 class="text-center">Flexible Columns</h3>
+                            <div>
+                                <p>
+                                    Select the columns that you want to display on this page
+                                </p>
+                                <?php
+                                foreach ($column_list as $name => $c) {
+                                    echo $c->html_index_flexible_columns(in_array($name, $selected_columns));
+                                }
+                                ?>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-success btn-lg" name="target"
+                                    value="select-columns">Update view</button>
                             </div>
                         </form>
                     </div>
@@ -691,7 +724,7 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
                         }
                     }
                     ?>
-                    <input type="hidden" name="{COLUMN_ID}" value="<?php echo ${COLUMN_ID}; ?>"/>
+                    <input type="hidden" name="{COLUMN_ID}" value="<?php echo $_GET["{COLUMN_ID}"]; ?>"/>
                     <p>
                         <input type="submit" class="btn btn-primary" value="Submit">
                         <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
