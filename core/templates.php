@@ -55,7 +55,7 @@ $indexfile = <<<'EOT'
     $total_pages = ceil($total_rows / $no_of_records_per_page);
 
     // Column sorting on column name
-    [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $columns, "{COLUMN_ID}", "{TABLE_NAME}");
+    [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $column_list, "{COLUMN_ID}", "{TABLE_NAME}");
     [$get_param_ordering, $temp] = get_order_parameters($order_param_array);
 
     // Generate WHERE statements for param
@@ -215,7 +215,7 @@ $indexfile = <<<'EOT'
                                 echo "</tr>";
                             echo "</thead>";
                             echo "<tbody>";
-                            while($row = mysqli_fetch_array($result)){
+                            while($row = mysqli_fetch_assoc($result)){
                                 echo "<tr>";
                                 echo '<td class="text-center" style="display:none;">
                                         <input type="checkbox" form="bulkupdatesform" name="bulk-update[]" value="'. $row['{COLUMN_NAME}'] .'">

@@ -483,9 +483,6 @@ function generate($postdata) {
         $update_sql_id = '';
         $update_column_rows = '';
 
-        $join_columns = '';
-        $join_clauses = '';
-
         $column_classes = array();
 
         global $sort;
@@ -623,6 +620,10 @@ function generate($postdata) {
             //DETAIL CREATE UPDATE DELETE and INDEX FILTER pages variables
             // Also create the classes for this table
             foreach ( $_POST[$key] as $columns ) {
+
+                $join_columns = '';
+                $join_clauses = '';
+
                 if ($j < $total_columns) {
 
                     $index_filter = array();
@@ -674,8 +675,6 @@ function generate($postdata) {
                             <p class="float-start fst-italic fw-light text-secondary">'. $columns["tablecomment"] .'</p>
                         </div>';
                     }
-
-                    $column_classes[] = create_column_object($columns['columnname'], $columns['columndisplay'], $columns['columncomment'], $columns['tablename'], "", $columns['columnnullable'], empty($columns['auto']), $type);
 
                     if(empty($columns['auto'])) {
 
@@ -737,7 +736,7 @@ function generate($postdata) {
                                 $join_clauses .= $local_join_clauses;                             
                                 
                                 // implode all gathered values to make the joins and selects.
-                                $join_columns .= "\n\t\t\t, CONCAT_WS(' | ',". implode(', ', $sql_concat_select) .') AS `'. $join_column_name .'`';
+                                $join_columns .= "CONCAT_WS(' | ',". implode(', ', $sql_concat_select) .')';
                                 $fk_columns_select = implode(', ', $sql_concat_select);
                                 $index_sql_search = array_merge($index_sql_search, $sql_concat_select);
 
@@ -998,6 +997,8 @@ function generate($postdata) {
                     
                     $j++;
                     }
+
+                    $column_classes[] = create_column_object($columns['columnname'], $columns['columndisplay'], $columns['columncomment'], $columns['tablename'], $join_clauses, $join_columns, $columns['columnnullable'], empty($columns['auto']), $type);
                 }
 
                 if ($j == $total_columns) {
