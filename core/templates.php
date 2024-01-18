@@ -16,6 +16,10 @@ $indexfile = <<<'EOT'
 
     $columns = array_keys($column_list);
 
+    if(isset($_GET["target"]) && $_GET["target"] == "empty"){
+        $_SESSION["selected_columns"]["{TABLE_NAME}"] = null;
+    }
+
     if (isset($_POST['flexible-columns'])) {
         $selected_columns = array_intersect($_POST['flexible-columns'], $columns);
         $_SESSION["selected_columns"]["{TABLE_NAME}"] = $selected_columns;
@@ -77,7 +81,6 @@ $indexfile = <<<'EOT'
         } else if($_GET["target"] == "empty"){
             // Remove the filter from the session
             $_SESSION["filter"]["{TABLE_NAME}"] = array();
-            $_SESSION["selected_columns"]["{TABLE_NAME}"] = null;
         }
     } else if(count($filter) == 0) {
         // Use the filter from the session if no other filter is used

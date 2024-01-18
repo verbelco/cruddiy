@@ -48,15 +48,20 @@ $preview_columns = array();
 
 // New bootstrap version
 // $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
-// <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">';
+// <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+// <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/css/selectize.default.min.css" integrity="sha512-pTaEn+6gF1IeWv3W1+7X7eM60TFu/agjgoHmYhAfLEU8Phuf6JKiiE8YmsNC0aCgQv4192s4Vai8YZ6VNM6vyQ==" crossorigin="anonymous" referrerpolicy="no-referrer"/>';
+
 $CSS_REFS = '<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text/css"/>
-<link rel="stylesheet" href="../css/style.css" type="text/css"/>';
+<link rel="stylesheet" href="../css/style.css" type="text/css"/>
+<link rel="stylesheet" href="../css/selectize.css" type="text/css"/>';
 
 // $JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
 // <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-// <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>';
+// <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>
+// <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js" integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>';
 $JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
 <script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/selectize.min.js"></script>
 <script src="../js/emojis.js"></script>
 <script src="../js/custom.js"></script>';
 
@@ -523,9 +528,9 @@ function generate($postdata) {
                             $html .= \'<p><a href="../'. $table . '/index.php?'. $column . '[]=\'. $row["'.$fk_column.'"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with '. $column . ' = \'. $row["'.$fk_column.'"] .\'</a></p></p>\';         
                         }';
 
-                        // Only primary keys can be used when checking for deletion
+                        // Only primary keys can be used when checking for deletion (because we don't have access to the other columns)
                         if(isset($_POST[$key][$fk_column]['primary'])){
-                            $foreign_key_delete_references[] = "\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`  FROM `$table` WHERE `$column` = ?;\"";
+                            $foreign_key_delete_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`  FROM `$table` WHERE `$column` = ?;\"";
                         }
                     }
                 }
