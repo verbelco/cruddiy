@@ -505,16 +505,22 @@ $createfile = <<<'EOT'
 // Include config file
 require_once "../config.php";
 require_once "../helpers.php";
+require_once "../shared/Column.php";
+require_once "class.php";
 
-{CREATE_DEFAULT_VARIABLES}
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    {CREATE_POST_VARIABLES}
+    $row = array();
+    foreach ($column_list as $name => $column) {
+        if ($column->get_name() != "{COLUMN_ID}") {
+            $row[$name] = $column_list[$name]->get_sql_create_value($_POST[$name]);
+        }
+    }
 
     $stmt = $link->prepare("INSERT INTO `{TABLE_NAME}` ({CREATE_COLUMN_NAMES}) VALUES ({CREATE_QUESTIONMARK_PARAMS})");
 
     try {
-        $stmt->execute([ {CREATE_SQL_PARAMS} ]);
+        $stmt->execute(array_values($row));
     } catch (Exception $e) {
         error_log($e->getMessage());
         $error = $e->getMessage();
@@ -533,9 +539,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     $stmt = $link->prepare("SELECT {CREATE_COLUMN_NAMES} FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?");
     $stmt->execute([ $duplicate_{COLUMN_ID} ]);
-    $stmt->bind_result({CREATE_SQL_PARAMS});
-    $stmt->fetch();
-    $stmt->close();    
+    $result = $stmt->get_result();
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+    }
 }
 ?>
 
@@ -559,7 +566,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 <p>Please fill this form and submit to add a record to the database.</p>
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                 <div>
-                    {CREATE_HTML}
+                    <?php
+                        foreach ($column_list as $name => $column) {
+                            if ($column->get_name() != "{COLUMN_ID}") {
+                                echo $column_list[$name]->html_update_row($row[$name]);
+                            }
+                        }
+                    ?>
                 </div>
                 <div class="mt-3 mb-3">
                     <input type="submit" class="btn btn-primary" value="Create">
@@ -591,71 +604,61 @@ $updatefile = <<<'EOT'
 // Include config file
 require_once "../config.php";
 require_once "../helpers.php";
+require_once "../shared/Column.php";
+require_once "class.php";
 
 // Processing form data when form is submitted
 if(isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])){
-    // Get hidden input value
-    ${COLUMN_ID} = $_POST["{COLUMN_ID}"];
+    $row = array();
+    $update_stmts = [];
+    foreach ($column_list as $name => $column) {
+        if ($column->get_name() != "{COLUMN_ID}") {
+            $row[$name] = $column_list[$name]->get_sql_update_value($_POST[$name]);
+            $update_stmts[] = $column_list[$name]->get_sql_update_stmt();
+        }
+    }
 
-    {CREATE_POST_VARIABLES}
-
-    // Prepare an update statement
-
-    $stmt = $link->prepare("UPDATE `{TABLE_NAME}` SET {UPDATE_SQL_PARAMS} WHERE {UPDATE_SQL_ID}");
+    $param_id = $_POST["{COLUMN_ID}"];
+    $row["{COLUMN_ID}"] = $param_id;
 
     try {
-        $stmt->execute([ {UPDATE_SQL_COLUMNS}  ]);
+        $stmt = $link->prepare("UPDATE `{TABLE_NAME}` SET " . implode(", ", $update_stmts) . " WHERE `{COLUMN_ID}`=?");
+        $stmt->execute(array_values($row));
     } catch (Exception $e) {
         error_log($e->getMessage());
         $error = $e->getMessage();
     }
 
-    if (!isset($error)){
-        header("location: ../{TABLE_NAME}/read.php?{COLUMN_ID}=${COLUMN_ID}");
+    if (!isset($error)) {
+        header("location: ../{TABLE_NAME}/read.php?{COLUMN_ID}=$param_id");
     }
-} 
-// Check existence of id parameter before processing further
+}
+
+// Retrieve the values for this record
 $_GET["{COLUMN_ID}"] = trim($_GET["{COLUMN_ID}"]);
-if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
-    // Get URL parameter
-    ${COLUMN_ID} =  trim($_GET["{COLUMN_ID}"]);
+if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
+    if (!isset($error)) {
+        // Get URL parameter
+        $param_id = trim($_GET["{COLUMN_ID}"]);
 
-    // Prepare a select statement
-    $sql = "SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?";
-    $stmt = mysqli_prepare($link, $sql);
-    // Set parameters
-    $param_id = ${COLUMN_ID};
+        // Prepare a select statement
+        $sql = "SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?";
+        $stmt = mysqli_prepare($link, $sql);
+        mysqli_stmt_execute($stmt, [$param_id]);
+        $result = mysqli_stmt_get_result($stmt);
 
-    // Bind variables to the prepared statement as parameters
-    if (is_int($param_id)) $__vartype = "i";
-    elseif (is_string($param_id)) $__vartype = "s";
-    elseif (is_numeric($param_id)) $__vartype = "d";
-    else $__vartype = "b"; // blob
-    mysqli_stmt_bind_param($stmt, $__vartype, $param_id);
+        if (mysqli_num_rows($result) == 1) {
+            $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+        } else {
+            // URL doesn't contain valid id. Redirect to error page
+            header("location: ../error.php");
+            exit();
+        }
 
-    // Attempt to execute the prepared statement
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-
-    if(mysqli_num_rows($result) == 1){
-        /* Fetch result row as an associative array. Since the result set
-        contains only one row, we don't need to use while loop */
-        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-
-        // Retrieve individual field value
-
-        {UPDATE_COLUMN_ROWS}
-
-    } else{
-        // URL doesn't contain valid id. Redirect to error page
-        header("location: ../error.php");
-        exit();
+        // Close statement
+        mysqli_stmt_close($stmt);
     }
-   
-    // Close statement
-    mysqli_stmt_close($stmt);
-
-}  else{
+} else {
     // URL doesn't contain id parameter. Redirect to error page
     header("location: ../error.php");
     exit();
@@ -681,9 +684,13 @@ if(isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])){
                 <?php print_error_if_exists($error); ?>
                 <p>Please edit the input values and submit to update the record.</p>
                 <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
-
-                    {CREATE_HTML}
-
+                    <?php
+                    foreach ($column_list as $name => $column) {
+                        if ($column->get_name() != "{COLUMN_ID}") {
+                            echo $column_list[$name]->html_update_row($row[$name]);
+                        }
+                    }
+                    ?>
                     <input type="hidden" name="{COLUMN_ID}" value="<?php echo ${COLUMN_ID}; ?>"/>
                     <p>
                         <input type="submit" class="btn btn-primary" value="Submit">
@@ -791,6 +798,6 @@ EOT;
 $crud_class_file = <<<'EOT'
 <?php
 
-$column_list = [{COLUMNS_CLASSES}];
+$column_list = array({COLUMNS_CLASSES});
 
 EOT;

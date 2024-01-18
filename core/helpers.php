@@ -55,23 +55,23 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
     $type = type_to_str($type);
 
     if($type == "text"){
-        return "new TextColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new TextColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "enum"){
         $enum_list = get_enum_list($table, $name);
         $enum_dict = "array_combine($enum_list, $enum_list)";
-        return "new EnumColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key, $enum_dict)";
+        return "'$name' => new EnumColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key, $enum_dict)";
     } elseif($type == "bool"){
-        return "new BoolColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new BoolColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "int"){
-        return "new IntColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new IntColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "float"){
-        return "new FloatColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new FloatColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "date"){
-        return "new DateColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new DateColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } elseif($type == "datetime"){
-        return "new DateTimeColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new DateTimeColumn('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     } else {
         // Default, usually strings
-        return "new Column('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
+        return "'$name' => new Column('$name', '$displayname', $comments, '$table', $sql_join, $required, $primary_key)";
     }
 }
