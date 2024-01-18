@@ -4,9 +4,9 @@ $indexfile = <<<'EOT'
 <?php
     // Include config file
     require_once "../config.php";
-    require_once "../helpers.php";
-    require_once "../bulk_updates.php";
-    require_once "../shared/Column.php";
+    require_once "../shared/helpers.php";
+    require_once "../shared/bulk_updates.php";
+    require_once "../shared/Column/Column.php";
     require_once "class.php";
 
     //Get current URL and parameters for correct pagination
@@ -126,7 +126,7 @@ $indexfile = <<<'EOT'
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once('../navbar.php'); ?>
+<?php require_once "../shared/navbar.php"; ?>
 <body>
     <div class="container-xxl py-5">
         <div class="row">
@@ -334,8 +334,8 @@ $_GET["{TABLE_ID}"] = trim($_GET["{TABLE_ID}"]);
 if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     // Include config file
     require_once "../config.php";
-    require_once "../helpers.php";
-    require_once "../shared/Column.php";
+    require_once "../shared/helpers.php";
+    require_once "../shared/Column/Column.php";
     require_once "class.php";
 
     // Prepare a select statement
@@ -380,7 +380,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once('../navbar.php'); ?>
+<?php require_once "../shared/navbar.php"; ?>
 <body class="bg-light">
     <div class="container-lg bg-white py-5 shadow">
         <div class="row">
@@ -428,7 +428,9 @@ $deletefile = <<<'EOT'
 <?php
 // Include config file
 require_once "../config.php";
-require_once "../helpers.php";
+require_once "../shared/helpers.php";
+require_once "../shared/Column/Column.php";
+require_once "class.php";
 
 // Process delete operation after confirmation
 if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
@@ -490,7 +492,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once('../navbar.php'); ?>
+<?php require_once "../shared/navbar.php"; ?>
 <body class="bg-light">
     <div class="container-lg bg-white py-5 shadow">
         <div class="row">
@@ -537,8 +539,8 @@ $createfile = <<<'EOT'
 <?php
 // Include config file
 require_once "../config.php";
-require_once "../helpers.php";
-require_once "../shared/Column.php";
+require_once "../shared/helpers.php";
+require_once "../shared/Column/Column.php";
 require_once "class.php";
 
 // Processing form data when form is submitted
@@ -587,7 +589,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once('../navbar.php'); ?>
+<?php require_once "../shared/navbar.php"; ?>
 <body class="bg-light">
     <div class="container-lg bg-white py-5 shadow">
         <div class="row">
@@ -636,8 +638,8 @@ $updatefile = <<<'EOT'
 <?php
 // Include config file
 require_once "../config.php";
-require_once "../helpers.php";
-require_once "../shared/Column.php";
+require_once "../shared/helpers.php";
+require_once "../shared/Column/Column.php";
 require_once "class.php";
 
 // Processing form data when form is submitted
@@ -706,7 +708,7 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once('../navbar.php'); ?>
+<?php require_once "../shared/navbar.php"; ?>
 <body class="bg-light">
     <div class="container-lg bg-white py-5 shadow">
         <div class="row">

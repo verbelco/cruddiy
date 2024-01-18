@@ -57,7 +57,8 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
 
     if($sql_join != "null" && $sql_select != "null"){
         [$fk_table, $fk_column] = get_foreign_table_and_column($table, $name);
-        return "'$name' => new ForeignKeyColumn('$name', '$displayname', $comments, '$table', $sql_join, $sql_select, '$fk_table', '$fk_column', $required, $primary_key)";
+        $fk_primary = is_primary_key($table, $name) ? "True" : "False";
+        return "'$name' => new ForeignKeyColumn('$name', '$displayname', $comments, '$table', $sql_join, $sql_select, '$fk_table', '$fk_column', $fk_primary, $required, $primary_key)";
     }
     elseif($type == "text"){
         return "'$name' => new TextColumn('$name', '$displayname', $comments, '$table', $sql_join, $sql_select, $required, $primary_key)";
