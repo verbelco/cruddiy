@@ -67,14 +67,7 @@ $indexfile = <<<'EOT'
     } else {
         $pageno = 1;
     }
-
-    // $no_of_records_per_page is set on the index page. Default is 10.
     $offset = ($pageno-1) * $no_of_records_per_page;
-
-    $total_pages_sql = "SELECT COUNT(*) FROM `{TABLE_NAME}`";
-    $result = mysqli_query($link,$total_pages_sql);
-    $total_rows = mysqli_fetch_array($result)[0];
-    $total_pages = ceil($total_rows / $no_of_records_per_page);
 
     // Column sorting on column name
     [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $column_list, "{COLUMN_ID}", "{TABLE_NAME}");
