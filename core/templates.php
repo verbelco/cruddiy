@@ -9,11 +9,19 @@ $indexfile = <<<'EOT'
     require_once "../shared/Column/Column.php";
     require_once "class.php";
 
+    // Import custom columns if they exist
+    if (file_exists(stream_resolve_include_path("class_extension.php"))) {
+        require "class_extension.php";
+    } else {
+        $read_only_columns_list = array();
+    }
+
     //Get current URL and parameters for correct pagination
     $script   = $_SERVER['SCRIPT_NAME'];
     $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
     $currenturl = $domain. $script . '?' . $parameters;
 
+    $column_list = $original_column_list + $read_only_columns_list;
     $columns = array_keys($column_list);
 
     if(isset($_GET["target"]) && $_GET["target"] == "empty"){
@@ -29,12 +37,14 @@ $indexfile = <<<'EOT'
         $selected_columns = ['{COLUMNS}'];
     }
 
-    $selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) { return in_array($c->get_name(), $selected_columns); });
+    $selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) {
+        return in_array($c->get_name(), $selected_columns);
+    });
 
     // Handle bulk updates
     if (isset($_POST['target']) && in_array($_POST['target'], ['Update', 'Update_all', 'Delete', 'Delete_all'])) {
         $ids = str_contains($_POST['target'], 'all') ? explode(';', $_POST['all_ids']) : $_POST['bulk-update'];
-        $values = array_intersect_key($_POST, array_flip($columns));
+        $values = array_intersect_key($_POST, array_flip(array_keys($original_column_list)));
 
         if (is_array($ids) && count($ids) > 0) {
             if (str_contains($_POST['target'], 'Update')) {
@@ -89,9 +99,12 @@ $indexfile = <<<'EOT'
 
     [$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
-    $sql_select = implode(", ", array_map(function ($c) { return $c->get_sql_select(); }, $column_list));
-    $sql_values = implode(", ", array_map(function ($c) { return $c->get_sql_value(); }, $column_list));
-    $sql_join = implode("", array_map(function ($c) { return $c->get_sql_join(); }, $column_list));
+    $sql_select = implode(", ", array_map(function ($c) {
+        return $c->get_sql_select();
+    }, $selected_columns_list + [$original_column_list["{COLUMN_ID}"]]));
+    $sql_values = implode(", ", array_map(function ($c) {
+        return $c->get_sql_value();
+    }, $column_list));
 
     if (!empty($_GET['search'])) {
         $search = mysqli_real_escape_string($link, $_GET['search']);
@@ -101,6 +114,15 @@ $indexfile = <<<'EOT'
         $get_param_search = "?";
         $search = "";
     }
+
+    // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
+    $colums_join_list = array_filter($column_list, function ($c) use ($selected_columns, $search, $filter, $order_param_array) {
+        return in_array($c->get_name(), $selected_columns) || $search != "" || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
+    });
+
+    $sql_join = implode("", array_map(function ($c) {
+        return $c->get_sql_join();
+    }, $colums_join_list));
 
     // Prepare SQL queries
     $sql = "SELECT $sql_select
@@ -189,7 +211,7 @@ $indexfile = <<<'EOT'
                             <h3 class="text-center">Bulk Updates</h3>
                             <div>
                                 <?php
-                                foreach ($column_list as $c) {
+                                foreach ($original_column_list as $c) {
                                     echo $c->html_index_bulk_update();
                                 }
                                 ?>
@@ -213,8 +235,17 @@ $indexfile = <<<'EOT'
                                     Select the columns that you want to display on this page
                                 </p>
                                 <?php
-                                foreach ($column_list as $name => $c) {
+                                if(count($read_only_columns_list) > 0){
+                                    echo "<h5>Original columns</h5>";
+                                }
+                                foreach ($original_column_list as $name => $c) {
                                     echo $c->html_index_flexible_columns(in_array($name, $selected_columns));
+                                }
+                                if(count($read_only_columns_list) > 0){
+                                    echo "<h5>Read-only columns</h5>";
+                                    foreach ($read_only_columns_list as $name => $c) {
+                                        echo $c->html_index_flexible_columns(in_array($name, $selected_columns));
+                                    }
                                 }
                                 ?>
                             </div>
@@ -242,7 +273,7 @@ $indexfile = <<<'EOT'
                                     </th>';
                                     foreach($selected_columns_list as $c){
                                         [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
-                                        if($default_ordering && $c->get_name() == "{COLUMN_ID}"){
+                                        if($default_ordering){
                                             unset($order_param_array["{COLUMN_ID}"]);
                                         }
                                         echo $c->html_index_table_header($get_param_search, $get_param_where, $get_param_order, $arrow);
@@ -341,6 +372,15 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
     require_once "../shared/Column/Column.php";
     require_once "class.php";
 
+    // Import custom columns if they exist
+    if (file_exists(stream_resolve_include_path("class_extension.php"))) {
+        require "class_extension.php";
+    } else {
+        $read_only_columns_list = array();
+    }
+
+    $column_list = $original_column_list + $read_only_columns_list;
+
     // Prepare a select statement
     $sql_select = implode(", ", array_map(function ($c) { return $c->get_sql_select(); }, $column_list));
     $sql_join = implode("", array_map(function ($c) { return $c->get_sql_join(); }, $column_list));
@@ -393,9 +433,18 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                 </div>
                 <div>
                     <?php
-                        foreach ($column_list as $c) {
+                    if(count($read_only_columns_list) > 0){
+                        echo "<h5>Original columns</h5>";
+                    }
+                    foreach ($original_column_list as $name => $c) {
+                        echo $c->html_read_row($row);
+                    }
+                    if(count($read_only_columns_list) > 0){
+                        echo "<h5>Read-only columns</h5>";
+                        foreach ($read_only_columns_list as $name => $c) {
                             echo $c->html_read_row($row);
-                        } 
+                        }   
+                    } 
                     ?>
                 </div>
                 <div class="mt-3 mb-5">
@@ -549,9 +598,9 @@ require_once "class.php";
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     $row = array();
-    foreach ($column_list as $name => $column) {
+    foreach ($original_column_list as $name => $column) {
         if ($column->get_name() != "{COLUMN_ID}") {
-            $row[$name] = $column_list[$name]->get_sql_create_value($_POST[$name]);
+            $row[$name] = $original_column_list[$name]->get_sql_create_value($_POST[$name]);
         }
     }
 
@@ -605,9 +654,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                 <div>
                     <?php
-                        foreach ($column_list as $name => $column) {
+                        foreach ($original_column_list as $name => $column) {
                             if ($column->get_name() != "{COLUMN_ID}") {
-                                echo $column_list[$name]->html_update_row($row[$name]);
+                                echo $original_column_list[$name]->html_update_row($row[$name]);
                             }
                         }
                     ?>
@@ -649,10 +698,10 @@ require_once "class.php";
 if(isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])){
     $row = array();
     $update_stmts = [];
-    foreach ($column_list as $name => $column) {
+    foreach ($original_column_list as $name => $column) {
         if ($column->get_name() != "{COLUMN_ID}") {
-            $row[$name] = $column_list[$name]->get_sql_update_value($_POST[$name]);
-            $update_stmts[] = $column_list[$name]->get_sql_update_stmt();
+            $row[$name] = $original_column_list[$name]->get_sql_update_value($_POST[$name]);
+            $update_stmts[] = $original_column_list[$name]->get_sql_update_stmt();
         }
     }
 
@@ -723,9 +772,9 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
                 <p>Please edit the input values and submit to update the record.</p>
                 <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
                     <?php
-                    foreach ($column_list as $name => $column) {
+                    foreach ($original_column_list as $name => $column) {
                         if ($column->get_name() != "{COLUMN_ID}") {
-                            echo $column_list[$name]->html_update_row($row[$name]);
+                            echo $original_column_list[$name]->html_update_row($row[$name]);
                         }
                     }
                     ?>
@@ -836,6 +885,6 @@ EOT;
 $crud_class_file = <<<'EOT'
 <?php
 
-$column_list = array({COLUMNS_CLASSES});
+$original_column_list = array({COLUMNS_CLASSES});
 
 EOT;
