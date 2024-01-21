@@ -26,23 +26,23 @@ I have no intention of merging this back into the original repository, since the
 - [x] Flexible columns on the index (Let the user choose which columns of the table are visible)
 - [x] Allow custom queries for flexible records 
 - [x] Bulk updating of records.
-- [ ] Default values from SQL as defaults in create.
 - [x] Remember cruddiy configuration
 - [x] Show SQL Table comments.
 - [x] Pre-fill create form, to duplicate records.
 - [x] Advanced searching (remember search parameters) (Mail 8 mei van Klaas).
 - [x] Advanced Ordering.
 - [x] Split files into folder of the table name.
-- [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
 - [x] Update bootstrap to the newest version.
 - [x] Multiple ordering displayed with 1st column, 2nd column.
 - [x] Extend the previews recursively.
 - [x] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
 - [x] Add a possibility for custom extensions to the view pages.
 - [ ] Automatic NAV-bar generation is broken.
-- [ ] For delete, check for external references before deletion.
+- [x] For delete, check for external references before deletion.
 - [ ] Null filter toevoegen
 - [ ] Knop back brengt je terug naar de index
+- [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
+- [x] Default values from SQL as defaults in create.
 
 
 ## Setup

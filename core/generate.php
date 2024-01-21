@@ -216,6 +216,9 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 }
 
 
+// Kolommen die niet meer worden gebruikt: INDEX_TABLE_HEADERS, INDEX_TABLE_ROWS,
+//  INDEX_CONCAT_SEARCH_FIELDS, JOIN_COLUMNS, JOIN_CLAUSES, INDEX_FILTER, BULK_UPDATE_FORM
+// COLUMN_NAME is dubbel
 function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_headers,$index_table_rows,$index_filter, $bulk_update_form,$column_id, $columns_selected, $index_sql_search, $join_columns, $join_clauses) {
     global $indexfile;
     global $appname;
@@ -246,6 +249,7 @@ function generate_index($tablename,$tabledisplay, $tablecomment, $index_table_he
     echo "Generating $tablename Index file<br>";
 }
 
+// Niet meer gebruikt: RECORDS_READ_FORM, JOIN_COLUMNS, JOIN_CLAUSES
 function generate_read($tablename, $column_id, $read_records, $foreign_key_references, $join_columns, $join_clauses){
     global $readfile;
     global $CSS_REFS;
@@ -294,6 +298,7 @@ function generate_delete($tablename, $column_id, $foreign_key_references){
     echo "Generating $tablename Delete file<br>";
 }
 
+// Niet meer gebruikt: CREATE_ERR_RECORDS, CREATE_RECORDS, CREATE_SQL_PARAMS, CREATE_HTML, CREATE_POST_VARIABLES, CREATE_DEFAULT_VARIABLES
 function generate_create($tablename,$create_records, $create_err_records, $create_sqlcolumns, $column_id, $create_numberofparams, $create_sql_params, $create_html, $create_postvars, $create_default_vars) {
     global $createfile;
     global $CSS_REFS;
@@ -318,6 +323,8 @@ function generate_create($tablename,$create_records, $create_err_records, $creat
     echo "Generating $tablename Create file<br>";
 }
 
+// Niet meer gebruikt CREATE_RECORDS, CREATE_ERR_RECORDS, UPDATE_SQL_PARAMS, UPDATE_SQL_ID, CREATE_HTML, 
+// CREATE_POST_VARIABLES, UPDATE_COLUMN_ROWS, UPDATE_SQL_COLUMNS
 function generate_update($tablename, $create_records, $create_err_records, $create_postvars, $column_id, $create_html, $update_sql_params, $update_sql_id, $update_column_rows, $update_sql_columns){
     global $updatefile;
     global $CSS_REFS;
@@ -364,53 +371,9 @@ function count_index_colums($table) {
     return $i;
 }
 
-function get_default_value($table, $column){
-    // Get the default value of a column
-    global $link;
-
-    // if($table == 'peilstanden')
-    // // This table seems to cause issues
-    // {
-    //     return '';
-    // }
-
-    $sql = "SELECT DEFAULT(`$column`) AS def FROM `$table` LIMIT 1;";
-    try{
-        $result = mysqli_query($link, $sql);
-        if(mysqli_num_rows($result) == 1)
-        {
-            return mysqli_fetch_assoc($result)['def']; 
-        } else {
-            return '';
-        }
-    } catch (Exception $e) {
-        return '';
-    }
-}
-
-function get_foreign_table_and_column($tablename, $columnname){
-    global $link;
-
-    $sql_getfk = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
-    k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
-    i.CONSTRAINT_NAME as 'Constraint Name'
-    FROM information_schema.TABLE_CONSTRAINTS i
-    LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
-    WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND k.TABLE_NAME = '$tablename' AND k.COLUMN_NAME = '$columnname'";
-    $result = mysqli_query($link, $sql_getfk);
-    if (mysqli_num_rows($result) > 0) {
-        while($row = mysqli_fetch_assoc($result)) {
-            $fk_table = $row["FK Table"];
-            $fk_column = $row["FK Column"];
-        }
-        return [$fk_table, $fk_column];
-    }
-}
-
 function get_fk_preview_queries($table, $join_name, &$sql_concat_select, &$sql_select, &$join_clauses){
     // This function goes over the preview columns of a table.
     global $preview_columns;
-    error_log("Recursive call");
     foreach($preview_columns[$table] as $column => $fk)
     {
         if($fk)
@@ -733,7 +696,7 @@ function generate($postdata) {
                                 $sql_select = array();
                                 
                                 // We need may need multiple JOIN, but in any case we need to join our refered foreign key.
-                                $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
+                                $join_clauses .= "\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`$columnname`";
                                 
                                 $local_join_clauses = "";
 

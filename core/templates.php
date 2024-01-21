@@ -649,7 +649,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <?php
                         foreach ($original_column_list as $name => $column) {
                             if ($column->get_name() != "{COLUMN_ID}") {
-                                echo $original_column_list[$name]->html_update_row($row[$name]);
+                                echo $original_column_list[$name]->html_create_row($row[$name]);
                             }
                         }
                     ?>
