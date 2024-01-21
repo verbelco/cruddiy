@@ -23,13 +23,10 @@ I have no intention of merging this back into the original repository, since the
 
 ## TODO
 - [x] Move all config/validation to the top.?
-- [ ] Gebruik valuelist/datalist ipv select bij grote tabellen
-- [ ] Submit, view, back at constant postions.
-- [ ] Layout of the create form more efficient.
-- [ ] Flexible columns on the index (Let the user choose which columns of the table are visible)
-- [ ] Allow custom queries for flexible records 
-- [ ] Bulk updating of records.
-- [x] Default values from SQL as defaults in create.
+- [x] Flexible columns on the index (Let the user choose which columns of the table are visible)
+- [x] Allow custom queries for flexible records 
+- [x] Bulk updating of records.
+- [ ] Default values from SQL as defaults in create.
 - [x] Remember cruddiy configuration
 - [x] Show SQL Table comments.
 - [x] Pre-fill create form, to duplicate records.
@@ -44,7 +41,8 @@ I have no intention of merging this back into the original repository, since the
 - [x] Add a possibility for custom extensions to the view pages.
 - [ ] Automatic NAV-bar generation is broken.
 - [ ] For delete, check for external references before deletion.
-- [ ] Filters should be more advanced (null, filter on previews)
+- [ ] Null filter toevoegen
+- [ ] Knop back brengt je terug naar de index
 
 
 ## Setup
