@@ -37,12 +37,11 @@ I have no intention of merging this back into the original repository, since the
 - [x] Extend the previews recursively.
 - [x] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
 - [x] Add a possibility for custom extensions to the view pages.
-- [ ] Automatic NAV-bar generation is broken.
+- [ ] Automatic NAV-bar generation is broken. (WONTFIX)
 - [x] For delete, check for external references before deletion.
 - [ ] Null filter toevoegen
+- [ ] ENUMs fatsoenlijk implementeren. (CustomEnum classes).
 - [ ] Knop back brengt je terug naar de index
-- [ ] Bulk updates in tables with reference to fk fail
-- [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
 - [x] Default values from SQL as defaults in create.
 
 
