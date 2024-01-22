@@ -25,7 +25,8 @@ function bulk_update_crud(string $table, string $table_id, array $values, array 
         $stmt_param = array_values($values);
         // Translate "null" to null
         $stmt_param = array_map(function ($v) {
-            return strtolower($v) == 'null' ? null : $v; }, $stmt_param);
+            return strtolower($v) == 'null' ? null : $v;
+        }, $stmt_param);
         $stmt_param[] = $id;
         try {
             $stmt->execute($stmt_param);

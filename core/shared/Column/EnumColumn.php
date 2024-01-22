@@ -1,0 +1,59 @@
+<?php
+
+class EnumColumn extends Column
+{
+    /** List with possible values */
+    protected array $enums;
+
+    function __construct(string $name, string $displayname, ?string $comment, string $table, $default, ?string $sql_join, ?string $sql_select, bool $required, bool $primary_key, array $enums)
+    {
+        parent::__construct($name, $displayname, $comment, $table, $default, $sql_join, $sql_select, $required, $primary_key);
+        $this->enums = $enums;
+    }
+
+    function format($value, $ref = null)
+    {
+        return $value;
+    }
+
+    function html_input_field($value = null, $required = true, $name = null, $id = null, $placeholder = null): string
+    {
+        $name = empty($name) ? $this->get_name() : $name;
+        $id = empty($id) ? $this->get_name() : $id;
+
+        $enum = $this->enums;
+
+        // Maak een zoekbare enum als er meer dan N opties zijn
+        if (count($enum) > 25) {
+            $class = "";
+        } else {
+            $class = ' class="form-control"';
+        }
+
+        $html = '<select name="' . $name . '" id="' . $id . '"' . $class . '>';
+
+        if (!$this->get_required()) {
+            $enum = array("null" => "Null") + $enum;
+        }
+
+        if (!$required) {
+            $enum = array("" => "") + $enum;
+        }
+
+        foreach ($enum as $key => $text) {
+            if (isset($value) && $key == $value) {
+                $html .= '<option value="' . $key . '" selected>' . $text . '</option>';
+            } else {
+                $html .= '<option value="' . $key . '">' . $text . '</option>';
+            }
+        }
+
+        $html .= '</select>';
+        return $html;
+    }
+
+    function html_index_advanced_filter_equal($val)
+    {
+        return $this->html_input_field($val, false, $this->get_name() . '[=]', 'advanced-filter-' . $this->get_name());
+    }
+}
