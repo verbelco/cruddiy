@@ -41,6 +41,7 @@ I have no intention of merging this back into the original repository, since the
 - [x] For delete, check for external references before deletion.
 - [ ] Null filter toevoegen
 - [ ] Knop back brengt je terug naar de index
+- [ ] Bulk updates in tables with reference to fk fail
 - [ ] After editing, return to the record on the index. (Mail 9 mei van Klaas).
 - [x] Default values from SQL as defaults in create.
 
