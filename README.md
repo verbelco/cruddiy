@@ -60,6 +60,7 @@ cp cruddiy/core/temp/* manager/modules/crud/
 rm -r cruddiy/core/temp
 ```
 3. Gebruik de [format files](https://marketplace.visualstudio.com/items?itemName=jbockle.jbockle-format-files) extensie voor VScode om de bestanden te formateren.
+4. Let op dat je de [shared](core/shared) map ook moet overzetten.
 
 ### CRUDDIY
 (FORK FROM CRUDDIY)
