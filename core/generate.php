@@ -296,8 +296,22 @@ function generate($postdata)
         global $link, $forced_deletion;
 
         if (!in_array($key, $excluded_keys)) {
-            $i = 0;
-            $j = 0;
+
+            // Specific INDEX page variables            
+            foreach ($table_data as $c) {
+                // Find the primary key of this table
+                if (isset($c['primary'])) {
+                    $column_id = $c['columnname'];
+                }
+
+                // Get the columns visible in the index file
+                if (isset($c['columnvisible'])) {
+                    if ($c['columnvisible'] == 1) {
+                        $columns_selected[] = $c['columnname'];
+                    }
+                }
+            }
+
             $total_params = count($table_data);
             $first_column = $table_data[array_keys($table_data)[0]];
             $tablename = $first_column['tablename'];
@@ -318,8 +332,7 @@ function generate($postdata)
             }
 
             // Find foreign key references to this table
-            $foreign_key_references = "";
-            $foreign_key_delete_references = [];
+            $foreign_key_references = [];
             $sql_get_fk_ref = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
                                 k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
                                 i.CONSTRAINT_NAME as 'Constraint Name'
@@ -334,35 +347,11 @@ function generate($postdata)
                     if (isset($preview_columns[$table])) {
                         $fk_column = $row["FK Column"];
                         $column = $row["Column"];
-                        $foreign_key_references .= '
-                        $subsql = "SELECT COUNT(*) AS count FROM `' . $table . '` WHERE `' . $column . '` = ". $row["' . $fk_column . '"] . ";";
-                        $number_of_refs = mysqli_fetch_assoc(mysqli_query($link, $subsql))["count"];
-                        if ($number_of_refs > 0)
-                        {
-                            $html .= \'<p><a href="../' . $table . '/index.php?' . $column . '[]=\'. $row["' . $fk_column . '"]' . '.\'" class="btn btn-info">View \' . $number_of_refs . \' ' . $table . ' with ' . $column . ' = \'. $row["' . $fk_column . '"] .\'</a></p></p>\';         
-                        }';
-
-                        // Only primary keys can be used when checking for deletion (because we don't have access to the other columns)
                         if (isset($table_data[$fk_column]['primary'])) {
-                            $foreign_key_delete_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`  FROM `$table` WHERE `$column` = ?;\"";
+                            $foreign_key_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`, `$column` AS `local_value` FROM `$table` WHERE `$column` = ?;\"";
+                        } elseif(isset($column_id)) {
+                            $foreign_key_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`, `$column` AS `local_value` FROM `$table` WHERE `$column` IN (SELECT `$fk_column` FROM `$fk_table` WHERE `$column_id` = ?);\"";
                         }
-                    }
-                }
-            }
-            $foreign_key_references = $foreign_key_references != "" ? '$html = "";' . $foreign_key_references . 'if ($html != "") {echo "<h3>References to this ' . $tablename . ':</h3>" . $html;}' : "";
-
-            // Specific INDEX page variables            
-            foreach ($table_data as $c) {
-                // Find the primary key of this table
-                if (isset($c['primary'])) {
-                    $column_id = $c['columnname'];
-                }
-
-                // Get the columns visible in the index file
-                if (isset($c['columnvisible'])) {
-                    if ($c['columnvisible'] == 1) {
-                        $columns_selected[] = $c['columnname'];
-                        $i++;
                     }
                 }
             }
@@ -375,7 +364,6 @@ function generate($postdata)
 
                 if (!empty($c['auto'])) {
                     //Dont create html input field for auto-increment columns
-                    $j++;
                     $total_params--;
                 }
 
@@ -414,7 +402,7 @@ function generate($postdata)
             $create_numberofparams = implode(", ", $create_numberofparams);
             $create_sqlcolumns = implode(", ", $create_sqlcolumns);
 
-            $foreign_key_delete_references = implode(",", $foreign_key_delete_references);
+            $foreign_key_references = implode(",", $foreign_key_references);
             $column_classes = implode(",\n", $column_classes);
 
             //Generate everything (without navbar)
@@ -455,7 +443,7 @@ function generate($postdata)
             generate_create($tablename, $create_sqlcolumns, $column_id, $create_numberofparams);
             generate_read($tablename, $column_id, $foreign_key_references);
             generate_update($tablename, $column_id);
-            generate_delete($tablename, $column_id, $foreign_key_delete_references);
+            generate_delete($tablename, $column_id, $foreign_key_references);
             generate_crud_class($tablename, $column_id, $column_classes);
         }
     }

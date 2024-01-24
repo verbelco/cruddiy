@@ -436,7 +436,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                         echo "<h5>Read-only columns</h5>";
                         foreach ($read_only_columns_list as $name => $c) {
                             echo $c->html_read_row($row);
-                        }   
+                        }
                     } 
                     ?>
                 </div>
@@ -447,7 +447,20 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                     <a href="javascript:history.back()" class="btn btn-primary">Back</a>
                 </div> 
                 <?php
-                {FOREIGN_KEY_REFS}
+                // Look for references to this record
+                $references = [];
+                $subsqls = [{FOREIGN_KEY_REFS}];
+                foreach($subsqls as $subsql){
+                    $stmt = $link->prepare($subsql);
+                    $stmt->execute([$param_id]);
+                    $row = $stmt->get_result()->fetch_assoc();
+                    $stmt->close();
+
+                    if($row['count'] > 0){
+                        $references[] = $row;
+                    }
+                }
+                echo html_read_references($references);
 
                 if (file_exists(stream_resolve_include_path("extension.php"))){
                     include("extension.php");
@@ -523,7 +536,6 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
         $stmt->close();
 
         if($row['count'] > 0){
-            $row['value'] = $param_id;
             $references[] = $row;
         }
     }

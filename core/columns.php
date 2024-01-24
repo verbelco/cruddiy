@@ -36,7 +36,7 @@ if (!is_dir($config_folder)) {
                             unset($configs[0]);
                             unset($configs[1]);
 
-                            foreach ($configs as $k => $fname) {
+                            foreach (array_reverse($configs) as $k => $fname) {
                                 $name = pathinfo($fname, PATHINFO_FILENAME);
                                 echo "<option value='$name'>$name</option>";
                             }
