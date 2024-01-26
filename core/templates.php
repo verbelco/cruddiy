@@ -525,6 +525,13 @@ require_once "../shared/helpers.php";
 require_once "../shared/Column/Column.php";
 require_once "class.php";
 
+// Import custom columns if they exist
+if (file_exists(stream_resolve_include_path("class_extension.php"))) {
+    require "class_extension.php";
+} else {
+    $read_only_columns_list = array();
+}
+
 // Process delete operation after confirmation
 if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
 
@@ -635,6 +642,13 @@ require_once "../shared/helpers.php";
 require_once "../shared/Column/Column.php";
 require_once "class.php";
 
+// Import custom columns if they exist
+if (file_exists(stream_resolve_include_path("class_extension.php"))) {
+    require "class_extension.php";
+} else {
+    $read_only_columns_list = array();
+}
+
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     $row = array();
@@ -733,6 +747,13 @@ require_once "../config.php";
 require_once "../shared/helpers.php";
 require_once "../shared/Column/Column.php";
 require_once "class.php";
+
+// Import custom columns if they exist
+if (file_exists(stream_resolve_include_path("class_extension.php"))) {
+    require "class_extension.php";
+} else {
+    $read_only_columns_list = array();
+}
 
 // Processing form data when form is submitted
 if(isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])){

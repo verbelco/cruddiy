@@ -2,7 +2,7 @@
 
 class EnumColumn extends Column
 {
-    /** List with possible values */
+    /** Array with possible values (<key> => <readable value>) */
     protected array $enums;
 
     function __construct(string $name, string $displayname, ?string $comment, string $table, $default, ?string $sql_join, ?string $sql_select, bool $required, bool $primary_key, array $enums)
@@ -13,8 +13,30 @@ class EnumColumn extends Column
 
     function format($value, $ref = null)
     {
-        return $value;
+        if (isset($value)) {
+            return $this->enums[$value];
+        }
     }
+
+    /** Update the enums with better readable values
+     * @param array $new_enums Associative array with (<enum key> => <synonyms>)
+     * Synonyms can be a string or a list with synonyms. (we then take the first one.)
+     * We update the readable values in $this->enums with the first available synonym
+     * 
+     * This function should be called in class extension, with the defined enums.
+     */
+    function update_enum(array $new_enums)
+    {
+        foreach ($new_enums as $key => $value) {
+            if (is_array($value)) {
+                $value = $value[0];
+            }
+            if (isset($this->enums[$key])) {
+                $this->enums[$key] = $value;
+            }
+        }
+    }
+
 
     function html_input_field($value = null, $required = true, $name = null, $id = null, $placeholder = null): string
     {

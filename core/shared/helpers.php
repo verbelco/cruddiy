@@ -1,4 +1,6 @@
 <?php
+$sortBy = array('asc' => 'ASC', 'dsc' => 'DESC');
+
 function print_error_if_exists($error)
 {
     if (isset($error)) {
@@ -50,39 +52,59 @@ function get_fk_url($value, $fk_table, $fk_column, $representation, bool $pk = f
     }
 }
 
-function get_orderby_clause($given_order_array, $column_list, $column_id, $table_name)
+/** Return an array with $columnname => asc/dsc, signaling what to sort on */
+function get_orderby_array($given_order_array, $column_list)
 {
-    $sortBy = array('asc' => 'ASC', 'dsc' => 'DESC');
-    $orderclause = "";
-    $ordering_on = "";
-    $get_param_array = array();
-    $default_ordering = false;
-    if (isset($given_order_array)) {
-        foreach ($given_order_array as $i => $str) {
-            $column = substr($str, 0, -3);
-            if (isset($column_list[$column])) {
-                $s = substr($str, -3);
-                if (isset($sortBy[$s])) {
-                    $select = $column_list[$column]->get_sql_value();
-                    $sort = $sortBy[$s];
-                    $orderclause .= $orderclause == "" ? "$select $sort" : ", $select $sort";
-                    $ordering_on .= $ordering_on == "" ? "$column $sort" : ", $column $sort";
-                    $get_param_array[$column] = $s;
-                }
-            }
-        }
+    global $sortBy;
+
+    // Check if the column and sortBy are known
+    $given_order_array = array_filter($given_order_array, function ($c) use ($column_list, $sortBy) {
+        return in_array(substr($c, 0, -3), array_keys($column_list)) && isset($sortBy[substr($c, -3)]);
+    });
+
+    $result = array();
+
+    foreach ($given_order_array as $str) {
+        $column = substr($str, 0, -3);
+        $sort = substr($str, -3);
+        $result[$column] = $sort;
     }
 
-    // Default to ordering on the primary key
-    if ($orderclause == "") {
-        $orderclause = "`$table_name`.`$column_id` " . $sortBy['asc'];
-        $ordering_on = $column_id . ' ' . $sortBy['asc'];
-        $get_param_array[$column_id] = 'asc';
-        $default_ordering = true;
-    }
-    return [$orderclause, $ordering_on, $get_param_array, $default_ordering];
+    return $result;
 }
 
+/** Return a string displaying what is being sorted on */
+function get_ordering_on($order_param_array, $column_list): string
+{
+    global $sortBy;
+
+    $ordering = [];
+    foreach ($order_param_array as $c => $s) {
+        $ordering[] = $column_list[$c]->html_columnname_with_tooltip(false) . " " . $sortBy[$s];
+    }
+    return implode(", ", $ordering);
+}
+
+/** Return the SQL code for ordering */
+function get_orderby_clause($order_param_array, $column_list, ): string
+{
+    global $sortBy;
+
+    $ordering = [];
+    foreach ($order_param_array as $c => $s) {
+        $ordering[] = $column_list[$c]->get_sql_value() . " " . $sortBy[$s];
+    }
+
+    if (empty($ordering)) {
+        return "";
+    } else {
+        return "ORDER BY " . implode(", ", $ordering);
+    }
+}
+
+/** For column $column, return the get parameters to follow up on the current ordering.
+ * Also return $arrow, displaying what this column is sorted on.
+ */
 function get_order_parameters($get_array, $column = null)
 {
     $arrow = "";
@@ -113,7 +135,7 @@ function create_sql_filter_array($where_columns)
             if ($operand == 0) {
                 $operand = '=';
             }
-            if (in_array($operand, ['=', '>', '<', '%'])) {
+            if (in_array($operand, ['=', '>', '<', '%', 'null'])) {
                 $filter[$column][$operand] = $val;
             }
         }
@@ -206,11 +228,18 @@ function process_geldigheids_extensie(string $id_kolom, string $tablename, strin
     return $html;
 }
 
+/** Return de link om naar de index pagina te gaan en de filters toe te passen die overeenkomen met deze reference. Zie html_delete_references() voor meer informatie. */
+function get_reference_url(array $reference)
+{
+    return '../' . $reference['table'] . '/index.php?' . $reference['column'] . urlencode('[=]') . "=" . $reference['local_value'];
+}
+
 /** Print de references naar dit record
- * @param ?array $reference lijst met associative arrays met count, table, fk_table, column, fk_column en value.
+ * @param ?array $reference lijst met associative arrays met count, table, fk_table, column, fk_column en local_value.
  * table en column verwijzen naar de brontabel (waar vanuit verwezen wordt).
- * fk_table en fk_column verwijzen naar de tabel/kolom waarnaar verwezen wordt.
+ * fk_table en fk_column verwijzen naar de tabel/kolom waarnaar verwezen wordt. (Dit is de tabel waarvan een record verwijderd wordt)
  * count bevat het aantal references naar deze kolom.
+ * local_value is de waarde van de kolom waarnaar verwezen wordt.
  */
 function html_delete_references(?array $references)
 {
@@ -218,11 +247,29 @@ function html_delete_references(?array $references)
         $html = "";
 
         foreach ($references as $r) {
-            $html .= '<p> There are <a href="../' . $r['table'] . '/index.php?' . $r['column'] . urlencode('[=]') . "=" . $r['value'] . '"> ' . $r['count'] . ' ' . $r['table'] . ' with ' . $r['column'] . ' = ' . $r['value'] . '</a>. Be careful when deleting!</p>';
+            $html .= '<p> There are <a href="' . get_reference_url($r) . '"> ' . $r['count'] . ' ' . $r['table'] . ' with ' . $r['column'] . ' = ' . $r['local_value'] . '</a>. Be careful when deleting!</p>';
         }
 
         if ($html != "") {
             return '<div class="alert alert-warning">' . $html . '</div>';
+        } else {
+            return "";
+        }
+    }
+}
+
+/** Vergelijkbaar met html_delete_references(), maar toont dan een knop om door te verwijzen. */
+function html_read_references(?array $references)
+{
+    if (isset($references)) {
+        $html = "";
+
+        foreach ($references as $r) {
+            $html .= '<p><a href="' . get_reference_url($r) . '" class="btn btn-info">View ' . $r['count'] . ' ' . $r['table'] . ' with ' . $r['column'] . ' = ' . $r['local_value'] . '</a></p>';
+        }
+
+        if ($html != "") {
+            return '<div><h3>References to this ' . $r['fk_table'] . ':</h3>' . $html . '</div>';
         } else {
             return "";
         }

@@ -19,18 +19,26 @@ class IntColumn extends Column
 
     function html_index_advanced_filter($filter): string
     {
-        return '<div class="form-group row my-1">
+        $html = '<div class="form-group row row-cols-5 my-1">
                     <label class="col-sm-2 col-form-label">' . $this->html_columnname_with_tooltip(false) . '</label>
-                    <div class="col-sm-3">
+                    <div class="col">
                         ' . $this->html_index_advanced_filter_equal($filter[$this->get_name()]["="]) . '
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col">
                         ' . $this->html_index_advanced_filter_larger($filter[$this->get_name()][">"]) . '
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col">
                         ' . $this->html_index_advanced_filter_smaller($filter[$this->get_name()]["<"]) . '
-                    </div>
+                    </div>';
+
+        if (!$this->get_required()) {
+            $html .= '<div class="col">
+                    ' . $this->html_index_advanced_filter_null($filter[$this->get_name()]["null"]) . '
                 </div>';
+        }
+
+        $html .= '</div>';
+        return $html;
     }
 
     function html_index_advanced_filter_equal($val)

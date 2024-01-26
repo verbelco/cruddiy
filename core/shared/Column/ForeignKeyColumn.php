@@ -16,6 +16,8 @@ class ForeignKeyColumn extends EnumColumn
     private string $fk_unique;
     /** Name of the FK table in AS part of the query*/
     private string $fk_table_alias;
+    /** SQL select for the original value (the identifier refering to a table) */
+    private string $original_column_select;
 
 
     function __construct(string $name, string $displayname, ?string $comment, string $table, $default, string $sql_join, string $sql_select, string $fk_table, string $fk_column, bool $fk_unique, bool $required, bool $primary_key)
@@ -26,6 +28,7 @@ class ForeignKeyColumn extends EnumColumn
         $this->fk_table_alias = $this->get_name() . $fk_table;
         $this->fk_column = $fk_column;
         $this->fk_unique = $fk_unique;
+        $this->original_column_select = "`" . $this->get_table() . "`.`" . $this->get_name() . "`";
     }
 
     /** $value contains the string that we want to display, $ref contains the actual value that is stored */
@@ -43,7 +46,7 @@ class ForeignKeyColumn extends EnumColumn
     /** For foreign keys, we need both the value in this column, and the string that it represents */
     function get_sql_select(): string
     {
-        return $this->sql_select . " AS `" . $this->fk_value . "`, `" . $this->get_table() . "`.`" . $this->get_name() . "` AS `" . $this->get_name() . "`";
+        return $this->sql_select . " AS `" . $this->fk_value . "`, " . $this->original_column_select . " AS `" . $this->get_name() . "`";
     }
 
     function html_index_table_element(array $row): string
@@ -90,12 +93,21 @@ class ForeignKeyColumn extends EnumColumn
         return parent::html_input_field($value, $required, $name, $id, $placeholder);
     }
 
+    function where_operand_null($val, $link)
+    {
+        if ($val == "null") {
+            return $this->original_column_select . " IS NULL";
+        } elseif ($val == "notnull") {
+            return $this->original_column_select . " IS NOT NULL";
+        }
+    }
+
     function where_operand_equal($val, $link)
     {
         if ($val == "null") {
-            return "`" . $this->get_table() . "`.`" . $this->get_name() . "` IS NULL";
+            return $this->original_column_select . " IS NULL";
         } else {
-            return "`" . $this->get_table() . "`.`" . $this->get_name() . "` = '" . mysqli_real_escape_string($link, $val) . "'";
+            return $this->original_column_select . " = '" . mysqli_real_escape_string($link, $val) . "'";
         }
     }
 
@@ -105,6 +117,6 @@ class ForeignKeyColumn extends EnumColumn
         $subsql = " SELECT `" . $this->fk_table_alias . "`.`" . $this->fk_column . "`
                     FROM `" . $this->fk_table . "` AS `" . $this->fk_table_alias . "` " . $this->get_fk_joins() . "
                     WHERE " . $this->get_sql_value() . " LIKE '%" . mysqli_real_escape_string($link, $val) . "%'";
-        return "`" . $this->get_table() . "`.`" . $this->get_name() . "` IN ($subsql)";
+        return $this->original_column_select . " IN ($subsql)";
     }
 }

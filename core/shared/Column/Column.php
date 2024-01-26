@@ -16,7 +16,7 @@ class Column
     private string $name;
     /** Friendly name of the column */
     private string $displayname;
-    /** Default value for this column, usually null */
+    /** Default value for this column, usually the same as $name */
     protected $default;
     /** Extra information on this column */
     private ?string $comment;
@@ -230,6 +230,28 @@ class Column
 
     // Advanced Filter and creating WHERE statements
 
+    function html_index_advanced_filter_null($value)
+    {
+        $html = '<select name="' . $this->get_name() . '[null]" class="form-control" data-toggle="tooltip" title="Filter on (non-)empty values">';
+
+        $enum = array(
+            "" => "",
+            "null" => "Null",
+            "notnull" => "Not Null"
+        );
+
+        foreach ($enum as $key => $text) {
+            if (isset($value) && $key == $value) {
+                $html .= '<option value="' . $key . '" selected>' . $text . '</option>';
+            } else {
+                $html .= '<option value="' . $key . '">' . $text . '</option>';
+            }
+        }
+
+        $html .= '</select>';
+        return $html;
+    }
+
     function html_index_advanced_filter_like($val)
     {
         return '<input type="text" name="' . $this->get_name() . '[%]" data-toggle="tooltip"
@@ -259,15 +281,24 @@ class Column
     /** Create the HTML for the advanced filter */
     function html_index_advanced_filter($filter): string
     {
-        return '<div class="form-group row my-1">
+        $html = '<div class="form-group row row-cols-5 my-1">
                     <label class="col-sm-2 col-form-label">' . $this->html_columnname_with_tooltip(false) . '</label>
-                    <div class="col-sm-3">
+                    <div class="col">
                         ' . $this->html_index_advanced_filter_equal($filter[$this->get_name()]["="]) . '
                     </div>
-                    <div class="col-sm-3">
+                    <div class="col">
                         ' . $this->html_index_advanced_filter_like($filter[$this->get_name()]["%"]) . '
-                    </div>
-                </div>';
+                    </div>';
+
+        if (!$this->get_required()) {
+            $html .= '<div class="col"></div>';
+            $html .= '<div class="col">
+                        ' . $this->html_index_advanced_filter_null($filter[$this->get_name()]["null"]) . '
+                    </div>';
+        }
+
+        $html .= '</div>';
+        return $html;
     }
 
     function where_operand_like($val, $link)
@@ -281,6 +312,15 @@ class Column
             return $this->get_sql_value() . " IS NULL";
         } else {
             return $this->get_sql_value() . " = '" . mysqli_real_escape_string($link, $val) . "'";
+        }
+    }
+
+    function where_operand_null($val, $link)
+    {
+        if ($val == "null") {
+            return $this->get_sql_value() . " IS NULL";
+        } elseif ($val == "notnull") {
+            return $this->get_sql_value() . " IS NOT NULL";
         }
     }
 
@@ -315,6 +355,8 @@ class Column
                 $where_statement[] = $this->where_operand_larger($val, $link);
             } elseif ($operand == '<') {
                 $where_statement[] = $this->where_operand_smaller($val, $link);
+            } elseif ($operand == 'null') {
+                $where_statement[] = $this->where_operand_null($val, $link);
             } else {
                 $where_statement[] = $this->where_operand_equal($val, $link);
             }
