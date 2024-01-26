@@ -102,6 +102,7 @@ if(isset($_GET["target"]) && $_GET["target"] == "Search"){
     // Use the filter from the session if no other filter is used
     $filter = $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"];
 }
+[$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
 // Handle quick search
 $columns_search_list = [];
@@ -121,8 +122,6 @@ if (!empty($_GET['search'])) {
     $get_param_search = "?";
     $search = "";
 }
-
-[$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
 // Pagination
 if (isset($_GET['pageno']) && is_numeric($_GET['pageno'])) {
