@@ -2,145 +2,175 @@
 
 $indexfile = <<<'EOT'
 <?php
-    // Include config file
-    require_once "../config.php";
-    require_once "../shared/helpers.php";
-    require_once "../shared/bulk_updates.php";
-    require_once "../shared/Column/Column.php";
-    require_once "class.php";
+// Include config file
+require_once "../config.php";
+require_once "../shared/helpers.php";
+require_once "../shared/bulk_updates.php";
+require_once "../shared/Column/Column.php";
+require_once "class.php";
 
-    // Import custom columns if they exist
-    if (file_exists(stream_resolve_include_path("class_extension.php"))) {
-        require "class_extension.php";
+// Import custom columns if they exist
+if (file_exists(stream_resolve_include_path("class_extension.php"))) {
+    require "class_extension.php";
+} else {
+    $read_only_columns_list = array();
+}
+
+//Get current URL and parameters for correct pagination
+$script   = $_SERVER['SCRIPT_NAME'];
+$parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
+$currenturl = $domain. $script . '?' . $parameters;
+
+$column_list = $original_column_list + $read_only_columns_list;
+$columns = array_keys($column_list);
+
+// Handle bulk updates
+if (isset($_POST['target']) && in_array($_POST['target'], ['Update', 'Update_all', 'Delete', 'Delete_all'])) {
+    $ids = str_contains($_POST['target'], 'all') ? explode(';', $_POST['all_ids']) : $_POST['bulk-update'];
+    $values = array_intersect_key($_POST, array_flip(array_keys($original_column_list)));
+
+    if (is_array($ids) && count($ids) > 0) {
+        if (str_contains($_POST['target'], 'Update')) {
+            if(count($values) > 0){
+                $result_html = bulk_update_crud("{TABLE_NAME}", "{COLUMN_ID}", $values, $ids);
+            } else {
+                $result_html = "Bulk updates was started, but no columns to update were selected.";
+            }
+        } else if (str_contains($_POST['target'], 'Delete')) {
+            $result_html = bulk_delete_crud("{TABLE_NAME}", "{COLUMN_ID}", $ids);
+        }
     } else {
-        $read_only_columns_list = array();
+        $result_html = "Bulk updates was started, but no records were selected.";
     }
+}
 
-    //Get current URL and parameters for correct pagination
-    $script   = $_SERVER['SCRIPT_NAME'];
-    $parameters   = $_GET ? $_SERVER['QUERY_STRING'] : "" ;
-    $currenturl = $domain. $script . '?' . $parameters;
-
-    $column_list = $original_column_list + $read_only_columns_list;
-    $columns = array_keys($column_list);
-
-    if(isset($_GET["target"]) && $_GET["target"] == "empty"){
-        $_SESSION["selected_columns"]["{TABLE_NAME}"] = null;
+// Handle page resets
+if (isset($_GET["target"])) {
+    if ($_GET["target"] == "empty") {
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"] = null;
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["order"] = null;
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = null;
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["pageno"] = null;
+    } elseif ($_GET["target"] == "resetfilter") {
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = null;
+    } elseif ($_GET["target"] == "resetorder") {
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["order"] = null;
     }
+}
 
-    if (isset($_POST['flexible-columns'])) {
-        $selected_columns = array_intersect($_POST['flexible-columns'], $columns);
-        $_SESSION["selected_columns"]["{TABLE_NAME}"] = $selected_columns;
-    } else if (isset($_SESSION["selected_columns"]["{TABLE_NAME}"])) {
-        $selected_columns = $_SESSION["selected_columns"]["{TABLE_NAME}"];
-    } else {
-        $selected_columns = ['{COLUMNS}'];
-    }
+// Get the selected columns
+if (isset($_POST['flexible-columns'])) {
+    $selected_columns = array_intersect($_POST['flexible-columns'], $columns);
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"] = $selected_columns;
+} else if (isset($_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"])) {
+    $selected_columns = $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"];
+} else {
+    $selected_columns = ['{COLUMNS}'];
+}
 
-    $selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) {
-        return in_array($c->get_name(), $selected_columns);
+$selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) {
+    return in_array($c->get_name(), $selected_columns);
+});   
+
+// Column sorting on column name
+if (isset($_GET['order'])) {
+    $order_param_array = get_orderby_array($_GET['order'], $column_list);
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["order"] = $order_param_array;
+    $default_ordering = false;
+} else if (!empty($_SESSION["CRUD"]["{TABLE_NAME}"]["order"])) {
+    $order_param_array = $_SESSION["CRUD"]["{TABLE_NAME}"]["order"];
+    $default_ordering = false;
+}
+
+if (empty($order_param_array)) {
+    $default_ordering = true;
+    $order_param_array = array('{COLUMN_ID}' => 'asc');
+}
+
+$orderclause = get_orderby_clause($order_param_array, $column_list);
+$ordering_on = get_ordering_on($order_param_array, $column_list);
+
+[$get_param_ordering, $temp] = get_order_parameters($order_param_array);
+
+// Create a filter
+$where_columns = array_intersect_key($_GET, array_flip($columns));
+$filter = create_sql_filter_array($where_columns);
+
+if(isset($_GET["target"]) && $_GET["target"] == "Search"){
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = $filter;
+} else if(count($filter) == 0 && !empty($_SESSION["CRUD"]["{TABLE_NAME}"]["filter"])) {
+    // Use the filter from the session if no other filter is used
+    $filter = $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"];
+}
+
+// Handle quick search
+$columns_search_list = [];
+if (!empty($_GET['search'])) {
+    $columns_search_list = array_filter($column_list, function ($c) {
+        return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']);
     });
 
-    // Handle bulk updates
-    if (isset($_POST['target']) && in_array($_POST['target'], ['Update', 'Update_all', 'Delete', 'Delete_all'])) {
-        $ids = str_contains($_POST['target'], 'all') ? explode(';', $_POST['all_ids']) : $_POST['bulk-update'];
-        $values = array_intersect_key($_POST, array_flip(array_keys($original_column_list)));
+    $sql_values = implode(", ", array_map(function ($c) {
+        return $c->get_sql_value();
+    }, $columns_search_list));
 
-        if (is_array($ids) && count($ids) > 0) {
-            if (str_contains($_POST['target'], 'Update')) {
-                if(count($values) > 0){
-                    $result_html = bulk_update_crud("{TABLE_NAME}", "{COLUMN_ID}", $values, $ids);
-                } else {
-                    $result_html = "Bulk updates was started, but no columns to update were selected.";
-                }
-            } else if (str_contains($_POST['target'], 'Delete')) {
-                $result_html = bulk_delete_crud("{TABLE_NAME}", "{COLUMN_ID}", $ids);
-            }
-        } else {
-            $result_html = "Bulk updates was started, but no records were selected.";
-        }
-    }
+    $search = mysqli_real_escape_string($link, $_GET['search']);
+    $get_param_search = "?search=$search";
+    $where_clause .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
+} else {
+    $get_param_search = "?";
+    $search = "";
+}
 
-    // Pagination
-    if (isset($_GET['pageno'])) {
-        $pageno = $_GET['pageno'];
-    } else {
+[$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
+
+// Pagination
+if (isset($_GET['pageno']) && is_numeric($_GET['pageno'])) {
+    $pageno = (int) $_GET['pageno'];
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["pageno"] = $pageno;
+} elseif (!empty($_SESSION["CRUD"]["{TABLE_NAME}"]["pageno"])) {
+    $pageno = $_SESSION["CRUD"]["{TABLE_NAME}"]["pageno"];
+} else {
+    $pageno = 1;
+}
+$offset = ($pageno - 1) * $no_of_records_per_page;
+
+// Prepare the query
+$sql_select = implode(", ", array_map(function ($c) {
+    return $c->get_sql_select();
+}, $selected_columns_list + [$original_column_list["{COLUMN_ID}"]]));
+
+// Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
+$columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_search_list) {
+    return in_array($c->get_name(), $selected_columns) || in_array($c->get_name(), $columns_search_list) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
+});
+
+$sql_join = implode("", array_map(function ($c) {
+    return $c->get_sql_join();
+}, $columns_join_list));
+
+// Run SQL queries
+$count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` 
+        $sql_join $where_clause";
+
+try{
+    $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
+    $number_of_results = $count_result['count'];
+    $all_ids = $count_result['all_ids'];
+    if ($number_of_results < $offset) {
+        $offset = 0;
         $pageno = 1;
     }
-    $offset = ($pageno-1) * $no_of_records_per_page;
+} catch (mysqli_sql_exception $e) {
+    echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN COUNT QUERY: " . $e->getMessage() . "</div>";
+}
 
-    // Column sorting on column name
-    [$orderclause, $ordering_on, $order_param_array, $default_ordering] = get_orderby_clause($_GET['order'], $column_list, "{COLUMN_ID}", "{TABLE_NAME}");
-    [$get_param_ordering, $temp] = get_order_parameters($order_param_array);
-
-    // Generate WHERE statements for param
-    $where_columns = array_intersect_key($_GET, array_flip($columns));
-    $filter = create_sql_filter_array($where_columns);
-
-    if(isset($_GET["target"])){
-        if($_GET["target"] == "Search"){
-            // Write the filter to the session
-            $_SESSION["filter"]["{TABLE_NAME}"] = $filter;
-        } else if($_GET["target"] == "empty"){
-            // Remove the filter from the session
-            $_SESSION["filter"]["{TABLE_NAME}"] = array();
-        }
-    } else if(count($filter) == 0) {
-        // Use the filter from the session if no other filter is used
-        $filter = $_SESSION["filter"]["{TABLE_NAME}"];
-    }
-
-    [$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
-
-    $sql_select = implode(", ", array_map(function ($c) {
-        return $c->get_sql_select();
-    }, $selected_columns_list + [$original_column_list["{COLUMN_ID}"]]));
-    
-    $columns_search_list = [];
-    if (!empty($_GET['search'])) {
-        $columns_search_list = array_filter($column_list, function ($c) {
-            return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']);
-        });
-
-        $sql_values = implode(", ", array_map(function ($c) {
-            return $c->get_sql_value();
-        }, $columns_search_list));
-
-        $search = mysqli_real_escape_string($link, $_GET['search']);
-        $get_param_search = "?search=$search";
-        $where_clause .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
-    } else {
-        $get_param_search = "?";
-        $search = "";
-    }
-
-    // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
-    $columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_search_list) {
-        return in_array($c->get_name(), $selected_columns) || in_array($c->get_name(), $columns_search_list) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
-    });
-
-    $sql_join = implode("", array_map(function ($c) {
-        return $c->get_sql_join();
-    }, $columns_join_list));
-
-    // Prepare SQL queries
-    $sql = "SELECT $sql_select
-            FROM `{TABLE_NAME}`
-            $sql_join $where_clause  
-            GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
-            ORDER BY $orderclause
-            LIMIT $offset, $no_of_records_per_page;";
-    $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` 
-            $sql_join $where_clause";
-
-    try{
-        $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
-        $number_of_results = $count_result['count'];
-        $all_ids = $count_result['all_ids'];
-    } catch (mysqli_sql_exception $e) {
-        echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN COUNT QUERY: " . $e->getMessage() . "</div>";
-    }
-
+$sql = "SELECT $sql_select
+        FROM `{TABLE_NAME}`
+        $sql_join $where_clause  
+        GROUP BY `{TABLE_NAME}`.`{COLUMN_ID}`
+        $orderclause
+        LIMIT $offset, $no_of_records_per_page;";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -158,10 +188,9 @@ $indexfile = <<<'EOT'
                 <div class="page-header clearfix">
                 <h2 class="float-start">{TABLE_DISPLAY} Details</h2>
                     <a href="../{TABLE_NAME}/create.php" class="btn btn-success float-end">Add New Record</a>
-                    <a href="../{TABLE_NAME}/index.php?target=empty<?php echo $get_param_ordering; ?>" class="btn btn-dark float-end me-2">Reset Filters</a>
-                    <a href="../{TABLE_NAME}/index.php<?php echo $get_param_search . $get_param_where; ?>" class="btn btn-primary float-end me-2">Reset Ordering</a>
+                    <a href="../{TABLE_NAME}/index.php?target=resetfilter" class="btn btn-dark float-end me-2">Reset Filters</a>
+                    <a href="../{TABLE_NAME}/index.php?target=resetorder" class="btn btn-primary float-end me-2">Reset Ordering</a>
                     <a href="../{TABLE_NAME}/index.php?target=empty" class="btn btn-info float-end me-2">Reset View</a>
-                    <a href="javascript:history.back()" class="btn btn-secondary float-end me-2">Back</a>
                 </div>
                 {TABLE_COMMENT}
                 <div class="form-row">
@@ -450,7 +479,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                     <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-secondary">Edit</a>
                     <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{TABLE_ID}"]; ?>" class="btn btn-info">Duplicate</a>
                     <a href="../{TABLE_NAME}/delete.php?{TABLE_ID}=<?php echo $_GET["{TABLE_ID}"];?>" class="btn btn-warning">Delete</a>
-                    <a href="javascript:history.back()" class="btn btn-primary">Back</a>
+                    <a href="../{TABLE_NAME}/index.php" class="btn btn-primary">Back to index</a>                    
                 </div> 
                 <?php
                 // Look for references to this record
@@ -578,7 +607,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
                 <div class="mt-3 mb-5">
                     <a href="../{TABLE_NAME}/read.php?{TABLE_ID}=<?php echo $param_id;?>" class="btn btn-info">View</a>
                     <a href="../{TABLE_NAME}/update.php?{TABLE_ID}=<?php echo $param_id;?>" class="btn btn-secondary">Edit</a>
-                    <a href="javascript:history.back()" class="btn btn-primary">Back</a>
+                    <a href="../{TABLE_NAME}/index.php" class="btn btn-primary">Back to index</a>
                 </div>
                 <?php
                 if (file_exists(stream_resolve_include_path("extension.php"))){
@@ -799,7 +828,7 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
                         <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-primary">View</a>
                         <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{COLUMN_ID}"]; ?>" class="btn btn-info">Duplicate</a>
                         <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"];?>" class="btn btn-warning">Delete</a>
-                        <a href="javascript:history.back()" class="btn btn-primary">Back</a>
+                        <a href="../{TABLE_NAME}/index.php" class="btn btn-primary">Back to index</a>
                     </div>
                 </form>
                 <?php
