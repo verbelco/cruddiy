@@ -95,11 +95,17 @@ $indexfile = <<<'EOT'
     $sql_select = implode(", ", array_map(function ($c) {
         return $c->get_sql_select();
     }, $selected_columns_list + [$original_column_list["{COLUMN_ID}"]]));
-    $sql_values = implode(", ", array_map(function ($c) {
-        return $c->get_sql_value();
-    }, $column_list));
-
+    
+    $columns_search_list = [];
     if (!empty($_GET['search'])) {
+        $columns_search_list = array_filter($column_list, function ($c) {
+            return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']);
+        });
+
+        $sql_values = implode(", ", array_map(function ($c) {
+            return $c->get_sql_value();
+        }, $columns_search_list));
+
         $search = mysqli_real_escape_string($link, $_GET['search']);
         $get_param_search = "?search=$search";
         $where_clause .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
@@ -109,13 +115,13 @@ $indexfile = <<<'EOT'
     }
 
     // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
-    $colums_join_list = array_filter($column_list, function ($c) use ($selected_columns, $search, $filter, $order_param_array) {
-        return in_array($c->get_name(), $selected_columns) || $search != "" || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
+    $columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_search_list) {
+        return in_array($c->get_name(), $selected_columns) || in_array($c->get_name(), $columns_search_list) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
     });
 
     $sql_join = implode("", array_map(function ($c) {
         return $c->get_sql_join();
-    }, $colums_join_list));
+    }, $columns_join_list));
 
     // Prepare SQL queries
     $sql = "SELECT $sql_select

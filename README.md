@@ -39,9 +39,9 @@ I have no intention of merging this back into the original repository, since the
 - [x] Add a possibility for custom extensions to the view pages.
 - [ ] Automatic NAV-bar generation is broken. (WONTFIX)
 - [x] For delete, check for external references before deletion.
-- [ ] Null filter toevoegen
+- [x] Null filter toevoegen
 - [ ] ENUMs fatsoenlijk implementeren. (CustomEnum classes).
-- [ ] Knop back brengt je terug naar de index
+- [ ] Knop back brengt je terug naar de index, de opties op de index worden goed onthouden.
 - [x] Default values from SQL as defaults in create.
 
 
