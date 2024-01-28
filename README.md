@@ -38,6 +38,7 @@ I have no intention of merging this back into the original repository, since the
 - [x] After creating, add a create another button (Move back button to the top). (Mail 16 juli van Klaas).
 - [x] Add a possibility for custom extensions to the view pages.
 - [ ] Automatic NAV-bar generation is broken. (WONTFIX)
+- [ ] Adding having statement to the where clause
 - [x] For delete, check for external references before deletion.
 - [x] Null filter toevoegen
 - [x] ENUMs fatsoenlijk implementeren.

@@ -487,11 +487,11 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
                 foreach($subsqls as $subsql){
                     $stmt = $link->prepare($subsql);
                     $stmt->execute([$param_id]);
-                    $row = $stmt->get_result()->fetch_assoc();
+                    $subrow = $stmt->get_result()->fetch_assoc();
                     $stmt->close();
 
-                    if($row['count'] > 0){
-                        $references[] = $row;
+                    if($subrow['count'] > 0){
+                        $references[] = $subrow;
                     }
                 }
                 echo html_read_references($references);
@@ -573,11 +573,11 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
     foreach($subsqls as $subsql){
         $stmt = $link->prepare($subsql);
         $stmt->execute([$param_id]);
-        $row = $stmt->get_result()->fetch_assoc();
+        $subrow = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        if($row['count'] > 0){
-            $references[] = $row;
+        if($subrow['count'] > 0){
+            $references[] = $subrow;
         }
     }
 }
