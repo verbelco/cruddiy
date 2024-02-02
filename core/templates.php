@@ -50,9 +50,11 @@ if (isset($_GET["target"])) {
         $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"] = null;
         $_SESSION["CRUD"]["{TABLE_NAME}"]["order"] = null;
         $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = null;
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = null;
         $_SESSION["CRUD"]["{TABLE_NAME}"]["pageno"] = null;
     } elseif ($_GET["target"] == "resetfilter") {
         $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = null;
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = null;
     } elseif ($_GET["target"] == "resetorder") {
         $_SESSION["CRUD"]["{TABLE_NAME}"]["order"] = null;
     }
@@ -105,17 +107,23 @@ if(isset($_GET["target"]) && $_GET["target"] == "Search"){
 [$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
 // Handle quick search
+if(!empty($_GET['search'])){
+    $search = mysqli_real_escape_string($link, $_GET['search']);
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = $search;
+} else if(isset($_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"])){
+    $search = $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"];
+}
+
 $columns_search_list = [];
-if (!empty($_GET['search'])) {
-    $columns_search_list = array_filter($column_list, function ($c) {
-        return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']);
+if (isset($search)) {
+    $columns_search_list = array_filter($column_list, function ($c) use ($selected_columns) {
+        return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']) && ($c->get_table() == "{TABLE_NAME}" || in_array($c->get_name(), $selected_columns));
     });
 
     $sql_values = implode(", ", array_map(function ($c) {
         return $c->get_sql_value();
     }, $columns_search_list));
 
-    $search = mysqli_real_escape_string($link, $_GET['search']);
     $get_param_search = "?search=$search";
     $where_clause .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
 } else {
@@ -760,7 +768,9 @@ if(isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])){
     $update_stmts = [];
     foreach ($original_column_list as $name => $column) {
         if ($column->get_name() != "{COLUMN_ID}") {
-            $row[$name] = $original_column_list[$name]->get_sql_update_value($_POST[$name]);
+            if(get_class($column) != "MutatieMomentColumn"){
+                $row[$name] = $original_column_list[$name]->get_sql_update_value($_POST[$name]);
+            }
             $update_stmts[] = $original_column_list[$name]->get_sql_update_stmt();
         }
     }

@@ -181,7 +181,11 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
     } elseif ($type == "date") {
         return "'$name' => new DateColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
     } elseif ($type == "datetime") {
-        return "'$name' => new DateTimeColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
+        if($name == "MutatieMoment"){
+            return "'$name' => new MutatieMomentColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
+        } else {
+            return "'$name' => new DateTimeColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
+        }        
     } else {
         // Default, usually strings
         return "'$name' => new Column('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
