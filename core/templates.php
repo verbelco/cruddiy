@@ -307,10 +307,10 @@ $sql = "SELECT $sql_select
                                         <input type="hidden" form="bulkupdatesform" name="all_ids" value="'. $all_ids .'">
                                     </th>';
                                     foreach($selected_columns_list as $c){
-                                        [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
-                                        if($default_ordering){
+                                        if ($default_ordering && $c->get_name() != "{COLUMN_ID}") {
                                             unset($order_param_array["{COLUMN_ID}"]);
                                         }
+                                        [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
                                         echo $c->html_index_table_header($get_param_search, $get_param_where, $get_param_order, $arrow);
                                     }
                                     echo "<th>Action</th>";
