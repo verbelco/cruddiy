@@ -9,8 +9,7 @@ if ($total_postvars >= $max_postvars) {
     exit();
 }
 
-require "app/config.php";
-require "templates.php";
+require_once "app/config.php";
 require_once "helpers.php";
 require "save_config.php";
 
@@ -40,9 +39,9 @@ $preview_columns = array();
 // <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
 // <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/css/selectize.default.min.css" integrity="sha512-pTaEn+6gF1IeWv3W1+7X7eM60TFu/agjgoHmYhAfLEU8Phuf6JKiiE8YmsNC0aCgQv4192s4Vai8YZ6VNM6vyQ==" crossorigin="anonymous" referrerpolicy="no-referrer"/>';
 
-$CSS_REFS = '<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text/css"/>
-<link rel="stylesheet" href="../css/style.css" type="text/css"/>
-<link rel="stylesheet" href="../css/selectize.css" type="text/css"/>';
+$CSS_REFS = '<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text/css" />
+<link rel="stylesheet" href="../css/style.css" type="text/css" />
+<link rel="stylesheet" href="../css/selectize.css" type="text/css" />';
 
 // $JS_REFS = '<script src="../js/jquery-3.5.1.min.js"></script>
 // <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
@@ -56,9 +55,9 @@ $JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
 
 function generate_error()
 {
-    global $errorfile;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
+
+    $errorfile = file_get_contents("templates/error.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $errorfile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
@@ -71,9 +70,9 @@ function generate_error()
 
 function generate_startpage()
 {
-    global $startfile;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
+
+    $startfile = file_get_contents("templates/start.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $startfile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
@@ -87,9 +86,9 @@ function generate_startpage()
 
 function generate_navbar($tablename, $start_page, $keep_startpage, $append_links, $td)
 {
-    global $navbarfile;
-    global $generate_start_checked_links;
-    global $startpage_filename;
+    global $generate_start_checked_links, $startpage_filename;
+
+    $navbarfile = file_get_contents("templates/navbar.template.php");
 
     echo "<h3>Table: $tablename</h3>";
 
@@ -126,8 +125,7 @@ function generate_navbar($tablename, $start_page, $keep_startpage, $append_links
 
 function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $generate_start_checked_links, $td)
 {
-    global $buttons_delimiter;
-    global $appname;
+    global $buttons_delimiter, $appname;
 
     // extract existing links from app/index.php
     echo "Looking for new link to append to Startpage file<br>";
@@ -165,10 +163,9 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 
 function generate_index($tablename, $tabledisplay, $tablecomment, $column_id, $columns_selected)
 {
-    global $indexfile;
-    global $appname;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $appname, $CSS_REFS, $JS_REFS;
+
+    $indexfile = file_get_contents("templates/index.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $indexfile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
@@ -188,16 +185,16 @@ function generate_index($tablename, $tabledisplay, $tablecomment, $column_id, $c
 
 function generate_read($tablename, $column_id, $foreign_key_references)
 {
-    global $readfile;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
+
+    $readfile = file_get_contents("templates/read.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $readfile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    $step3 = str_replace("{FOREIGN_KEY_REFS}", $foreign_key_references, $step1);
+    $step3 = str_replace("/**{FOREIGN_KEY_REFS}*/", $foreign_key_references, $step1);
     if (!file_put_contents("app/$tablename/read.php", $step3, LOCK_EX)) {
         die("Unable to open file!");
     }
@@ -206,9 +203,9 @@ function generate_read($tablename, $column_id, $foreign_key_references)
 
 function generate_crud_class($tablename, $column_id, $column_classes)
 {
-    global $crud_class_file;
+    $crud_class_file = file_get_contents("templates/crud_class.template.php");
 
-    $step0 = str_replace("{COLUMNS_CLASSES}", $column_classes, $crud_class_file);
+    $step0 = str_replace("/**{COLUMNS_CLASSES}*/", $column_classes, $crud_class_file);
     if (!file_put_contents("app/$tablename/class.php", $step0, LOCK_EX)) {
         die("Unable to open file!");
     }
@@ -218,16 +215,16 @@ function generate_crud_class($tablename, $column_id, $column_classes)
 
 function generate_delete($tablename, $column_id, $foreign_key_references)
 {
-    global $deletefile;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
+
+    $deletefile = file_get_contents("templates/delete.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $deletefile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    $step2 = str_replace("{FOREIGN_KEY_REFS}", $foreign_key_references, $step1);
+    $step2 = str_replace("/**{FOREIGN_KEY_REFS}*/", $foreign_key_references, $step1);
     if (!file_put_contents("app/$tablename/delete.php", $step2, LOCK_EX)) {
         die("Unable to open file!");
     }
@@ -236,9 +233,9 @@ function generate_delete($tablename, $column_id, $foreign_key_references)
 
 function generate_create($tablename, $create_sqlcolumns, $column_id, $create_numberofparams)
 {
-    global $createfile;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
+
+    $createfile = file_get_contents("templates/create.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $createfile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
@@ -255,9 +252,9 @@ function generate_create($tablename, $create_sqlcolumns, $column_id, $create_num
 
 function generate_update($tablename, $column_id)
 {
-    global $updatefile;
-    global $CSS_REFS;
-    global $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
+
+    $updatefile = file_get_contents("templates/update.template.php");
 
     $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $updatefile);
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
@@ -325,7 +322,8 @@ function generate($postdata)
 
             if (!empty($first_column['tablecomment'])) {
                 $tablecomment = '<div class="clearfix">
-                    <p class="float-start fst-italic fw-light text-secondary">' . $first_column["tablecomment"] . '</p>
+                    <p class="float-start fst-italic fw-light text-secondary">' . $first_column["tablecomment"] . '
+                    </p>
                 </div>';
             } else {
                 $tablecomment = '';
@@ -349,7 +347,7 @@ function generate($postdata)
                         $column = $row["Column"];
                         if (isset($table_data[$fk_column]['primary'])) {
                             $foreign_key_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`, `$column` AS `local_value` FROM `$table` WHERE `$column` = ?;\"";
-                        } elseif(isset($column_id)) {
+                        } elseif (isset($column_id)) {
                             $foreign_key_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`, `$column` AS `local_value` FROM `$table` WHERE `$column` IN (SELECT `$fk_column` FROM `$fk_table` WHERE `$column_id` = ?);\"";
                         }
                     }
