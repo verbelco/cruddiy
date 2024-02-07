@@ -114,15 +114,15 @@ if(!empty($_GET['search'])){
     $search = $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"];
 }
 
-$columns_search_list = [];
+$columns_in_search = [];
 if (isset($search)) {
-    $columns_search_list = array_filter($column_list, function ($c) use ($selected_columns) {
+    $columns_in_search = array_filter($column_list, function ($c) use ($selected_columns) {
         return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']) && ($c->get_table() == "{TABLE_NAME}" || in_array($c->get_name(), $selected_columns));
     });
 
     $sql_values = implode(", ", array_map(function ($c) {
         return $c->get_sql_value();
-    }, $columns_search_list));
+    }, $columns_in_search));
 
     $get_param_search = "?search=$search";
     $where_clause .= " AND CONCAT_WS ('|', $sql_values) LIKE '%$search%'";
@@ -148,8 +148,8 @@ $sql_select = implode(", ", array_map(function ($c) {
 }, $selected_columns_list + [$original_column_list["{COLUMN_ID}"]]));
 
 // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
-$columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_search_list) {
-    return in_array($c->get_name(), $selected_columns) || in_array($c->get_name(), $columns_search_list) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
+$columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_in_search) {
+    return in_array($c->get_name(), $selected_columns) || isset($columns_in_search[$c->get_name()]) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
 });
 
 $sql_join = implode("", array_map(function ($c) {
