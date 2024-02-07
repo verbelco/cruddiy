@@ -212,6 +212,30 @@ function generate_crud_class($tablename, $column_id, $column_classes)
     echo "Generating $tablename class file<br><br>";
 }
 
+function generate_database_link($tablename, $column_id, $columns_list, $preview_columns_list, $attributes_list)
+{
+    $database_class_file = file_get_contents("templates/database-link.template.php");
+
+    $columns = "'" . implode("', '", $columns_list) . "'";
+    $preview_columns = "'" . implode("', '", $preview_columns_list) . "'";
+    $attributes = implode("\n", $attributes_list);
+
+    $step0 = str_replace("{TABLE}", $tablename, $database_class_file);
+    $step1 = str_replace("{COLUMN_ID}", $column_id, $step0);
+    $step2 = str_replace("/**{COLUMNS}*/", $columns, $step1);
+    $step3 = str_replace("/**{PREVIEW_COLUMNS}*/", $preview_columns, $step2);
+    $step4 = str_replace("/**{ATTRIBUTES}*/", $attributes, $step3);
+
+    $dir = "app/database_link";
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+
+    if (!file_put_contents("$dir/$tablename.php", $step4, LOCK_EX)) {
+        die("Unable to open file!");
+    }
+    echo "Generating $tablename database link file<br>";
+}
 
 function generate_delete($tablename, $column_id, $foreign_key_references)
 {
@@ -286,11 +310,16 @@ function generate($postdata)
 
     foreach ($postdata as $key => $table_data) {
         // Loop over a single table
+        global $link, $forced_deletion;
+
         $columns_selected = [];
         $create_sqlcolumns = [];
-        $column_classes = array();
+        /** List with all columns of this table */
+        $column_list = [];
+        /** List with the selected columns of this table */
+        $column_classes = [];
 
-        global $link, $forced_deletion;
+        $db_attributes = [];
 
         if (!in_array($key, $excluded_keys)) {
 
@@ -307,6 +336,8 @@ function generate($postdata)
                         $columns_selected[] = $c['columnname'];
                     }
                 }
+
+                $column_list[] = $c['columnname'];
             }
 
             $total_params = count($table_data);
@@ -394,6 +425,7 @@ function generate($postdata)
                     }
                 }
                 $column_classes[] = create_column_object($c['columnname'], $c['columndisplay'], $c['columncomment'], $c['tablename'], $join_clauses, $join_columns, $c['columnnullable'], empty($c['auto']), $type);
+                $db_attributes[] = create_db_attribute($c['columnname'], $type, $c['columncomment'], $c['columnnullable']);
             }
 
             $create_numberofparams = array_fill(0, $total_params, '?');
@@ -442,6 +474,7 @@ function generate($postdata)
             generate_read($tablename, $column_id, $foreign_key_references);
             generate_update($tablename, $column_id);
             generate_delete($tablename, $column_id, $foreign_key_references);
+            generate_database_link($tablename, $column_id, $column_list, $columns_selected, $db_attributes);
             generate_crud_class($tablename, $column_id, $column_classes);
         }
     }
