@@ -454,7 +454,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>View Record</title>
+    <title>View {TABLE_NAME}</title>
     {CSS_REFS}
     {JS_REFS}
 </head>
@@ -464,7 +464,7 @@ if(isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])){
         <div class="row">
             <div class="col-md-7 mx-auto">
                 <div class="page-header">
-                    <h1>View Record</h1>
+                    <h1>View {TABLE_NAME}</h1>
                 </div>
                 <div>
                     <?php
@@ -594,7 +594,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>View Record</title>
+    <title>Delete {TABLE_NAME}</title>
     {CSS_REFS}
     {JS_REFS}
 </head>
@@ -604,7 +604,7 @@ if(isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])){
         <div class="row">
             <div class="col-md-7 mx-auto">
                 <div class="page-header">
-                    <h1>Delete Record</h1>
+                    <h1>Delete {TABLE_NAME}</h1>
                 </div>
                 <?php echo html_delete_references($references); ?>
                 <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $param_id; ?>" method="post">
@@ -698,7 +698,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Record</title>
+    <title>Create {TABLE_NAME}</title>
     {CSS_REFS}
     {JS_REFS}
 </head>
@@ -708,7 +708,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         <div class="row">
             <div class="col-md-7 mx-auto">
                 <div class="page-header">
-                    <h2>Create Record</h2>
+                    <h2>Create {TABLE_NAME}</h2>
                 </div>
                 <?php print_error_if_exists($error); print_message_if_exists($message); ?>
                 <p>Please fill this form and submit to add a record to the database.</p>
@@ -826,7 +826,7 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Update Record</title>
+    <title>Update {TABLE_NAME}</title>
     {CSS_REFS}
     {JS_REFS}
 </head>
@@ -836,7 +836,7 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
         <div class="row">
             <div class="col-md-7 mx-auto">
                 <div class="page-header">
-                    <h2>Update Record</h2>
+                    <h2>Update {TABLE_NAME}</h2>
                 </div>
                 <?php print_error_if_exists($error); ?>
                 <p>Please edit the input values and submit to update the record.</p>
