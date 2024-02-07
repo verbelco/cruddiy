@@ -107,8 +107,12 @@ if(isset($_GET["target"]) && $_GET["target"] == "Search"){
 [$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
 // Handle quick search
-if(!empty($_GET['search'])){
-    $search = mysqli_real_escape_string($link, $_GET['search']);
+if (isset($_GET['search'])) {
+    if(empty($_GET['search'])){
+        $search = null;
+    } else {
+        $search = mysqli_real_escape_string($link, $_GET['search']);
+    }
     $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = $search;
 } else if(isset($_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"])){
     $search = $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"];
