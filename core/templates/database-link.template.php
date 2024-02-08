@@ -53,7 +53,7 @@ class {TABLE}Via{COLUMN_ID} extends {TABLE}
         static $stmt;
 
         if (!isset($stmt)) {
-            $stmt = $db->prepare("SELECT * FROM {TABLE} WHERE {COLUMN_ID} = ?");
+            $stmt = $db->prepare("SELECT * FROM `{TABLE}` WHERE `{COLUMN_ID}` = ?");
         }
 
         $stmt->execute([${COLUMN_ID}]);

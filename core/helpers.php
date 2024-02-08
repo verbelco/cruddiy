@@ -142,8 +142,8 @@ function type_to_php($type)
         7 => "DateTime",
         8 => "DateTime"
     );
-    if (isset($type_to_str[$type])) {
-        return $type_to_str[$type];
+    if (isset($type_to_php[$type])) {
+        return $type_to_php[$type];
     } else {
         return "string";
     }
@@ -213,7 +213,7 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
 
 function create_db_attribute($name, $type, $comments, $nullable)
 {
-    $comments = empty($comments) ? "" : "/** $comments */\n";
+    $comments = empty($comments) ? "" : "/** ". str_replace("\n", "\n*", $comments) ." */\n";
     $nullable = $nullable ? "?" : "";
 
     $type = type_to_php($type);
