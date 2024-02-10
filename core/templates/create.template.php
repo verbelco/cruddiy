@@ -21,7 +21,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    $stmt = $link->prepare("INSERT INTO `{TABLE_NAME}` ({CREATE_COLUMN_NAMES}) VALUES ({CREATE_QUESTIONMARK_PARAMS})");
+    $inserts = implode(", ", array_map(function ($c) {
+        return "`" . $c . "`";
+    }, array_keys($row)));
+    $question_marks = implode(", ", array_fill(0, count($row), '?'));
+
+    $stmt = $link->prepare("INSERT INTO `instanties` ($inserts) VALUES ($question_marks)");
 
     try {
         $stmt->execute(array_values($row));
@@ -41,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 } else if (isset($_GET['duplicate'])) {
     $duplicate_id = trim($_GET['duplicate']);
 
-    $stmt = $link->prepare("SELECT {CREATE_COLUMN_NAMES} FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?");
+    $stmt = $link->prepare("SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?");
     $stmt->execute([$duplicate_id]);
     $result = $stmt->get_result();
     if ($result->num_rows == 1) {

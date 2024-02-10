@@ -255,7 +255,7 @@ function generate_delete($tablename, $column_id, $foreign_key_references)
     echo "Generating $tablename Delete file<br>";
 }
 
-function generate_create($tablename, $create_sqlcolumns, $column_id, $create_numberofparams)
+function generate_create($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
@@ -265,9 +265,7 @@ function generate_create($tablename, $create_sqlcolumns, $column_id, $create_num
     $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step3 = str_replace("{CREATE_COLUMN_NAMES}", $create_sqlcolumns, $step0);
-    $step4 = str_replace("{CREATE_QUESTIONMARK_PARAMS}", $create_numberofparams, $step3);
-    $step9 = str_replace("{COLUMN_ID}", $column_id, $step4);
+    $step9 = str_replace("{COLUMN_ID}", $column_id, $step0);
     if (!file_put_contents("app/$tablename/create.php", $step9, LOCK_EX)) {
         die("Unable to open file!");
     }
@@ -313,7 +311,6 @@ function generate($postdata)
         global $link, $forced_deletion;
 
         $columns_selected = [];
-        $create_sqlcolumns = [];
         /** List with all columns of this table */
         $column_list = [];
         /** List with the selected columns of this table */
@@ -340,7 +337,6 @@ function generate($postdata)
                 $column_list[] = $c['columnname'];
             }
 
-            $total_params = count($table_data);
             $first_column = $table_data[array_keys($table_data)[0]];
             $tablename = $first_column['tablename'];
 
@@ -391,14 +387,7 @@ function generate($postdata)
                 $join_clauses = '';
                 $type = column_type($c['columntype']);
 
-                if (!empty($c['auto'])) {
-                    //Dont create html input field for auto-increment columns
-                    $total_params--;
-                }
-
                 if (empty($c['auto'])) {
-                    $create_sqlcolumns[] = "`" . $c['columnname'] . "`";
-
                     // Foreign Key
                     // Create FK JOINS.
                     if (!empty($c['fk'])) {
@@ -427,10 +416,6 @@ function generate($postdata)
                 $column_classes[] = create_column_object($c['columnname'], $c['columndisplay'], $c['columncomment'], $c['tablename'], $join_clauses, $join_columns, $c['columnnullable'], empty($c['auto']), $type);
                 $db_attributes[] = create_db_attribute($c['columnname'], $type, $c['columncomment'], $c['columnnullable']);
             }
-
-            $create_numberofparams = array_fill(0, $total_params, '?');
-            $create_numberofparams = implode(", ", $create_numberofparams);
-            $create_sqlcolumns = implode(", ", $create_sqlcolumns);
 
             $foreign_key_references = implode(",", $foreign_key_references);
             $column_classes = implode(",\n", $column_classes);
@@ -470,7 +455,7 @@ function generate($postdata)
             }
 
             generate_index($tablename, $tabledisplay, $tablecomment, $column_id, $columns_selected);
-            generate_create($tablename, $create_sqlcolumns, $column_id, $create_numberofparams);
+            generate_create($tablename, $column_id);
             generate_read($tablename, $column_id, $foreign_key_references);
             generate_update($tablename, $column_id);
             generate_delete($tablename, $column_id, $foreign_key_references);
