@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }, array_keys($row)));
     $question_marks = implode(", ", array_fill(0, count($row), '?'));
 
-    $stmt = $link->prepare("INSERT INTO `instanties` ($inserts) VALUES ($question_marks)");
+    $stmt = $link->prepare("INSERT INTO `{TABLE_NAME}` ($inserts) VALUES ($question_marks)");
 
     try {
         $stmt->execute(array_values($row));
