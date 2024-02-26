@@ -358,9 +358,8 @@ function generate($postdata)
 
             // Find foreign key references to this table
             $foreign_key_references = [];
-            $sql_get_fk_ref = "SELECT i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
-                                k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column',
-                                i.CONSTRAINT_NAME as 'Constraint Name'
+            $sql_get_fk_ref = " SELECT DISTINCT i.CONSTRAINT_NAME as 'Constraint Name', i.TABLE_NAME as 'Table', k.COLUMN_NAME as 'Column',
+                                k.REFERENCED_TABLE_NAME as 'FK Table', k.REFERENCED_COLUMN_NAME as 'FK Column'
                                 FROM information_schema.TABLE_CONSTRAINTS i
                                 LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
                                 WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND k.REFERENCED_TABLE_NAME = '$tablename'";
@@ -400,7 +399,7 @@ function generate($postdata)
                             $sql_concat_select = array();
                             $sql_select = array();
 
-                            // We need may need multiple JOIN, but in any case we need to join our refered foreign key.
+                            // We need may need multiple JOIN, but in any case we need to join our referred foreign key.
                             $join_clauses = "\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`" . $c['columnname'] . "`";
 
                             $local_join_clauses = "";
