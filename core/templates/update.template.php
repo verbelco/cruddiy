@@ -12,6 +12,8 @@ if (file_exists(stream_resolve_include_path("class_extension.php"))) {
     $read_only_columns_list = array();
 }
 
+include "pre_extension.php";
+
 // Processing form data when form is submitted
 if (isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])) {
     $row = array();
@@ -117,18 +119,11 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
                     </div>
                 </form>
                 <?php
-                if (file_exists(stream_resolve_include_path("extension.php"))) {
-                    include("extension.php");
-                }
+                include "post_extension.php";
                 ?>
             </div>
         </div>
     </div>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-    </script>
 </body>
 
 </html>

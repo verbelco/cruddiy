@@ -21,6 +21,11 @@ $currenturl = $domain . $script . '?' . $parameters;
 $column_list = $original_column_list + $read_only_columns_list;
 $columns = array_keys($column_list);
 
+$DEFAULT_COLUMNS = ['{COLUMNS}'];
+$DEFAULT_ORDERING = array('{COLUMN_ID}' => 'asc');
+
+include "pre_extension.php";
+
 // Handle bulk updates
 if (isset($_POST['target']) && in_array($_POST['target'], ['Update', 'Update_all', 'Delete', 'Delete_all'])) {
     $ids = str_contains($_POST['target'], 'all') ? explode(';', $_POST['all_ids']) : $_POST['bulk-update'];
@@ -64,12 +69,16 @@ if (isset($_POST['flexible-columns'])) {
 } else if (isset($_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"])) {
     $selected_columns = $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"];
 } else {
-    $selected_columns = ['{COLUMNS}'];
+    $selected_columns = $DEFAULT_COLUMNS;
 }
 
-$selected_columns_list = array_filter($column_list, function ($c) use ($selected_columns) {
-    return in_array($c->get_name(), $selected_columns);
-});
+// Get the selected columns in the right order
+$selected_columns_list = array();
+foreach ($selected_columns as $c) {
+    if (isset($column_list[$c])) {
+        $selected_columns_list[$c] = $column_list[$c];
+    }
+}
 
 // Column sorting on column name
 if (isset($_GET['order'])) {
@@ -83,7 +92,7 @@ if (isset($_GET['order'])) {
 
 if (empty($order_param_array)) {
     $default_ordering = true;
-    $order_param_array = array('{COLUMN_ID}' => 'asc');
+    $order_param_array = $DEFAULT_ORDERING;
 }
 
 $orderclause = get_orderby_clause($order_param_array, $column_list);
@@ -97,9 +106,13 @@ $filter = create_sql_filter_array($where_columns);
 
 if (isset($_GET["target"]) && $_GET["target"] == "Search") {
     $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = $filter;
-} else if (count($filter) == 0 && !empty($_SESSION["CRUD"]["{TABLE_NAME}"]["filter"])) {
+} else if (count($filter) == 0) {
     // Use the filter from the session if no other filter is used
     $filter = $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"];
+} else {
+    // Skip quick search when a direct reference is being called
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = $filter;
+    $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = null;
 }
 [$get_param_where, $where_clause] = create_sql_where($column_list, $filter, $link);
 
@@ -323,8 +336,10 @@ $sql = "SELECT $sql_select
                                         <input type="hidden" form="bulkupdatesform" name="all_ids" value="' . $all_ids . '">
                                     </th>';
                         foreach ($selected_columns_list as $c) {
-                            if ($default_ordering && $c->get_name() != "{COLUMN_ID}") {
-                                unset($order_param_array["{COLUMN_ID}"]);
+                            if ($default_ordering && !isset($DEFAULT_ORDERING[$c->get_name()])) {
+                                foreach (array_keys($DEFAULT_ORDERING) as $column_name) {
+                                    unset($order_param_array[$column_name]);
+                                }
                             }
                             [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
                             echo $c->html_index_table_header($get_param_search, $get_param_where, $get_param_order, $arrow);
@@ -393,12 +408,7 @@ $sql = "SELECT $sql_select
                     echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN MAIN QUERY: " . $e->getMessage() . "</div>";
                 }
 
-                if (file_exists(stream_resolve_include_path("extension.php"))) {
-                    include("extension.php");
-                }
-
-                // Close connection
-                mysqli_close($link);
+                include "post_extension.php";
                 ?>
             </div>
         </div>

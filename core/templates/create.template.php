@@ -12,6 +12,8 @@ if (file_exists(stream_resolve_include_path("class_extension.php"))) {
     $read_only_columns_list = array();
 }
 
+include "pre_extension.php";
+
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $row = array();
@@ -94,18 +96,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
                 <p> * field can not be left empty </p>
                 <?php
-                if (file_exists(stream_resolve_include_path("extension.php"))) {
-                    include("extension.php");
-                }
+                include "post_extension.php";
                 ?>
             </div>
         </div>
     </div>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-    </script>
 </body>
 
 </html>

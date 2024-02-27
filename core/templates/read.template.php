@@ -17,6 +17,8 @@ if (isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])) {
 
     $column_list = $original_column_list + $read_only_columns_list;
 
+    include "pre_extension.php";
+
     // Prepare a select statement
     $sql_select = implode(", ", array_map(function ($c) {
         return $c->get_sql_select();
@@ -113,22 +115,12 @@ if (isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])) {
                     }
                 }
                 echo html_read_references($references);
-
-                if (file_exists(stream_resolve_include_path("extension.php"))) {
-                    include("extension.php");
-                }
-
-                // Close connection
-                mysqli_close($link);
+                
+                include "post_extension.php";
                 ?>
             </div>
         </div>
     </div>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-    </script>
 </body>
 
 </html>
