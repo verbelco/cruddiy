@@ -174,16 +174,21 @@ $sql_join = implode("", array_map(function ($c) {
 $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` 
         $sql_join $where_clause";
 
-try {
-    $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
-    $number_of_results = $count_result['count'];
-    $all_ids = $count_result['all_ids'];
-    if ($number_of_results < $offset) {
-        $offset = 0;
-        $pageno = 1;
+if(isset($skip_count) && $skip_count && empty($filter)){
+    $number_of_results = $number_of_records ?? 1000;
+    $all_ids = "";
+} else {
+    try {
+        $count_result = mysqli_fetch_assoc(mysqli_query($link, $count_pages));
+        $number_of_results = $count_result['count'];
+        $all_ids = $count_result['all_ids'];
+        if ($number_of_results < $offset) {
+            $offset = 0;
+            $pageno = 1;
+        }
+    } catch (mysqli_sql_exception $e) {
+        echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN COUNT QUERY: " . $e->getMessage() . "</div>";
     }
-} catch (mysqli_sql_exception $e) {
-    echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN COUNT QUERY: " . $e->getMessage() . "</div>";
 }
 
 $sql = "SELECT $sql_select
