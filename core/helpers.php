@@ -62,7 +62,7 @@ function get_default_value($table, $column)
         $def = "new DateTime()";
     }
 
-    return empty($def) || $def == "NULL" ? "null" : $def;
+    return !isset($def) || $def == "" || $def == "NULL" ? "null" : $def;
 }
 
 function get_foreign_table_and_column($tablename, $columnname)
