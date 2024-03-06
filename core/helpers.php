@@ -220,3 +220,12 @@ function create_db_attribute($name, $type, $comments, $nullable)
 
     return $comments . "protected $nullable$type $$name;";
 }
+
+function create_constructor_parameter($name, $type, $nullable)
+{
+    $nullable = $nullable ? "?" : "";
+
+    $type = type_to_php($type);
+
+    return "$nullable$type $$name";
+}

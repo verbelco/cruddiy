@@ -237,6 +237,34 @@ function generate_database_link($tablename, $column_id, $columns_list, $preview_
     echo "Generating $tablename database link file<br>";
 }
 
+function generate_object($tablename, $columns_list, $attributes_list,  $constructor_parameters)
+{
+    $database_class_file = file_get_contents("templates/object-class.template.php");
+
+    $columns = "'" . implode("', '", $columns_list) . "'";
+    $attributes = implode("\n", $attributes_list);
+    $constructor_parameters = implode(",", $constructor_parameters);
+    $construct_statements = implode("\n", array_map(fn($c) => "\$this->$c = \$$c;", $columns_list));
+    $array_construct = implode(",\n", array_map(fn($c) => "\$row['$c']", $columns_list));
+
+    $step0 = str_replace("{TABLE}", $tablename, $database_class_file);
+    $step1 = str_replace("/**{COLUMNS}*/", $columns, $step0);
+    $step2 = str_replace("/**{ATTRIBUTES}*/", $attributes, $step1);
+    $step3 = str_replace("/**{CONSTRUCT_PARAMETERS}*/", $constructor_parameters, $step2);
+    $step4 = str_replace("/**{CONSTRUCT_STATEMENTS}*/", $construct_statements, $step3);
+    $step5 = str_replace("/**{ARRAY_CONSTRUCT_ROW}*/", $array_construct, $step4);
+
+    $dir = "app/object_class";
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+
+    if (!file_put_contents("$dir/$tablename.php", $step5, LOCK_EX)) {
+        die("Unable to open file!");
+    }
+    echo "Generating $tablename object class file<br>";
+}
+
 function generate_delete($tablename, $column_id, $foreign_key_references)
 {
     global $CSS_REFS, $JS_REFS;
@@ -316,6 +344,7 @@ function generate($postdata)
         /** List with the selected columns of this table */
         $column_classes = [];
 
+        $constructor_parameters = [];
         $db_attributes = [];
 
         if (!in_array($key, $excluded_keys)) {
@@ -414,6 +443,7 @@ function generate($postdata)
                 }
                 $column_classes[] = create_column_object($c['columnname'], $c['columndisplay'], $c['columncomment'], $c['tablename'], $join_clauses, $join_columns, $c['columnnullable'], empty($c['auto']), $type);
                 $db_attributes[] = create_db_attribute($c['columnname'], $type, $c['columncomment'], $c['columnnullable']);
+                $constructor_parameters[] = create_constructor_parameter($c['columnname'], $type, $c['columnnullable']);    
             }
 
             $foreign_key_references = implode(",", $foreign_key_references);
@@ -459,6 +489,7 @@ function generate($postdata)
             generate_update($tablename, $column_id);
             generate_delete($tablename, $column_id, $foreign_key_references);
             generate_database_link($tablename, $column_id, $column_list, $columns_selected, $db_attributes);
+            generate_object($tablename, $column_list, $db_attributes, $constructor_parameters);
             generate_crud_class($tablename, $column_id, $column_classes);
         }
     }
