@@ -4,7 +4,8 @@ require_once "WaterWebObject.php";
 
 class {TABLE} extends WaterWebObject
 {
-const KOLOMMEN = [/**{COLUMNS}*/];
+    const KOLOMMEN = [/**{COLUMNS}*/];
+    const TABLE = "{TABLE}";
 
     /**{ATTRIBUTES}*/
 
@@ -14,7 +15,7 @@ const KOLOMMEN = [/**{COLUMNS}*/];
     }
 
     public function __toString() : string {
-        return "{TABLE} " . $this->id . ": ";
+        return "{TABLE} " . parent::__toString() . ": ";
     }
 }
 
