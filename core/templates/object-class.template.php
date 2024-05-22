@@ -5,7 +5,7 @@ require_once "WaterWebObject.php";
 class {TABLE} extends WaterWebObject
 {
     const KOLOMMEN = [/**{COLUMNS}*/];
-    const TABLE = "{TABLE}";
+    const TABEL = "{TABLE}";
 
     /**{ATTRIBUTES}*/
 
