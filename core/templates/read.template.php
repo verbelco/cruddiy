@@ -1,7 +1,7 @@
 <?php
 // Check existence of id parameter before processing further
 $_GET["{TABLE_ID}"] = trim($_GET["{TABLE_ID}"]);
-if (isset($_GET["{TABLE_ID}"]) && !empty($_GET["{TABLE_ID}"])) {
+if (!empty($_GET["{TABLE_ID}"])) {
     // Include config file
     require_once "../config.php";
     require_once "../shared/helpers.php";

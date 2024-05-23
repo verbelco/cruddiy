@@ -15,15 +15,15 @@ if (file_exists(stream_resolve_include_path("class_extension.php"))) {
 include "pre_extension.php";
 
 // Processing form data when form is submitted
-if (isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])) {
+if (!empty($_POST["{COLUMN_ID}"])) {
     $row = array();
     $update_stmts = [];
     foreach ($original_column_list as $name => $column) {
         if ($column->get_name() != "{COLUMN_ID}") {
             if (get_class($column) != "MutatieMomentColumn") {
-                $row[$name] = $original_column_list[$name]->get_sql_update_value($_POST[$name]);
+                $row[$name] = $column->get_sql_update_value($_POST[$name]);
             }
-            $update_stmts[] = $original_column_list[$name]->get_sql_update_stmt();
+            $update_stmts[] = $column->get_sql_update_stmt();
         }
     }
 
@@ -45,7 +45,7 @@ if (isset($_POST["{COLUMN_ID}"]) && !empty($_POST["{COLUMN_ID}"])) {
 
 // Retrieve the values for this record
 $_GET["{COLUMN_ID}"] = trim($_GET["{COLUMN_ID}"]);
-if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
+if (!empty($_GET["{COLUMN_ID}"])) {
     if (!isset($error)) {
         // Get URL parameter
         $param_id = trim($_GET["{COLUMN_ID}"]);
@@ -98,7 +98,7 @@ if (isset($_GET["{COLUMN_ID}"]) && !empty($_GET["{COLUMN_ID}"])) {
                     <?php
                     foreach ($original_column_list as $name => $column) {
                         if ($column->get_name() != "{COLUMN_ID}") {
-                            echo $original_column_list[$name]->html_update_row($row[$name]);
+                            echo $column->html_update_row($row[$name]);
                         }
                     }
                     ?>

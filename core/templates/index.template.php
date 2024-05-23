@@ -66,10 +66,8 @@ if (isset($_GET["target"])) {
 if (isset($_POST['flexible-columns'])) {
     $selected_columns = array_intersect($_POST['flexible-columns'], $columns);
     $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"] = $selected_columns;
-} else if (isset($_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"])) {
-    $selected_columns = $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"];
 } else {
-    $selected_columns = $DEFAULT_COLUMNS;
+    $selected_columns = $_SESSION["CRUD"]["{TABLE_NAME}"]["selected_columns"] ?? $DEFAULT_COLUMNS;
 }
 
 // Get the selected columns in the right order
@@ -421,7 +419,7 @@ $sql = "SELECT $sql_select
     <script type="text/javascript">
         $(".subnav .nav-link").click(function () {
             $(".subpage").hide();
-            id = $(this).attr('id').slice(0, -2);
+            const id = $(this).attr('id').slice(0, -2);
 
             if (!$(this).hasClass("active")) {
                 $("#" + id).css('display', 'block');

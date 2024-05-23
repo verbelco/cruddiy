@@ -15,7 +15,7 @@ if (file_exists(stream_resolve_include_path("class_extension.php"))) {
 include "pre_extension.php";
 
 // Process delete operation after confirmation
-if (isset($_POST["{TABLE_ID}"]) && !empty($_POST["{TABLE_ID}"])) {
+if (!empty($_POST["{TABLE_ID}"])) {
 
     // Prepare a delete statement
     $sql = "DELETE FROM `{TABLE_NAME}` WHERE `{TABLE_ID}` = ?";

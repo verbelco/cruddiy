@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $row = array();
     foreach ($original_column_list as $name => $column) {
         if ($column->get_name() != "{COLUMN_ID}") {
-            $row[$name] = $original_column_list[$name]->get_sql_create_value($_POST[$name]);
+            $row[$name] = $column->get_sql_create_value($_POST[$name]);
         }
     }
 
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php
                         foreach ($original_column_list as $name => $column) {
                             if ($column->get_name() != "{COLUMN_ID}") {
-                                echo $original_column_list[$name]->html_create_row($row[$name]);
+                                echo $column->html_create_row($row[$name]);
                             }
                         }
                         ?>
