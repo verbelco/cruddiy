@@ -50,6 +50,7 @@ $CSS_REFS = '<link rel="stylesheet" href="../css/bootstrap-5.min.css" type="text
 $JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
 <script src="../js/bootstrap.bundle.min.js"></script>
 <script src="../js/selectize.min.js"></script>
+<script src="../js/sortable.min.js"></script>
 <script src="../js/emojis.js"></script>
 <script src="../js/custom.js"></script>';
 

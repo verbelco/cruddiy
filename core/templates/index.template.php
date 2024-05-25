@@ -161,7 +161,7 @@ $sql_select = implode(", ", array_map(function ($c) {
 
 // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
 $columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_in_search) {
-    return in_array($c->get_name(), $selected_columns) || isset($columns_in_search[$c->get_name()]) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
+    return in_array($c->get_name(), $selected_columns) || isset ($columns_in_search[$c->get_name()]) || isset ($filter[$c->get_name()]) || isset ($order_param_array[$c->get_name()]);
 });
 
 $sql_join = implode("", array_map(function ($c) {
@@ -172,7 +172,7 @@ $sql_join = implode("", array_map(function ($c) {
 $count_pages = "SELECT COUNT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}`) AS count, GROUP_CONCAT(DISTINCT `{TABLE_NAME}`.`{COLUMN_ID}` SEPARATOR ';') AS all_ids FROM `{TABLE_NAME}` 
         $sql_join $where_clause";
 
-if(isset($skip_count) && $skip_count && empty($filter)){
+if (isset($skip_count) && $skip_count && empty($filter)) {
     $number_of_results = $number_of_records ?? 1000;
     $all_ids = "";
 } else {
@@ -297,124 +297,148 @@ $sql = "SELECT $sql_select
                         id="Flexible_columns">
                         <form action="../{TABLE_NAME}/index.php" id="flexiblecolumnsform" method="post">
                             <h3 class="text-center">Flexible Columns</h3>
-                            <div>
-                                <p>
-                                    Select the columns that you want to display on this page
-                                </p>
+                            <p>
+                                Select the columns that you want to display on this page
+                            </p>
+                            <div class="row">
                                 <?php
-                                if (count($read_only_columns_list) > 0) {
-                                    echo "<h5>Original columns</h5>";
-                                }
-                                foreach ($original_column_list as $name => $c) {
-                                    echo $c->html_index_flexible_columns(in_array($name, $selected_columns));
-                                }
-                                if (count($read_only_columns_list) > 0) {
-                                    echo "<h5>Read-only columns</h5>";
-                                    foreach ($read_only_columns_list as $name => $c) {
-                                        echo $c->html_index_flexible_columns(in_array($name, $selected_columns));
+                                if (count($selected_columns_list) > 0) {
+                                    echo "<div class='col'>";
+                                    echo "<h5>Selected columns (in order)</h5>";
+                                    echo "<ol class='list-group flexible-columns my-2'>";
+                                    foreach ($selected_columns_list as $name => $c) {
+                                        echo $c->html_index_flexible_columns();
                                     }
+                                    echo "</ol>";
+                                    echo "</div>";
                                 }
                                 ?>
-                            </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-success btn-lg" name="target"
-                                    value="select-columns">Update view</button>
-                            </div>
                         </form>
+                        <?php
+                        $not_used_original_columns_list = array_diff_key($original_column_list, $selected_columns_list);
+                        if (count($not_used_original_columns_list) > 0) {
+                            echo "<div class='col'>";
+                            echo "<h5>Original columns</h5>";
+                            echo "<ol class='list-group flexible-columns my-2'>";
+                            foreach ($not_used_original_columns_list as $name => $c) {
+                                echo $c->html_index_flexible_columns();
+                            }
+                            echo "</ol>";
+                            echo "</div>";
+                        }
+
+                        $not_used_read_only_columns_list = array_diff_key($read_only_columns_list, $selected_columns_list);
+                        if (count($not_used_read_only_columns_list) > 0) {
+                            echo "<div class='col'>";
+                            echo "<h5>Read-only columns</h5>";
+                            echo "<ol class='list-group flexible-columns my-2'>";
+                            foreach ($not_used_read_only_columns_list as $name => $c) {
+                                echo $c->html_index_flexible_columns();
+                            }
+                            echo "</ol>";
+                            echo "</div>";
+                        }
+                        ?>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg" name="target" value="select-columns"
+                            form="flexiblecolumnsform">Update
+                            view</button>
                     </div>
                 </div>
-                <?php
-                try {
-                    $result = mysqli_query($link, $sql);
-                    if (mysqli_num_rows($result) > 0) {
-                        $total_pages = ceil($number_of_results / $no_of_records_per_page);
-                        echo "Sorting on $ordering_on <br>";
-                        echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
+            </div>
+            <?php
+            try {
+                $result = mysqli_query($link, $sql);
+                if (mysqli_num_rows($result) > 0) {
+                    $total_pages = ceil($number_of_results / $no_of_records_per_page);
+                    echo "Sorting on $ordering_on <br>";
+                    echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
 
-                        echo "<table class='table table-bordered table-striped'>";
-                        echo "<thead class='table-primary sticky-top'>";
-                        echo "<tr>";
-                        echo '<th class="text-center" title="Select all" data-toggle="tooltip" style="display:none;">
+                    echo "<table class='table table-bordered table-striped'>";
+                    echo "<thead class='table-primary sticky-top'>";
+                    echo "<tr>";
+                    echo '<th class="text-center" title="Select all" data-toggle="tooltip" style="display:none;">
                                         Bulk updates <input type="checkbox" id="select_all_checkboxes">
                                         <input type="hidden" form="bulkupdatesform" name="all_ids" value="' . $all_ids . '">
                                     </th>';
-                        foreach ($selected_columns_list as $c) {
-                            if ($default_ordering && !isset($DEFAULT_ORDERING[$c->get_name()])) {
-                                foreach (array_keys($DEFAULT_ORDERING) as $column_name) {
-                                    unset($order_param_array[$column_name]);
-                                }
+                    foreach ($selected_columns_list as $c) {
+                        if ($default_ordering && !isset($DEFAULT_ORDERING[$c->get_name()])) {
+                            foreach (array_keys($DEFAULT_ORDERING) as $column_name) {
+                                unset($order_param_array[$column_name]);
                             }
-                            [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
-                            echo $c->html_index_table_header($get_param_search, $get_param_where, $get_param_order, $arrow);
                         }
-                        echo "<th>Action</th>";
-                        echo "</tr>";
-                        echo "</thead>";
-                        echo "<tbody>";
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo "<tr>";
-                            echo '<td class="text-center" style="display:none;">
+                        [$get_param_order, $arrow] = get_order_parameters($order_param_array, $c->get_name());
+                        echo $c->html_index_table_header($get_param_search, $get_param_where, $get_param_order, $arrow);
+                    }
+                    echo "<th>Action</th>";
+                    echo "</tr>";
+                    echo "</thead>";
+                    echo "<tbody>";
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        echo "<tr>";
+                        echo '<td class="text-center" style="display:none;">
                                         <input type="checkbox" form="bulkupdatesform" name="bulk-update[]" value="' . $row['{COLUMN_ID}'] . '">
                                     </td>';
-                            foreach ($selected_columns_list as $c) {
-                                echo $c->html_index_table_element($row);
-                            }
-                            echo "<td class='text-nowrap'>";
-                            echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=" . $row['{COLUMN_ID}'] . "' title='View Record' data-toggle='tooltip' class='me-1'><i class='far fa-eye'></i></a>";
-                            echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=" . $row['{COLUMN_ID}'] . "' title='Update Record' data-toggle='tooltip'class='me-1'><i class='far fa-edit'></i></a>";
-                            echo "<a href='../{TABLE_NAME}/create.php?duplicate=" . $row['{COLUMN_ID}'] . "' title='Create a duplicate of this record' data-toggle='tooltip' class='me-1'><i class='fa fa-copy'></i></a>";
-                            echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=" . $row['{COLUMN_ID}'] . "' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
-                            echo "</td>";
-                            echo "</tr>";
+                        foreach ($selected_columns_list as $c) {
+                            echo $c->html_index_table_element($row);
                         }
-                        echo "</tbody>";
-                        echo "</table>";
-                        ?>
-                        <ul id="pagination" class="pagination fixed-bottom" align-right>
-                            <?php
-                            $new_url = preg_replace('/&?pageno=[^&]*/', '', $currenturl);
-                            ?>
-                            <li class="page-item"><a class="page-link" href="<?php echo $new_url . '&pageno=1' ?>">First</a>
-                            </li>
-                            <li class="page-item <?php if ($pageno <= 1) {
-                                echo 'disabled';
-                            } ?>">
-                                <a class="page-link" href="<?php if ($pageno <= 1) {
-                                    echo '#';
-                                } else {
-                                    echo $new_url . "&pageno=" . ($pageno - 1);
-                                } ?>">Prev</a>
-                            </li>
-                            <li class="page-item <?php if ($pageno >= $total_pages) {
-                                echo 'disabled';
-                            } ?>">
-                                <a class="page-link" href="<?php if ($pageno >= $total_pages) {
-                                    echo '#';
-                                } else {
-                                    echo $new_url . "&pageno=" . ($pageno + 1);
-                                } ?>">Next</a>
-                            </li>
-                            <li class="page-item <?php if ($pageno >= $total_pages) {
-                                echo 'disabled';
-                            } ?>">
-                                <a class="page-item"><a class="page-link"
-                                        href="<?php echo $new_url . '&pageno=' . $total_pages; ?>">Last</a>
-                            </li>
-                        </ul>
-                        <?php
-                        // Free result set
-                        mysqli_free_result($result);
-                    } else {
-                        echo "<p class='lead'><em>No records were found.</em></p>";
+                        echo "<td class='text-nowrap'>";
+                        echo "<a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=" . $row['{COLUMN_ID}'] . "' title='View Record' data-toggle='tooltip' class='me-1'><i class='far fa-eye'></i></a>";
+                        echo "<a href='../{TABLE_NAME}/update.php?{COLUMN_ID}=" . $row['{COLUMN_ID}'] . "' title='Update Record' data-toggle='tooltip'class='me-1'><i class='far fa-edit'></i></a>";
+                        echo "<a href='../{TABLE_NAME}/create.php?duplicate=" . $row['{COLUMN_ID}'] . "' title='Create a duplicate of this record' data-toggle='tooltip' class='me-1'><i class='fa fa-copy'></i></a>";
+                        echo "<a href='../{TABLE_NAME}/delete.php?{COLUMN_ID}=" . $row['{COLUMN_ID}'] . "' title='Delete Record' data-toggle='tooltip'><i class='far fa-trash-alt'></i></a>";
+                        echo "</td>";
+                        echo "</tr>";
                     }
-                } catch (mysqli_sql_exception $e) {
-                    echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN MAIN QUERY: " . $e->getMessage() . "</div>";
+                    echo "</tbody>";
+                    echo "</table>";
+                    ?>
+                    <ul id="pagination" class="pagination fixed-bottom" align-right>
+                        <?php
+                        $new_url = preg_replace('/&?pageno=[^&]*/', '', $currenturl);
+                        ?>
+                        <li class="page-item"><a class="page-link" href="<?php echo $new_url . '&pageno=1' ?>">First</a>
+                        </li>
+                        <li class="page-item <?php if ($pageno <= 1) {
+                            echo 'disabled';
+                        } ?>">
+                            <a class="page-link" href="<?php if ($pageno <= 1) {
+                                echo '#';
+                            } else {
+                                echo $new_url . "&pageno=" . ($pageno - 1);
+                            } ?>">Prev</a>
+                        </li>
+                        <li class="page-item <?php if ($pageno >= $total_pages) {
+                            echo 'disabled';
+                        } ?>">
+                            <a class="page-link" href="<?php if ($pageno >= $total_pages) {
+                                echo '#';
+                            } else {
+                                echo $new_url . "&pageno=" . ($pageno + 1);
+                            } ?>">Next</a>
+                        </li>
+                        <li class="page-item <?php if ($pageno >= $total_pages) {
+                            echo 'disabled';
+                        } ?>">
+                            <a class="page-item"><a class="page-link"
+                                    href="<?php echo $new_url . '&pageno=' . $total_pages; ?>">Last</a>
+                        </li>
+                    </ul>
+                    <?php
+                    // Free result set
+                    mysqli_free_result($result);
+                } else {
+                    echo "<p class='lead'><em>No records were found.</em></p>";
                 }
+            } catch (mysqli_sql_exception $e) {
+                echo "<div class='alert alert-danger' role='alert'>DATABASE ERROR IN MAIN QUERY: " . $e->getMessage() . "</div>";
+            }
 
-                include "post_extension.php";
-                ?>
-            </div>
+            include "post_extension.php";
+            ?>
         </div>
+    </div>
     </div>
     <script type="text/javascript">
         $(".subnav .nav-link").click(function () {
@@ -435,6 +459,10 @@ $sql = "SELECT $sql_select
         });
 
         $("tbody input[type=checkbox]").change(count_checked_boxes);
+
+        $("ol.flexible-columns").sortable({
+            group: 'flexible-columns',
+        });
     </script>
 </body>
 
