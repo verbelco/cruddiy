@@ -4,7 +4,7 @@ namespace Database;
 
 require_once "shared/database/classes/link/Tabel.php";
 
-use DateTime, Exception, ErrorException, Logger;
+use DateTime, NotFoundException, Logger;
 
 /** Class om {TABLE} op te halen uit de database */
 class {TABLE} extends Tabel
@@ -29,7 +29,7 @@ class {TABLE} extends Tabel
         if (isset($this->{COLUMN_ID})) {
             try {
                 return new {TABLE}Via{COLUMN_ID}($this->{COLUMN_ID});
-            } catch (Exception $e) {
+            } catch (NotFoundException $e) {
                 if ($log_verbose) {
                     $logger->log($e->getMessage());
                 }
@@ -45,7 +45,7 @@ class {TABLE}Via{COLUMN_ID} extends {TABLE}
 
     /**
      * Initialiseer een {TABLE} vanuit het {COLUMN_ID}
-     * @throws ErrorException als er geen {TABLE} gevonden wordt.
+     * @throws NotFoundException als er geen {TABLE} gevonden wordt.
      */
     public function __construct(int ${COLUMN_ID})
     {
@@ -62,7 +62,7 @@ class {TABLE}Via{COLUMN_ID} extends {TABLE}
         if ($result->num_rows == 1) {
             parent::__construct($result->fetch_assoc());
         } else {
-            throw new ErrorException("Kan geen {TABLE} vinden met {COLUMN_ID} ${COLUMN_ID}");
+            throw new NotFoundException("Kan geen {TABLE} vinden met {COLUMN_ID} ${COLUMN_ID}");
         }
     }
 }
