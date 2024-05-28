@@ -2,7 +2,7 @@
 
 namespace Database;
 
-require_once "shared/database/classes/Tabel.php";
+require_once "shared/database/classes/link/Tabel.php";
 
 use DateTime, Exception, ErrorException, Logger;
 
