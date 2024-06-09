@@ -51,6 +51,7 @@ $JS_REFS = '<script src="../js/jquery-3.7.0.min.js"></script>
 <script src="../js/bootstrap.bundle.min.js"></script>
 <script src="../js/selectize.min.js"></script>
 <script src="../js/sortable.min.js"></script>
+<script src="../js/jquery-sortable.js"></script>
 <script src="../js/emojis.js"></script>
 <script src="../js/custom.js"></script>';
 
