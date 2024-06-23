@@ -3,7 +3,6 @@
 require_once "../config.php";
 require_once "../shared/helpers.php";
 require_once "../shared/bulk_updates.php";
-require_once "shared/crud/Column/Column.php";
 require_once "class.php";
 
 //Get current URL and parameters for correct pagination

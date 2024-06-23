@@ -5,7 +5,6 @@ if (!empty($_GET["{TABLE_ID}"])) {
     // Include config file
     require_once "../config.php";
     require_once "../shared/helpers.php";
-    require_once "shared/crud/Column/Column.php";
     require_once "class.php";
 
     $original_column_list = $CRUD['{TABLE_NAME}']->get_original_columns();
