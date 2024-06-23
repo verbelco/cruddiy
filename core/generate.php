@@ -164,7 +164,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
     }
 }
 
-function generate_index($tablename, $tabledisplay, $tablecomment, $column_id, $columns_selected)
+function generate_index($tablename, $tabledisplay, $column_id, $columns_selected)
 {
     global $appname, $CSS_REFS, $JS_REFS;
 
@@ -176,8 +176,7 @@ function generate_index($tablename, $tabledisplay, $tablecomment, $column_id, $c
     $columns_selected = implode("', '", $columns_selected);
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
-    $step2 = str_replace("{TABLE_COMMENT}", $tablecomment, $step1);
-    $step5 = str_replace("{COLUMN_ID}", $column_id, $step2);
+    $step5 = str_replace("{COLUMN_ID}", $column_id, $step1);
     $step7 = str_replace("{COLUMNS}", $columns_selected, $step5);
     $step9 = str_replace("{APP_NAME}", $appname, $step7);
     if (!file_put_contents("app/$tablename/index.php", $step9, LOCK_EX)) {
@@ -204,12 +203,17 @@ function generate_read($tablename, $column_id, $foreign_key_references)
     echo "Generating $tablename Read file<br>";
 }
 
-function generate_crud_class($tablename, $column_id, $column_classes)
+function generate_crud_class($tablename, $tabledisplay, $tablecomment, $column_id, $foreign_key_references, $column_classes)
 {
     $crud_class_file = file_get_contents("templates/crud_class.template.php");
 
-    $step0 = str_replace("/**{COLUMNS_CLASSES}*/", $column_classes, $crud_class_file);
-    if (!file_put_contents("app/$tablename/class.php", $step0, LOCK_EX)) {
+    $step0 = str_replace("{TABLE}", $tablename, $crud_class_file);
+    $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
+    $step2 = str_replace('"{TABLE_COMMENT}"', $tablecomment, $step1);
+    $step3 = str_replace("{COLUMN_ID}", $column_id, $step2);
+    $step4 = str_replace("/**{FOREIGN_KEY_REFS}*/", $foreign_key_references, $step3);
+    $step5 = str_replace("/**{COLUMNS_CLASSES}*/", $column_classes, $step4);
+    if (!file_put_contents("app/$tablename/class.php", $step5, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename class file<br><br>";
@@ -380,12 +384,9 @@ function generate($postdata)
             }
 
             if (!empty($first_column['tablecomment'])) {
-                $tablecomment = '<div class="clearfix">
-                    <p class="float-start fst-italic fw-light text-secondary">' . $first_column["tablecomment"] . '
-                    </p>
-                </div>';
+                $tablecomment = "'". $first_column['tablecomment'] ."'";
             } else {
-                $tablecomment = '';
+                $tablecomment = 'null';
             }
 
             // Find foreign key references to this table
@@ -486,14 +487,14 @@ function generate($postdata)
                 mkdir("app/$tablename/", 0777, true);
             }
 
-            generate_index($tablename, $tabledisplay, $tablecomment, $column_id, $columns_selected);
+            generate_index($tablename, $tabledisplay, $column_id, $columns_selected);
             generate_create($tablename, $column_id);
             generate_read($tablename, $column_id, $foreign_key_references);
             generate_update($tablename, $column_id);
             generate_delete($tablename, $column_id, $foreign_key_references);
             generate_database_link($tablename, $column_id, $column_list, $columns_selected, $db_attributes);
             generate_object($tablename, $column_list, $db_attributes, $constructor_parameters);
-            generate_crud_class($tablename, $column_id, $column_classes);
+            generate_crud_class($tablename, $tabledisplay, $tablecomment, $column_id, $foreign_key_references, $column_classes);
         }
     }
 }

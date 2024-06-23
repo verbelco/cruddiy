@@ -2,15 +2,11 @@
 // Include config file
 require_once "../config.php";
 require_once "../shared/helpers.php";
-require_once "../shared/Column/Column.php";
+require_once "shared/crud/Column/Column.php";
 require_once "class.php";
 
-// Import custom columns if they exist
-if (file_exists(stream_resolve_include_path("class_extension.php"))) {
-    require "class_extension.php";
-} else {
-    $read_only_columns_list = array();
-}
+$original_column_list = $CRUD['{TABLE_NAME}']->get_original_columns();
+$read_only_columns_list = $CRUD['{TABLE_NAME}']->get_read_only_columns();
 
 include "pre_extension.php";
 

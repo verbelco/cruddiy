@@ -3,26 +3,23 @@
 require_once "../config.php";
 require_once "../shared/helpers.php";
 require_once "../shared/bulk_updates.php";
-require_once "../shared/Column/Column.php";
+require_once "shared/crud/Column/Column.php";
 require_once "class.php";
-
-// Import custom columns if they exist
-if (file_exists(stream_resolve_include_path("class_extension.php"))) {
-    require "class_extension.php";
-} else {
-    $read_only_columns_list = array();
-}
 
 //Get current URL and parameters for correct pagination
 $script = $_SERVER['SCRIPT_NAME'];
 $parameters = $_GET ? $_SERVER['QUERY_STRING'] : "";
 $currenturl = $domain . $script . '?' . $parameters;
 
+$original_column_list = $CRUD['{TABLE_NAME}']->get_original_columns();
+$read_only_columns_list = $CRUD['{TABLE_NAME}']->get_read_only_columns();
+
 $column_list = $original_column_list + $read_only_columns_list;
 $columns = array_keys($column_list);
 
 $DEFAULT_COLUMNS = ['{COLUMNS}'];
 $DEFAULT_ORDERING = array('{COLUMN_ID}' => 'asc');
+$DEFAULT_FILTER = array();
 
 include "pre_extension.php";
 
@@ -106,7 +103,7 @@ if (isset($_GET["target"]) && $_GET["target"] == "Search") {
     $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = $filter;
 } else if (count($filter) == 0) {
     // Use the filter from the session if no other filter is used
-    $filter = $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"];
+    $filter = $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] ?? $DEFAULT_FILTER;
 } else {
     // Skip quick search when a direct reference is being called
     $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = $filter;
@@ -220,7 +217,7 @@ $sql = "SELECT $sql_select
                         Ordering</a>
                     <a href="../{TABLE_NAME}/index.php?target=empty" class="btn btn-info float-end me-2">Reset View</a>
                 </div>
-                {TABLE_COMMENT}
+                <?php echo $CRUD['{TABLE_NAME}']->html_comment(); ?>
                 <div class="form-row">
                     <form action="../{TABLE_NAME}/index.php" method="get">
                         <div class="form-floating col-sm-3">
