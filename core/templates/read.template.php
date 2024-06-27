@@ -97,19 +97,7 @@ if (!empty($_GET["{TABLE_ID}"])) {
                 </div>
                 <?php
                 // Look for references to this record
-                $references = [];
-                $subsqls = $CRUD['{TABLE_NAME}']->get_foreign_key_references();
-                foreach ($subsqls as $subsql) {
-                    $stmt = $link->prepare($subsql);
-                    $stmt->execute([$param_id]);
-                    $subrow = $stmt->get_result()->fetch_assoc();
-                    $stmt->close();
-
-                    if ($subrow['count'] > 0) {
-                        $references[] = $subrow;
-                    }
-                }
-                echo html_read_references($references);
+                echo $CRUD['{TABLE_NAME}']->html_read_references($param_id);
                 
                 include "post_extension.php";
                 ?>

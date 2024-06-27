@@ -405,9 +405,9 @@ function generate($postdata)
                         $fk_column = $row["FK Column"];
                         $column = $row["Column"];
                         if (isset($table_data[$fk_column]['primary'])) {
-                            $foreign_key_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`, `$column` AS `local_value` FROM `$table` WHERE `$column` = ?;\"";
+                            $foreign_key_references[] = "\n\"new ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$fk_column')\"";
                         } elseif (isset($column_id)) {
-                            $foreign_key_references[] = "\n\"SELECT COUNT(*) AS `count`, '$table' AS `table`, '$fk_table' AS `fk_table`, '$column' AS `column`, '$fk_column' AS `fk_column`, `$column` AS `local_value` FROM `$table` WHERE `$column` IN (SELECT `$fk_column` FROM `$fk_table` WHERE `$column_id` = ?);\"";
+                            $foreign_key_references[] = "\n\"new ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$column_id')\"";
                         }
                     }
                 }
