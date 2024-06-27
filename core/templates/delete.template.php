@@ -44,20 +44,6 @@ if (!empty($_POST["{TABLE_ID}"])) {
         header("location: ../error.php");
         exit();
     }
-
-    // Look for references to this record
-    $references = [];
-    $subsqls = $CRUD['{TABLE_NAME}']->get_foreign_key_references();
-    foreach ($subsqls as $subsql) {
-        $stmt = $link->prepare($subsql);
-        $stmt->execute([$param_id]);
-        $subrow = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-
-        if ($subrow['count'] > 0) {
-            $references[] = $subrow;
-        }
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -78,7 +64,7 @@ if (!empty($_POST["{TABLE_ID}"])) {
                 <div class="page-header">
                     <h1>Delete {TABLE_NAME}</h1>
                 </div>
-                <?php echo html_delete_references($references); ?>
+                <?php echo $CRUD['{TABLE_NAME}']->html_delete_references($param_id); ?>
                 <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $param_id; ?>"
                     method="post">
                     <?php print_error_if_exists($error); ?>
