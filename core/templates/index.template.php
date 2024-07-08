@@ -125,7 +125,14 @@ if (isset($_GET['search'])) {
 $columns_in_search = [];
 if (isset($search)) {
     $columns_in_search = array_filter($column_list, function ($c) use ($selected_columns) {
-        return !in_array(get_class($c), ['IntColumn', 'FloatColumn', 'DateColumn', 'DateTimeColumn', 'BoolColumn']) && ($c->get_table() == "{TABLE_NAME}" || in_array($c->get_name(), $selected_columns));
+        return
+            !(
+                $c instanceof CRUD\IntColumn
+                || $c instanceof CRUD\DateColumn
+                || $c instanceof CRUD\BoolColumn
+                || $c instanceof CRUD\FlexibleForeignKeyColumn
+            )
+            && ($c->get_table() == "{TABLE_NAME}" || in_array($c->get_name(), $selected_columns));
     });
 
     $sql_values = implode(", ", array_map(function ($c) {
@@ -157,7 +164,7 @@ $sql_select = implode(", ", array_map(function ($c) {
 
 // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
 $columns_join_list = array_filter($column_list, function ($c) use ($selected_columns, $filter, $order_param_array, $columns_in_search) {
-    return in_array($c->get_name(), $selected_columns) || isset ($columns_in_search[$c->get_name()]) || isset ($filter[$c->get_name()]) || isset ($order_param_array[$c->get_name()]);
+    return in_array($c->get_name(), $selected_columns) || isset($columns_in_search[$c->get_name()]) || isset($filter[$c->get_name()]) || isset($order_param_array[$c->get_name()]);
 });
 
 $sql_join = implode("", array_map(function ($c) {
@@ -220,8 +227,7 @@ $sql = "SELECT $sql_select
                 <div class="form-row">
                     <form action="../{TABLE_NAME}/index.php" method="get">
                         <div class="form-floating col-sm-3">
-                            <input type="text" id="quicksearch" class="form-control" placeholder="Search this table"
-                                name="search" value="<?php echo $search; ?>">
+                            <input type="text" id="quicksearch" class="form-control" placeholder="Search this table" name="search" value="<?php echo $search; ?>">
                             <label for="quicksearch">Search this table</label>
                         </div>
                     </form>
@@ -243,13 +249,11 @@ $sql = "SELECT $sql_select
                             <a class="nav-link" id="Flexible_columns_T" href="#">Flexible Columns</a>
                         </li>
                     </ul>
-                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage"
-                        id="Advanced_filters">
+                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Advanced_filters">
                         <form action="../{TABLE_NAME}/index.php" id="advancedfilterform" method="get">
                             <div class="h3 text-center">
                                 Advanced Filters
-                                <button type="submit" class="btn btn-success btn-lg" name="target"
-                                    value="Search">Search</button>
+                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Search">Search</button>
                             </div>
                             <div>
                                 <?php
@@ -272,25 +276,20 @@ $sql = "SELECT $sql_select
                                 ?>
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Update"
-                                    id="bulkupdate-update-button">Update</button>
-                                <button type="submit" class="btn btn-outline-success btn-lg" name="target"
-                                    value="Update_all">Update all
+                                <button type="submit" class="btn btn-success btn-lg" name="target" value="Update" id="bulkupdate-update-button">Update</button>
+                                <button type="submit" class="btn btn-outline-success btn-lg" name="target" value="Update_all">Update all
                                     <?php echo $number_of_results; ?> records
                                 </button>
 
-                                <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete"
-                                    id="bulkupdate-delete-button">Delete</button>
-                                <button type="submit" class="btn btn-outline-warning btn-lg" name="target"
-                                    value="Delete_all">Delete all
+                                <button type="submit" class="btn btn-warning btn-lg ms-4" name="target" value="Delete" id="bulkupdate-delete-button">Delete</button>
+                                <button type="submit" class="btn btn-outline-warning btn-lg" name="target" value="Delete_all">Delete all
                                     <?php echo $number_of_results; ?> records
                                 </button>
                             </div>
                         </form>
                     </div>
 
-                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage"
-                        id="Flexible_columns">
+                    <div class="form-row border p-3 border-top-0 rounded-0 rounded-bottom subpage" id="Flexible_columns">
                         <h3 class="text-center">Flexible Columns</h3>
                         <p>
                             Select the columns that you want to display on this page
@@ -334,8 +333,7 @@ $sql = "SELECT $sql_select
                             ?>
                         </div>
                         <div class="text-center">
-                            <button type="submit" class="btn btn-success btn-lg" name="target" value="select-columns"
-                                form="flexiblecolumnsform">Update
+                            <button type="submit" class="btn btn-success btn-lg" name="target" value="select-columns" form="flexiblecolumnsform">Update
                                 view</button>
                         </div>
                     </div>
@@ -386,7 +384,7 @@ $sql = "SELECT $sql_select
                         }
                         echo "</tbody>";
                         echo "</table>";
-                        ?>
+                ?>
                         <ul id="pagination" class="pagination fixed-bottom" align-right>
                             <?php
                             $new_url = preg_replace('/&?pageno=[^&]*/', '', $currenturl);
@@ -394,31 +392,30 @@ $sql = "SELECT $sql_select
                             <li class="page-item"><a class="page-link" href="<?php echo $new_url . '&pageno=1' ?>">First</a>
                             </li>
                             <li class="page-item <?php if ($pageno <= 1) {
-                                echo 'disabled';
-                            } ?>">
+                                                        echo 'disabled';
+                                                    } ?>">
                                 <a class="page-link" href="<?php if ($pageno <= 1) {
-                                    echo '#';
-                                } else {
-                                    echo $new_url . "&pageno=" . ($pageno - 1);
-                                } ?>">Prev</a>
+                                                                echo '#';
+                                                            } else {
+                                                                echo $new_url . "&pageno=" . ($pageno - 1);
+                                                            } ?>">Prev</a>
                             </li>
                             <li class="page-item <?php if ($pageno >= $total_pages) {
-                                echo 'disabled';
-                            } ?>">
+                                                        echo 'disabled';
+                                                    } ?>">
                                 <a class="page-link" href="<?php if ($pageno >= $total_pages) {
-                                    echo '#';
-                                } else {
-                                    echo $new_url . "&pageno=" . ($pageno + 1);
-                                } ?>">Next</a>
+                                                                echo '#';
+                                                            } else {
+                                                                echo $new_url . "&pageno=" . ($pageno + 1);
+                                                            } ?>">Next</a>
                             </li>
                             <li class="page-item <?php if ($pageno >= $total_pages) {
-                                echo 'disabled';
-                            } ?>">
-                                <a class="page-item"><a class="page-link"
-                                        href="<?php echo $new_url . '&pageno=' . $total_pages; ?>">Last</a>
+                                                        echo 'disabled';
+                                                    } ?>">
+                                <a class="page-item"><a class="page-link" href="<?php echo $new_url . '&pageno=' . $total_pages; ?>">Last</a>
                             </li>
                         </ul>
-                        <?php
+                <?php
                         // Free result set
                         mysqli_free_result($result);
                     } else {
@@ -434,7 +431,7 @@ $sql = "SELECT $sql_select
         </div>
     </div>
     <script type="text/javascript">
-        $(".subnav .nav-link").click(function () {
+        $(".subnav .nav-link").click(function() {
             $(".subpage").hide();
             const id = $(this).attr('id').slice(0, -2);
 
