@@ -70,6 +70,8 @@ if (!empty($_GET["{TABLE_ID}"])) {
                 <div class="page-header">
                     <h1>View {TABLE_NAME}</h1>
                 </div>
+                <?php print_error_if_exists($error);
+                print_message_if_exists($message); ?>
                 <div>
                     <?php
                     if (count($read_only_columns_list) > 0) {

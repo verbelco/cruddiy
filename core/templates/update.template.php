@@ -87,7 +87,8 @@ if (!empty($_GET["{COLUMN_ID}"])) {
                 <div class="page-header">
                     <h2>Update {TABLE_NAME}</h2>
                 </div>
-                <?php print_error_if_exists($error); ?>
+                <?php print_error_if_exists($error);
+                print_message_if_exists($message); ?>
                 <p>Please edit the input values and submit to update the record.</p>
                 <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
                     <?php
