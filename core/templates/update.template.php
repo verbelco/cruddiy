@@ -15,7 +15,7 @@ if (!empty($_POST["{COLUMN_ID}"])) {
     $update_stmts = [];
     foreach ($original_column_list as $name => $column) {
         if ($column->get_name() != "{COLUMN_ID}") {
-            if (get_class($column) != "MutatieMomentColumn") {
+            if (!($column instanceof CRUD\MutatieMomentColumn)) {
                 $row[$name] = $column->get_sql_update_value($_POST[$name]);
             }
             $update_stmts[] = $column->get_sql_update_stmt();
