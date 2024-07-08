@@ -84,7 +84,6 @@ function generate_startpage()
         die("Unable to open file!");
     }
     echo "Generating main index file.<br>";
-
 }
 
 function generate_navbar($tablename, $start_page, $keep_startpage, $append_links, $td)
@@ -185,7 +184,7 @@ function generate_index($tablename, $tabledisplay, $column_id, $columns_selected
     echo "Generating $tablename Index file<br>";
 }
 
-function generate_read($tablename, $column_id, $foreign_key_references)
+function generate_read($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
@@ -196,8 +195,7 @@ function generate_read($tablename, $column_id, $foreign_key_references)
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    $step3 = str_replace("/**{FOREIGN_KEY_REFS}*/", $foreign_key_references, $step1);
-    if (!file_put_contents("app/$tablename/read.php", $step3, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/read.php", $step1, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Read file<br>";
@@ -251,8 +249,8 @@ function generate_object($tablename, $columns_list, $attributes_list,  $construc
     $columns = "'" . implode("', '", $columns_list) . "'";
     $attributes = implode("\n", $attributes_list);
     $constructor_parameters = implode(",", $constructor_parameters);
-    $construct_statements = implode("\n", array_map(fn($c) => "\$this->$c = \$$c;", $columns_list));
-    $array_construct = implode(",\n", array_map(fn($c) => "\$row['$c']", $columns_list));
+    $construct_statements = implode("\n", array_map(fn ($c) => "\$this->$c = \$$c;", $columns_list));
+    $array_construct = implode(",\n", array_map(fn ($c) => "\$row['$c']", $columns_list));
 
     $step0 = str_replace("{TABLE}", $tablename, $database_class_file);
     $step1 = str_replace("/**{COLUMNS}*/", $columns, $step0);
@@ -272,7 +270,7 @@ function generate_object($tablename, $columns_list, $attributes_list,  $construc
     echo "Generating $tablename object class file<br>";
 }
 
-function generate_delete($tablename, $column_id, $foreign_key_references)
+function generate_delete($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
@@ -283,8 +281,7 @@ function generate_delete($tablename, $column_id, $foreign_key_references)
 
     $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
     $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    $step2 = str_replace("/**{FOREIGN_KEY_REFS}*/", $foreign_key_references, $step1);
-    if (!file_put_contents("app/$tablename/delete.php", $step2, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/delete.php", $step1, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Delete file<br>";
@@ -384,7 +381,7 @@ function generate($postdata)
             }
 
             if (!empty($first_column['tablecomment'])) {
-                $tablecomment = "'". $first_column['tablecomment'] ."'";
+                $tablecomment = "'" . $first_column['tablecomment'] . "'";
             } else {
                 $tablecomment = 'null';
             }
@@ -405,9 +402,9 @@ function generate($postdata)
                         $fk_column = $row["FK Column"];
                         $column = $row["Column"];
                         if (isset($table_data[$fk_column]['primary'])) {
-                            $foreign_key_references[] = "\n\"new ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$fk_column')\"";
+                            $foreign_key_references[] = "\nnew ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$fk_column')";
                         } elseif (isset($column_id)) {
-                            $foreign_key_references[] = "\n\"new ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$column_id')\"";
+                            $foreign_key_references[] = "\nnew ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$column_id')";
                         }
                     }
                 }
@@ -447,7 +444,7 @@ function generate($postdata)
                 }
                 $column_classes[] = create_column_object($c['columnname'], $c['columndisplay'], $c['columncomment'], $c['tablename'], $join_clauses, $join_columns, $c['columnnullable'], empty($c['auto']), $type);
                 $db_attributes[] = create_db_attribute($c['columnname'], $type, $c['columncomment'], $c['columnnullable']);
-                $constructor_parameters[] = create_constructor_parameter($c['columnname'], $type, $c['columnnullable']);    
+                $constructor_parameters[] = create_constructor_parameter($c['columnname'], $type, $c['columnnullable']);
             }
 
             $foreign_key_references = implode(",", $foreign_key_references);
@@ -505,8 +502,7 @@ function generate($postdata)
 <head>
     <title>Generated pages</title>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
-        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
 </head>
 
@@ -537,9 +533,7 @@ function generate($postdata)
             </div>
         </div>
     </section>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
-        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 </body>
 
 </html>
