@@ -51,7 +51,7 @@ if (isset($_GET["target"])) {
         $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = null;
         $_SESSION["CRUD"]["{TABLE_NAME}"]["pageno"] = null;
     } elseif ($_GET["target"] == "resetfilter") {
-        $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = null;
+        $_SESSION["CRUD"]["{TABLE_NAME}"]["filter"] = array();
         $_SESSION["CRUD"]["{TABLE_NAME}"]["quick-search"] = null;
     } elseif ($_GET["target"] == "resetorder") {
         $_SESSION["CRUD"]["{TABLE_NAME}"]["order"] = null;
