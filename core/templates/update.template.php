@@ -41,27 +41,25 @@ if (!empty($_POST["{COLUMN_ID}"])) {
 // Retrieve the values for this record
 $_GET["{COLUMN_ID}"] = trim($_GET["{COLUMN_ID}"]);
 if (!empty($_GET["{COLUMN_ID}"])) {
-    if (!isset($error)) {
-        // Get URL parameter
-        $param_id = trim($_GET["{COLUMN_ID}"]);
+    // Get URL parameter
+    $param_id = trim($_GET["{COLUMN_ID}"]);
 
-        // Prepare a select statement
-        $sql = "SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?";
-        $stmt = mysqli_prepare($link, $sql);
-        mysqli_stmt_execute($stmt, [$param_id]);
-        $result = mysqli_stmt_get_result($stmt);
+    // Prepare a select statement
+    $sql = "SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?";
+    $stmt = mysqli_prepare($link, $sql);
+    mysqli_stmt_execute($stmt, [$param_id]);
+    $result = mysqli_stmt_get_result($stmt);
 
-        if (mysqli_num_rows($result) == 1) {
-            $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-        } else {
-            // URL doesn't contain valid id. Redirect to error page
-            header("location: ../error.php");
-            exit();
-        }
-
-        // Close statement
-        mysqli_stmt_close($stmt);
+    if (mysqli_num_rows($result) == 1) {
+        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    } else {
+        // URL doesn't contain valid id. Redirect to error page
+        header("location: ../error.php");
+        exit();
     }
+
+    // Close statement
+    mysqli_stmt_close($stmt);
 } else {
     // URL doesn't contain id parameter. Redirect to error page
     header("location: ../error.php");
@@ -105,12 +103,9 @@ if (!empty($_GET["{COLUMN_ID}"])) {
                     </p>
                     <p> * field can not be left empty </p>
                     <div class="mt-5 mb-5">
-                        <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"]; ?>"
-                            class="btn btn-primary">View</a>
-                        <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{COLUMN_ID}"]; ?>"
-                            class="btn btn-info">Duplicate</a>
-                        <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"]; ?>"
-                            class="btn btn-warning">Delete</a>
+                        <a href="../{TABLE_NAME}/read.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"]; ?>" class="btn btn-primary">View</a>
+                        <a href="../{TABLE_NAME}/create.php?duplicate=<?php echo $_GET["{COLUMN_ID}"]; ?>" class="btn btn-info">Duplicate</a>
+                        <a href="../{TABLE_NAME}/delete.php?{COLUMN_ID}=<?php echo $_GET["{COLUMN_ID}"]; ?>" class="btn btn-warning">Delete</a>
                         <a href="../{TABLE_NAME}/index.php" class="btn btn-primary">Back to index</a>
                     </div>
                 </form>

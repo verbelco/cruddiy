@@ -85,26 +85,37 @@ function get_foreign_table_and_column($tablename, $columnname)
     }
 }
 
+/** True if $column in $table is a json column */
+function isJson($table, $column)
+{
+    global $link, $db_name;
+    $sql = "SELECT *
+            FROM information_schema.check_constraints
+            WHERE constraint_schema = '$db_name' AND table_name = '$table' AND constraint_name = '$column' AND check_clause = 'json_valid(`$column`)'";
+    $result = $link->query($sql);
+    return $result->num_rows > 0;
+}
+
 function column_type($sql_column_def)
 {
     switch ($sql_column_def) {
-        case(preg_match("/text/i", $sql_column_def) ? true : false):
+        case (preg_match("/text/i", $sql_column_def) ? true : false):
             return 1;
-        case(preg_match("/enum/i", $sql_column_def) ? true : false):
+        case (preg_match("/enum/i", $sql_column_def) ? true : false):
             return 2;
-        case(preg_match("/varchar/i", $sql_column_def) ? true : false):
+        case (preg_match("/varchar/i", $sql_column_def) ? true : false):
             return 3;
-        case(preg_match("/tinyint\(1\)/i", $sql_column_def) ? true : false):
+        case (preg_match("/tinyint\(1\)/i", $sql_column_def) ? true : false):
             return 4;
-        case(preg_match("/int/i", $sql_column_def) ? true : false):
+        case (preg_match("/int/i", $sql_column_def) ? true : false):
             return 5;
-        case(preg_match("/decimal/i", $sql_column_def) ? true : false):
+        case (preg_match("/decimal/i", $sql_column_def) ? true : false):
             return 6;
-        case(preg_match("/float/i", $sql_column_def) ? true : false):
+        case (preg_match("/float/i", $sql_column_def) ? true : false):
             return 6;
-        case(preg_match("/datetime/i", $sql_column_def) ? true : false):
+        case (preg_match("/datetime/i", $sql_column_def) ? true : false):
             return 8;
-        case(preg_match("/date/i", $sql_column_def) ? true : false):
+        case (preg_match("/date/i", $sql_column_def) ? true : false):
             return 7;
         default:
             return 0;
@@ -185,21 +196,23 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
         [$fk_table, $fk_column] = get_foreign_table_and_column($table, $name);
         $fk_primary = is_primary_key($fk_table, $fk_column) ? "True" : "False";
         return "'$name' => new ForeignKeyColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, '$fk_table', '$fk_column', $fk_primary, $required, $primary_key)";
-    } elseif ($type == "text") {
+    } else if (isJson($table, $name)) {
+        return "'$name' => new JSONColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
+    } else if ($type == "text") {
         return "'$name' => new TextColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } elseif ($type == "enum") {
+    } else if ($type == "enum") {
         $enum_list = get_enum_list($table, $name);
         $enum_dict = "array_combine($enum_list, $enum_list)";
         return "'$name' => new EnumColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key, $enum_dict)";
-    } elseif ($type == "bool") {
+    } else if ($type == "bool") {
         return "'$name' => new BoolColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } elseif ($type == "int") {
+    } else if ($type == "int") {
         return "'$name' => new IntColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } elseif ($type == "float") {
+    } else if ($type == "float") {
         return "'$name' => new FloatColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } elseif ($type == "date") {
+    } else if ($type == "date") {
         return "'$name' => new DateColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } elseif ($type == "datetime") {
+    } else if ($type == "datetime") {
         if ($name == "MutatieMoment") {
             return "'$name' => new MutatieMomentColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
         } else {
@@ -213,7 +226,7 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
 
 function create_db_attribute($name, $type, $comments, $nullable)
 {
-    $comments = empty($comments) ? "" : "/** ". str_replace("\n", "\n*", $comments) ." */\n";
+    $comments = empty($comments) ? "" : "/** " . str_replace("\n", "\n*", $comments) . " */\n";
     $nullable = $nullable ? "?" : "";
 
     $type = type_to_php($type);
