@@ -340,8 +340,8 @@ $sql = "SELECT $sql_select
                 </div>
                 <?php
                 try {
-                    $result = mysqli_query($link, $sql);
-                    if (mysqli_num_rows($result) > 0) {
+                    $rows = $result->fetch_all(MYSQLI_ASSOC);
+                    if (count($rows) > 0) {
                         $total_pages = ceil($number_of_results / $no_of_records_per_page);
                         echo "Sorting on $ordering_on <br>";
                         echo " " . $number_of_results . " results - Page " . $pageno . " of " . $total_pages;
@@ -366,7 +366,7 @@ $sql = "SELECT $sql_select
                         echo "</tr>";
                         echo "</thead>";
                         echo "<tbody>";
-                        while ($row = mysqli_fetch_assoc($result)) {
+                        foreach ($rows as $row) {
                             echo "<tr>";
                             echo '<td class="text-center" style="display:none;">
                                         <input type="checkbox" form="bulkupdatesform" name="bulk-update[]" value="' . $row['{COLUMN_ID}'] . '">
