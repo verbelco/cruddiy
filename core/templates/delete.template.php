@@ -30,12 +30,6 @@ if (!empty($_POST["{TABLE_ID}"])) {
         // Records deleted successfully. Redirect to landing page
         header("location: ../{TABLE_NAME}/index.php");
     }
-
-    // Close statement
-    mysqli_stmt_close($stmt);
-
-    // Close connection
-    mysqli_close($link);
 } else {
     // Check existence of id parameter
     $param_id = trim($_GET["{TABLE_ID}"]);
