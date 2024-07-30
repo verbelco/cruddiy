@@ -340,6 +340,7 @@ $sql = "SELECT $sql_select
                 </div>
                 <?php
                 try {
+                    $result = mysqli_query($link, $sql);
                     $rows = $result->fetch_all(MYSQLI_ASSOC);
                     if (count($rows) > 0) {
                         $total_pages = ceil($number_of_results / $no_of_records_per_page);
