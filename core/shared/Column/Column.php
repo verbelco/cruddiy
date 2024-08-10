@@ -213,7 +213,7 @@ class Column
     }
 
     /** Return the SQL Select Statement */
-    function get_sql_select(): string
+    function get_sql_select_alias(): string
     {
         return $this->get_sql_value() . " AS `" . $this->get_name() . "`";
     }

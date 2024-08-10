@@ -44,7 +44,7 @@ class ForeignKeyColumn extends EnumColumn
     }
 
     /** For foreign keys, we need both the value in this column, and the string that it represents */
-    function get_sql_select(): string
+    function get_sql_select_alias(): string
     {
         return $this->sql_select . " AS `" . $this->fk_value . "`, " . $this->original_column_select . " AS `" . $this->get_name() . "`";
     }

@@ -16,7 +16,7 @@ if (!empty($_GET["{TABLE_ID}"])) {
 
     // Prepare a select statement
     $sql_select = implode(", ", array_map(function ($c) {
-        return $c->get_sql_select();
+        return $c->get_sql_select_alias();
     }, $column_list));
     $sql_join = implode("", array_map(function ($c) {
         return $c->get_sql_join();

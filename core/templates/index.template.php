@@ -159,7 +159,7 @@ $offset = ($pageno - 1) * $no_of_records_per_page;
 
 // Prepare the query
 $sql_select = implode(", ", array_map(function ($c) {
-    return $c->get_sql_select();
+    return $c->get_sql_select_alias();
 }, $selected_columns_list + [$original_column_list["{COLUMN_ID}"]]));
 
 // Only load the joins from columns that are required. (When they are used for searching, ordering or being selected)
