@@ -204,6 +204,7 @@ $sql = "SELECT $sql_select
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{APP_NAME}</title>
     {CSS_REFS}
     {JS_REFS}

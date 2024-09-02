@@ -57,6 +57,7 @@ if (!empty($_GET["{TABLE_ID}"])) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>View {TABLE_NAME}</title>
     {CSS_REFS}
     {JS_REFS}
