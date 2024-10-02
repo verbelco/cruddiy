@@ -165,7 +165,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
 
 function generate_index($tablename, $tabledisplay, $column_id, $columns_selected)
 {
-    global $appname, $CSS_REFS, $JS_REFS;
+    global $CSS_REFS, $JS_REFS;
 
     $indexfile = file_get_contents("templates/index.template.php");
 
@@ -177,8 +177,7 @@ function generate_index($tablename, $tabledisplay, $column_id, $columns_selected
     $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
     $step5 = str_replace("{COLUMN_ID}", $column_id, $step1);
     $step7 = str_replace("{COLUMNS}", $columns_selected, $step5);
-    $step9 = str_replace("{APP_NAME}", $appname, $step7);
-    if (!file_put_contents("app/$tablename/index.php", $step9, LOCK_EX)) {
+    if (!file_put_contents("app/$tablename/index.php", $step7, LOCK_EX)) {
         die("Unable to open file!");
     }
     echo "Generating $tablename Index file<br>";
