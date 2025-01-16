@@ -88,6 +88,26 @@ function getViewFile(string $table, string $modelName, string $variableName, str
     return $result;
 }
 
+function getRequestFile(string $table, string $modelName, string $variableName, string $routeName): string
+{
+    $result = getTemplate('request.template.php', $modelName, $variableName, $routeName);
+
+    $columns = implode(",\n", array_map(fn($column) => getLaravelRequestValidation($column, $table, $variableName), get_columns($table)));
+    $result = str_replace('{columns}', $columns, $result);
+
+    return $result;
+}
+function getResourceFile(string $table, string $modelName, string $variableName, string $routeName): string
+{
+    $result = getTemplate('resource.template.php', $modelName, $variableName, $routeName);
+
+    $columns = implode(",\n", array_map(fn($column) => "            '{$column}' => \$this->{$column}", get_columns($table)));
+    $result = str_replace('{columns}', $columns, $result);
+
+    return $result;
+}
+
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -167,6 +187,18 @@ function getViewFile(string $table, string $modelName, string $variableName, str
                     </div>
                     <div class="row bg-light p-3">
                         <pre><?php echo htmlspecialchars(getViewFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>Request</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getRequestFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>Resource</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getResourceFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                 </div>
             </div>

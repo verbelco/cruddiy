@@ -124,7 +124,7 @@ function column_type($sql_column_def)
 
 function type_to_str($type)
 {
-    $type_to_str = array(
+    return match($type) {
         1 => "text",
         2 => "enum",
         3 => "string",
@@ -132,13 +132,9 @@ function type_to_str($type)
         5 => "int",
         6 => "float",
         7 => "date",
-        8 => "datetime"
-    );
-    if (isset($type_to_str[$type])) {
-        return $type_to_str[$type];
-    } else {
-        return "string";
-    }
+        8 => "datetime",
+        default => 'string',
+    };
 }
 
 function get_react_type($table, $column)
@@ -165,7 +161,7 @@ function get_react_type($table, $column)
 
 function type_to_php($type)
 {
-    $type_to_php = array(
+    return match($type) {
         1 => "string",
         2 => "string",
         3 => "string",
@@ -173,13 +169,24 @@ function type_to_php($type)
         5 => "int",
         6 => "float",
         7 => "DateTime",
-        8 => "DateTime"
-    );
-    if (isset($type_to_php[$type])) {
-        return $type_to_php[$type];
-    } else {
-        return "string";
-    }
+        8 => "DateTime",
+        default => 'string',
+    };
+}
+
+function type_to_laravel_rules($type)
+{
+    return match($type) {
+        1 => "string",
+        2 => "string",
+        3 => "string",
+        4 => "boolean",
+        5 => "integer",
+        6 => "numeric",
+        7 => "date",
+        8 => "datetime",
+        default => 'string',
+    };
 }
 
 /** Returns a string with a php list with enum values, such as:
@@ -354,4 +361,13 @@ function getReactTableColumnElement(string $column, string $table, string $table
         </Tooltip>
       ),
     }";
+}
+
+function getLaravelRequestValidation(string $column, string $table, string $tableVariableName): string
+{
+    $required = get_col_nullable($table, $column) ? 'nullable' : 'required';
+    $type = type_to_laravel_rules(column_type(get_col_types($table, $column)));
+    $rules = [$required, $type];
+
+    return "            '$column' => '" . implode('|', $rules)."'";
 }
