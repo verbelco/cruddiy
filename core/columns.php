@@ -82,30 +82,6 @@ if (!is_dir($config_folder)) {
                             return $auto_keys;
                         }
 
-                        function get_col_types($table,$column){
-                            global $link; 
-                            $sql = "SHOW FIELDS FROM $table where FIELD ="."'".$column."'";
-                            $result = mysqli_query($link,$sql);
-                            $row = mysqli_fetch_assoc($result);
-                            return $row['Type'] ;
-                        }
-
-                        function get_col_comments($table,$column){
-                            global $link; 
-                            $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
-                            $result = mysqli_query($link,$sql);
-                            $row = mysqli_fetch_assoc($result);
-                            return $row['Comment'] ;
-                        }
-
-                        function get_col_nullable($table,$column){
-                            global $link; 
-                            $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
-                            $result = mysqli_query($link,$sql);
-                            $row = mysqli_fetch_assoc($result);
-                            return ($row['Null'] == "YES") ? true : 0;
-                        }
-
                         function get_foreign_keys($table){
                             global $link;
                             global $db_name;
@@ -132,20 +108,18 @@ if (!is_dir($config_folder)) {
                                     $tablecomment = $table['tablecomment'];
                                     $tabledisplay = $table['tabledisplay'];
                                     echo "<div class='text-center mb-4'><span data-toggle='tooltip' data-placement='top' title='$tablecomment'><b>Table: " . $tabledisplay . " (". $tablename .")</b></span></div>";
-                                    $sql = "SHOW columns FROM $tablename";
+                                    $columns = get_columns($tablename);
                                     $primary_keys = get_primary_keys($tablename);
                                     $auto_keys = get_autoincrement_cols($tablename);
                                     $foreign_keys = get_foreign_keys($tablename);
 
-                                    $result = mysqli_query($link,$sql);
-                                    while ($column = mysqli_fetch_array($result)) {
+                                    foreach($columns as $column){
+                                        $column_type = get_col_types($tablename,$column);
+                                        $column_comment = get_col_comments($tablename,$column);
+                                        $column_nullable = get_col_nullable($tablename,$column);
+                                        $columnname = $column;
 
-                                        $column_type = get_col_types($tablename,$column[0]);
-                                        $column_comment = get_col_comments($tablename,$column[0]);
-                                        $column_nullable = get_col_nullable($tablename,$column[0]);
-                                        $columnname = $column[0];
-
-                                        if (in_array ("$column[0]", $primary_keys)) {
+                                        if (in_array ("$column", $primary_keys)) {
                                             $primary = "🔑";
                                             echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][primary]" value="'.$primary.'"/>';
                                         }
@@ -153,7 +127,7 @@ if (!is_dir($config_folder)) {
                                             $primary = "";
                                         }
 
-                                        if (in_array ("$column[0]", $auto_keys)) {
+                                        if (in_array ("$column", $auto_keys)) {
                                             $auto = "🔒";
                                             echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][auto]" value="'.$auto.'"/>';
                                         }
@@ -161,7 +135,7 @@ if (!is_dir($config_folder)) {
                                             $auto = "";
                                         }
 
-                                        if (in_array ("$column[0]", $foreign_keys)) {
+                                        if (in_array ("$column", $foreign_keys)) {
                                             $fk = "🛅";
                                             echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][fk]" value="'.$fk.'"/>';
                                         }
@@ -179,7 +153,7 @@ if (!is_dir($config_folder)) {
                                         echo "<span data-toggle='tooltip' data-placement='top' data-bs-html=\"true\" title=" . prepare_text_for_tooltip($column_comment) . ">";
                                         echo '<div class="row align-items-center mb-2">
                                     <div class="col-2 text-right">
-                                        <label class="col-form-label" for="'.$tablename.'">'. $primary . $auto . $fk . $nb . $column[0] . ' </label>
+                                        <label class="col-form-label" for="'.$tablename.'">'. $primary . $auto . $fk . $nb . $column . ' </label>
                                     </div>
                                     <div class="col-md-6">
                                         <input type="hidden" name="'.$tablename.'columns['.$columnname.'][tablename]" value="'.$tablename.'"/>

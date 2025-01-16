@@ -141,6 +141,28 @@ function type_to_str($type)
     }
 }
 
+function get_react_type($table, $column)
+{
+    $type = column_type(get_col_types($table, $column));
+    $typeStr = match($type) {
+        1 => "string",
+        2 => "string",
+        3 => "string",
+        4 => "boolean",
+        5 => "number",
+        6 => "number",
+        7 => "Date",
+        8 => "Date",
+        default => 'string'
+    };
+
+    $nullable = get_col_nullable($table, $column);
+    if($nullable){
+        $typeStr .= ' | undefined';
+    }
+    return $typeStr;
+}
+
 function type_to_php($type)
 {
     $type_to_php = array(
@@ -241,4 +263,62 @@ function create_constructor_parameter($name, $type, $nullable)
     $type = type_to_php($type);
 
     return "$nullable$type $$name";
+}
+
+function camelCase($string) {
+    $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
+    $string = strtolower($string);
+    $string = lcfirst(str_replace(' ', '', ucwords($string)));
+
+    return $string;
+}
+
+function kebabCase($string) {
+    return strtolower(str_replace([' ', '_'], ['-', '-'], $string));
+}
+
+/** Open a template and replace basic information */
+function getTemplate(string $template, string $modelName, string $variableName, string $routeName): string
+{
+    $result = file_get_contents("templates/{$template}");
+
+    $result = str_replace("{modelName}", $modelName, $result);
+    $result = str_replace("{variableName}", $variableName, $result);
+    $result = str_replace("{routeName}", $routeName, $result);
+    
+    return $result;
+}
+
+function get_columns($table): array
+{
+    global $link; 
+    $sql = "SHOW columns FROM $table";
+    $result = mysqli_query($link,$sql);
+    $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+    return array_map(fn(array $row) => $row['Field'], $rows);
+}
+
+function get_col_types($table,$column){
+    global $link; 
+    $sql = "SHOW FIELDS FROM $table where FIELD ="."'".$column."'";
+    $result = mysqli_query($link,$sql);
+    $row = mysqli_fetch_assoc($result);
+    return $row['Type'] ;
+}
+
+function get_col_comments($table,$column){
+    global $link; 
+    $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
+    $result = mysqli_query($link,$sql);
+    $row = mysqli_fetch_assoc($result);
+    return $row['Comment'] ;
+}
+
+function get_col_nullable($table,$column){
+    global $link; 
+    $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
+    $result = mysqli_query($link,$sql);
+    $row = mysqli_fetch_assoc($result);
+    return ($row['Null'] == "YES") ? true : 0;
 }

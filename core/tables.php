@@ -52,8 +52,11 @@
                                      <input type="hidden" name="table['.$i.'][tablecomment]" value="'.$tablecomment.'"/>
                                      <input id="textinput_'.$table. '" name="table['.$i.'][tabledisplay]" type="text" placeholder="Display table name in frontend" class="form-control rounded-0 shadow-sm">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                               <input class="mr-1" type="checkbox"  name="table['.$i.'][tablecheckbox]" id="checkboxes-'.$i.'" value="1"><label for="checkboxes-'.$i.'">Generate CRUD</label>
+                            </div>
+                            <div class="col-md-1">
+                              <a href="laravel/table.php?table='. $table .'">Laravel</a>
                             </div>
                         </div>
                         ';
