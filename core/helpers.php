@@ -322,3 +322,36 @@ function get_col_nullable($table,$column){
     $row = mysqli_fetch_assoc($result);
     return ($row['Null'] == "YES") ? true : 0;
 }
+
+function getReactFormElement(string $column, string $table, string $tableVariableName): string
+{
+    $required = get_col_nullable($table, $column) ? "" : "\n      required: true,";
+    return "    {
+      id: '{$column}',
+      label: {$tableVariableName}Labels.{$column},
+      name: '{$column}',$required
+      tooltip: {$tableVariableName}Tooltips.{$column},
+    }";
+}
+
+function getReactDetailElement(string $column, string $table, string $tableVariableName): string
+{
+    return "    {
+      label: {$tableVariableName}Labels.{$column},
+      value: {$tableVariableName}Data.{$column},
+      tooltip: {$tableVariableName}Tooltips.{$column},
+    }";
+}
+
+function getReactTableColumnElement(string $column, string $table, string $tableVariableName): string
+{
+    return "    {
+      accessorKey: '{$column}',
+      header: {$tableVariableName}Labels.{$column},
+      Header: () => (
+        <Tooltip title={{$tableVariableName}Tooltips.{$column}}>
+          <p>{{$tableVariableName}Labels.{$column}}</p>
+        </Tooltip>
+      ),
+    }";
+}

@@ -8,34 +8,26 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { showDateTime } from '../../../util/dateTime.ts';
-import { showNumber } from '../../../util/number.ts';
+import { showDate } from '../../../util/dateTime.ts';
 import { parseURLParams } from '../../../util/parse.ts';
-import { parseReferentieUrl } from '../../../util/url.tsx';
-import { useSensor } from '../sensor/hooks/useSensorQuery.ts';
-import { Sensor } from '../sensor/types.ts';
 import ShowDialog from '../shared/components/showDialog.tsx';
 import { useExtendedTable } from '../shared/hooks/Table/ManagerExtendedTable.tsx';
-import { batterijniveauLabels } from './components/labels.ts';
-import { batterijniveauTooltips } from './components/tooltips.ts';
-import { useBatterijniveauFilters } from './hooks/useBatterijniveauFilters.ts';
-import {
-  useBatterijniveau,
-  useDeleteBatterijniveau,
-} from './hooks/useBatterijniveauQuery.ts';
-import { Batterijniveau } from './types.template.ts';
+import { booleanFilterParams } from '../shared/types.ts';
+import { {variableName}Labels } from './components/labels.ts';
+import { {variableName}Tooltips } from './components/tooltips.ts';
+import { use{modelName}Filters } from './hooks/use{modelName}Filters.ts';
+import { use{modelName}, useDelete{modelName} } from './hooks/use{modelName}Query.ts';
+import { {modelName} } from './types.ts';
 
-const BatterijniveauView = () => {
+const {modelName}View = () => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const [open, setOpen] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [selectedBatterijniveau, setSelectedBatterijniveau] =
-    useState<Batterijniveau | null>(null);
-  const [globalSensorFilter, setSensorFilter] = useState('');
+  const [selected{modelName}, setSelected{modelName}] = useState<{modelName} | null>(null);
 
-  const batterijFilters = useBatterijniveauFilters();
+  const {variableName}Filters = use{modelName}Filters();
   const {
     columnFilters,
     globalFilter,
@@ -43,23 +35,19 @@ const BatterijniveauView = () => {
     pagination,
     nullFilters,
     setColumnFilters,
-  } = batterijFilters;
+  } = {variableName}Filters;
 
   const {
-    data: batterijniveau,
+    data: {variableName},
     isError,
     isRefetching,
     isLoading,
-  } = useBatterijniveau({
+  } = use{modelName}({
     columnFilters,
     globalFilter,
     pagination,
     sorting,
     nullFilters,
-  });
-
-  const { data: sensor } = useSensor({
-    globalFilter: globalSensorFilter,
   });
 
   useEffect(() => {
@@ -69,105 +57,19 @@ const BatterijniveauView = () => {
     }
   }, [search, setColumnFilters]);
 
-  const columns = useMemo<MRT_ColumnDef<Batterijniveau>[]>(
+  const columns = useMemo<MRT_ColumnDef<{modelName}>[]>(
     () => [
-      {
-        accessorKey: 'id',
-        header: batterijniveauLabels.id,
-        enableEditing: false,
-        enableColumnFilter: false,
-        size: 50,
-        Header: () => (
-          <Tooltip title={batterijniveauTooltips.id}>
-            <p>{batterijniveauLabels.id}</p>
-          </Tooltip>
-        ),
-      },
-      {
-        accessorKey: 'sensor.serienummer',
-        header: batterijniveauLabels.sensor,
-        enableSorting: false,
-        size: 20,
-        filterFn: 'equals',
-        filterVariant: 'autocomplete',
-        Cell: ({ cell }) =>
-          parseReferentieUrl(
-            'sensor',
-            cell.row.original.sensor?.id,
-            `${cell.row.original.sensor?.sensor_type?.naam ?? ''} ${cell.row.original.sensor?.serienummer ?? ''}`,
-          ),
-        muiFilterAutocompleteProps: ({ column, table }) => ({
-          options: sensor?.data || [],
-          getOptionLabel: (option: string | Sensor) => {
-            return typeof option === 'string'
-              ? option
-              : `${option.sensor_type?.naam ?? ''} ${option.serienummer ?? ''}`;
-          },
-          isOptionEqualToValue: (option, value) => option?.id === value?.id,
-          onChange: (_, value) => {
-            table.setColumnFilters((prev) => {
-              const excludeId = 'Sensor';
-
-              const updatedFilters = prev.filter(
-                (filter) => filter.id !== column.id && filter.id !== excludeId,
-              );
-
-              if (value) {
-                updatedFilters.push({ id: excludeId, value: value.id });
-              }
-
-              return updatedFilters;
-            });
-          },
-          onInputChange: (_, value) => {
-            setSensorFilter(value);
-          },
-          renderInput: (params) => <div {...params} />,
-        }),
-        Header: () => (
-          <Tooltip title={batterijniveauTooltips.sensor}>
-            <p>{batterijniveauLabels.sensor}</p>
-          </Tooltip>
-        ),
-      },
-      {
-        accessorKey: 'Spanning',
-        size: 20,
-        filterFn: 'between',
-        header: batterijniveauLabels.Spanning,
-        Cell: ({ cell }) => {
-          return cell.getValue() ? showNumber(cell.getValue() as number) : '';
-        },
-        Header: () => (
-          <Tooltip title={batterijniveauTooltips.Spanning}>
-            <p>{batterijniveauLabels.Spanning}</p>
-          </Tooltip>
-        ),
-      },
-      {
-        accessorKey: 'MeetMoment',
-        size: 20,
-        header: batterijniveauLabels.MeetMoment,
-        filterVariant: 'date-range',
-        Cell: ({ cell }) => {
-          return cell.getValue() ? showDateTime(cell.getValue() as Date) : '';
-        },
-        Header: () => (
-          <Tooltip title={batterijniveauTooltips.MeetMoment}>
-            <p>{batterijniveauLabels.MeetMoment}</p>
-          </Tooltip>
-        ),
-      },
+{tableColumns}
     ],
-    [sensor?.data, setSensorFilter],
+    [],
   );
 
-  const { mutateAsync: deleteBatterijniveau } = useDeleteBatterijniveau();
+  const { mutateAsync: delete{modelName} } = useDelete{modelName}();
 
-  const handleDeleteBatterijniveau = async () => {
-    if (selectedBatterijniveau) {
+  const handleDelete{modelName} = async () => {
+    if (selected{modelName}) {
       try {
-        await deleteBatterijniveau(selectedBatterijniveau?.id);
+        await delete{modelName}(selected{modelName}?.id);
         setOpen(false);
       } catch (error) {
         if (error instanceof AxiosError) {
@@ -180,8 +82,8 @@ const BatterijniveauView = () => {
     }
   };
 
-  const openDeleteConfirmModal = (row: MRT_Row<Batterijniveau>) => {
-    setSelectedBatterijniveau(row.original);
+  const openDeleteConfirmModal = (row: MRT_Row<{modelName}>) => {
+    setSelected{modelName}(row.original);
     setOpen(true);
   };
 
@@ -189,16 +91,16 @@ const BatterijniveauView = () => {
     {
       navigate,
       openDeleteConfirmModal,
-      filters: batterijFilters,
+      filters: {variableName}Filters,
       isError,
       isLoading,
       isRefetching,
-      newButtonText: 'Batterijniveau aanmaken',
+      newButtonText: '{modelName} aanmaken',
     },
     {
       columns,
-      data: batterijniveau?.data || [],
-      rowCount: batterijniveau?.meta.total || 0,
+      data: {variableName}?.data || [],
+      rowCount: {variableName}?.meta.total || 0,
     },
   );
 
@@ -210,17 +112,11 @@ const BatterijniveauView = () => {
     <div className="p-4 h-[calc(100vh-56px-2em)]">
       <MaterialReactTable table={table} />
       <ShowDialog
-        className={'BatterijNiveau'}
-        instanceName={
-          selectedBatterijniveau?.sensor?.sensor_type?.naam +
-          ' ' +
-          selectedBatterijniveau?.sensor?.serienummer +
-          ' ' +
-          showDateTime(selectedBatterijniveau?.MeetMoment)
-        }
+        className={'{modelName}'}
+        instanceName={selected{modelName}?.titel}
         open={open}
         setOpen={setOpen}
-        handleDelete={handleDeleteBatterijniveau}
+        handleDelete={handleDelete{modelName}}
         showSnackbar={showSnackbar}
         handleSnackbarClose={handleSnackbarClose}
         snackbarMessage={snackbarMessage}
@@ -229,4 +125,4 @@ const BatterijniveauView = () => {
   );
 };
 
-export default BatterijniveauView;
+export default {modelName}View;

@@ -50,6 +50,44 @@ function getUseQueryFile(string $table, string $modelName, string $variableName,
     return $result;
 }
 
+function getFormFile(string $table, string $modelName, string $variableName, string $routeName): string
+{
+    $result = getTemplate('form.template.tsx', $modelName, $variableName, $routeName);
+
+    $columns = get_columns($table);
+    unset($columns[0]);
+
+    $defaultValues = implode("\n", array_map(fn($column) => "      {$column}: {$variableName}.$column,", $columns));
+    $result = str_replace('{defaultValues}', $defaultValues, $result);
+
+    $fields = implode(",\n", array_map(fn($column) => getReactFormElement($column, $table, $variableName), $columns));
+    $result = str_replace('{fields}', $fields, $result);
+
+    return $result;
+}
+
+function getShowFile(string $table, string $modelName, string $variableName, string $routeName): string
+{
+    $result = getTemplate('show.template.tsx', $modelName, $variableName, $routeName);
+
+    $columns = get_columns($table);
+    $details = implode(",\n", array_map(fn($column) => getReactDetailElement($column, $table, $variableName), $columns));
+    $result = str_replace('{details}', $details, $result);
+
+    return $result;
+}
+
+function getViewFile(string $table, string $modelName, string $variableName, string $routeName): string
+{
+    $result = getTemplate('view.template.tsx', $modelName, $variableName, $routeName);
+
+    $columns = get_columns($table);
+    $tableColumns = implode(",\n", array_map(fn($column) => getReactTableColumnElement($column, $table, $variableName), $columns));
+    $result = str_replace('{tableColumns}', $tableColumns, $result);
+
+    return $result;
+}
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -86,31 +124,49 @@ function getUseQueryFile(string $table, string $modelName, string $variableName,
                         <h3>Labels</h3>
                     </div>
                     <div class="row bg-light p-3">
-                        <pre><?php echo getLabelsFile($table, $modelName, $variableName, $routeName); ?></pre>
+                        <pre><?php echo htmlspecialchars(getLabelsFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>Tooltips</h3>
                     </div>
                     <div class="row bg-light p-3">
-                        <pre><?php echo getTooltipsFile($table, $modelName, $variableName, $routeName); ?></pre>
+                        <pre><?php echo htmlspecialchars(getTooltipsFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>Types</h3>
                     </div>
                     <div class="row bg-light p-3">
-                        <pre><?php echo getTypesFile($table, $modelName, $variableName, $routeName); ?></pre>
+                        <pre><?php echo htmlspecialchars(getTypesFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>useFilters</h3>
                     </div>
                     <div class="row bg-light p-3">
-                        <pre><?php echo getUseFiltersFile($table, $modelName, $variableName, $routeName); ?></pre>
+                        <pre><?php echo htmlspecialchars(getUseFiltersFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>useQuery</h3>
                     </div>
                     <div class="row bg-light p-3">
-                        <pre><?php echo getUseQueryFile($table, $modelName, $variableName, $routeName); ?></pre>
+                        <pre><?php echo htmlspecialchars(getUseQueryFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>Form</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getFormFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>Show</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getShowFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>View</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getViewFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                 </div>
             </div>
