@@ -142,7 +142,7 @@ function get_react_type($table, $column)
     $type = column_type(get_col_types($table, $column));
     $typeStr = match($type) {
         1 => "string",
-        2 => "string",
+        2 => $column,
         3 => "string",
         4 => "boolean",
         5 => "number",
@@ -189,19 +189,24 @@ function type_to_laravel_rules($type)
     };
 }
 
-/** Returns a string with a php list with enum values, such as:
- * ['UTC', 'Wintertijd (UTC+1)', 'Zomertijd (UTC+2)', 'Kalendertijd(UTC+1/UTC+2)']
- */
-function get_enum_list($tablename, $columnname)
+function get_enums($tablename, $columnname): array
 {
     global $link;
-
     $sql = "SELECT COLUMN_TYPE as AllPossibleEnumValues
             FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tablename' AND COLUMN_NAME = '$columnname';";
     $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
     preg_match('/enum\((.*)\)$/', $row[0], $matches);
-    return "[" . $matches[1] . "]";
+
+    return array_map(fn($enum) => str_replace("'", '',$enum), explode(',', $matches[1]));
+}
+
+/** Returns a string with a php list with enum values, such as:
+ * ['UTC', 'Wintertijd (UTC+1)', 'Zomertijd (UTC+2)', 'Kalendertijd(UTC+1/UTC+2)']
+ */
+function get_enum_list($tablename, $columnname)
+{    
+    return "['" . implode("','", get_enums($tablename, $columnname)) . "']";
 }
 
 function create_column_object($name, $displayname, $comments, $table, $sql_join, $sql_select, $nullable, $primary_key, $type)
@@ -270,6 +275,15 @@ function create_constructor_parameter($name, $type, $nullable)
     $type = type_to_php($type);
 
     return "$nullable$type $$name";
+}
+
+
+function PascalCase($string) {
+    $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
+    $string = strtolower($string);
+    $string = lcfirst(str_replace(' ', '', ucwords($string)));
+
+    return ucwords($string);
 }
 
 function camelCase($string) {

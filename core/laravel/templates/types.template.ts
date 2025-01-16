@@ -2,6 +2,8 @@ export type {modelName} = {
 {Types}
 };
 
+{Enums}
+
 export type {modelName}Tooltips = {
   [K in keyof {modelName}]: string;
 };
