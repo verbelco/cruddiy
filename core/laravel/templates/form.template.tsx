@@ -1,3 +1,4 @@
+import { Typography } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -58,19 +59,10 @@ const {modelName}Form: React.FC = () => {
   });
 
   if (isLoading && isEditMode) {
-    return <div>Loading...</div>;
+    return <Typography>Loading...</Typography>;
   }
 
-  return (
-    <div className="p-5 flex justify-center">
-      <div
-        className="bg-white p-8 rounded-lg w-full overflow-y-auto"
-        style={{ maxHeight: '90vh' }}
-      >
-        {form}
-      </div>
-    </div>
-  );
+  return form;
 };
 
 export default {modelName}Form;

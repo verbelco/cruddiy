@@ -50,6 +50,13 @@ function getUseQueryFile(string $table, string $modelName, string $variableName,
     return $result;
 }
 
+function getRoutes(string $table, string $modelName, string $variableName, string $routeName): string
+{
+    $result = getTemplate('routes.template.tsx', $modelName, $variableName, $routeName);
+
+    return $result;
+}
+
 function getFormFile(string $table, string $modelName, string $variableName, string $routeName): string
 {
     $result = getTemplate('form.template.tsx', $modelName, $variableName, $routeName);
@@ -101,7 +108,7 @@ function getResourceFile(string $table, string $modelName, string $variableName,
 {
     $result = getTemplate('resource.template.php', $modelName, $variableName, $routeName);
 
-    $columns = implode(",\n", array_map(fn($column) => "            '{$column}' => \$this->{$column}", get_columns($table)));
+    $columns = implode(",\n", array_map(fn($column) => "            '{$column}' => z\$this->{$column}", get_columns($table)));
     $result = str_replace('{columns}', $columns, $result);
 
     return $result;
@@ -141,6 +148,12 @@ function getResourceFile(string $table, string $modelName, string $variableName,
 
 
                     <div class="row">
+                        <h3>Types</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getTypesFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
                         <h3>Labels</h3>
                     </div>
                     <div class="row bg-light p-3">
@@ -151,12 +164,6 @@ function getResourceFile(string $table, string $modelName, string $variableName,
                     </div>
                     <div class="row bg-light p-3">
                         <pre><?php echo htmlspecialchars(getTooltipsFile($table, $modelName, $variableName, $routeName)); ?></pre>
-                    </div>
-                    <div class="row">
-                        <h3>Types</h3>
-                    </div>
-                    <div class="row bg-light p-3">
-                        <pre><?php echo htmlspecialchars(getTypesFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>useFilters</h3>
@@ -187,6 +194,12 @@ function getResourceFile(string $table, string $modelName, string $variableName,
                     </div>
                     <div class="row bg-light p-3">
                         <pre><?php echo htmlspecialchars(getViewFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>Routes</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getRoutes($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>Request</h3>
