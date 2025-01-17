@@ -1,22 +1,22 @@
 <?php
 // Include config file
-require_once "../config.php";
-require_once "../shared/helpers.php";
-require_once "class.php";
+require_once '../config.php';
+require_once '../shared/helpers.php';
+require_once 'class.php';
 
 $original_column_list = $CRUD['{TABLE_NAME}']->get_original_columns();
 $read_only_columns_list = $CRUD['{TABLE_NAME}']->get_read_only_columns();
 
-include "pre_extension.php";
+include 'pre_extension.php';
 
 // Process delete operation after confirmation
-if (!empty($_POST["{TABLE_ID}"])) {
+if (! empty($_POST['{TABLE_ID}'])) {
 
     // Prepare a delete statement
-    $sql = "DELETE FROM `{TABLE_NAME}` WHERE `{TABLE_ID}` = ?";
+    $sql = 'DELETE FROM `{TABLE_NAME}` WHERE `{TABLE_ID}` = ?';
 
     $stmt = $link->prepare($sql);
-    $param_id = trim($_POST["{TABLE_ID}"]);
+    $param_id = trim($_POST['{TABLE_ID}']);
 
     try {
         $stmt->execute([$param_id]);
@@ -26,16 +26,16 @@ if (!empty($_POST["{TABLE_ID}"])) {
         $error .= $e->getMessage();
     }
 
-    if (!isset($error)) {
+    if (! isset($error)) {
         // Records deleted successfully. Redirect to landing page
-        header("location: ../{TABLE_NAME}/index.php");
+        header('location: ../{TABLE_NAME}/index.php');
     }
 } else {
     // Check existence of id parameter
-    $param_id = trim($_GET["{TABLE_ID}"]);
+    $param_id = trim($_GET['{TABLE_ID}']);
     if (empty($param_id)) {
         // URL doesn't contain id parameter. Redirect to error page
-        header("location: ../error.php");
+        header('location: ../error.php');
         exit();
     }
 }
@@ -50,7 +50,7 @@ if (!empty($_POST["{TABLE_ID}"])) {
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once "../shared/navbar.php"; ?>
+<?php require_once '../shared/navbar.php'; ?>
 
 <body class="bg-light">
     <div class="container-lg bg-white py-5 shadow">
@@ -60,7 +60,7 @@ if (!empty($_POST["{TABLE_ID}"])) {
                     <h1>Delete {TABLE_NAME}</h1>
                 </div>
                 <?php echo $CRUD['{TABLE_NAME}']->html_delete_references($param_id); ?>
-                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . "?{TABLE_ID}=" . $param_id; ?>"
+                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']).'?{TABLE_ID}='.$param_id; ?>"
                     method="post">
                     <?php print_error_if_exists($error); ?>
                     <div class="alert alert-danger fade-in">
@@ -80,8 +80,8 @@ if (!empty($_POST["{TABLE_ID}"])) {
                     <a href="../{TABLE_NAME}/index.php" class="btn btn-primary">Back to index</a>
                 </div>
                 <?php
-                include "post_extension.php";
-                ?>
+                include 'post_extension.php';
+?>
             </div>
         </div>
     </div>

@@ -1,24 +1,24 @@
 <?php
 $total_postvars = count($_POST, COUNT_RECURSIVE);
-$max_postvars = ini_get("max_input_vars");
+$max_postvars = ini_get('max_input_vars');
 if ($total_postvars >= $max_postvars) {
     echo "Uh oh, it looks like you're trying to use more variables than your PHP settings (<a href='https://www.php.net/manual/en/info.configuration.php#ini.max-input-vars'>max_input_variables</a>) allow! <br>";
-    echo "Go back and choose less tables and/or columns or change your php.ini setting. <br>";
+    echo 'Go back and choose less tables and/or columns or change your php.ini setting. <br>';
     echo "Read <a href='https://betterstudio.com/blog/increase-max-input-vars-limit/'>here</a> how you can increase this limit.<br>";
-    echo "Cruddiy will now exit because only part of what you wanted would otherwise be generated. 🙇";
+    echo 'Cruddiy will now exit because only part of what you wanted would otherwise be generated. 🙇';
     exit();
 }
 
-require_once "app/config.php";
-require_once "helpers.php";
-require "save_config.php";
+require_once 'app/config.php';
+require_once 'helpers.php';
+require 'save_config.php';
 
-$excluded_keys = array('singlebutton', 'keep_startpage', 'append_links');
-$generate_start_checked_links = array();
-$startpage_filename = "app/navbar.php";
+$excluded_keys = ['singlebutton', 'keep_startpage', 'append_links'];
+$generate_start_checked_links = [];
+$startpage_filename = 'app/navbar.php';
 $forced_deletion = false;
 $buttons_delimiter = '<!-- TABLE_BUTTONS -->';
-$preview_columns = array();
+$preview_columns = [];
 
 // $CSS_REFS = '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">';
 // $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
@@ -32,7 +32,6 @@ $preview_columns = array();
 // <script src="../js/popper.min.js"></script>
 // <script src="../js/bootstrap.min.js"></script>
 // <script src="https://kit.fontawesome.com/6b773fe9e4.js" crossorigin="anonymous"></script>';
-
 
 // New bootstrap version
 // $CSS_REFS = '<link rel="stylesheet" href="../css/style.css" type="text/css"/>
@@ -60,65 +59,65 @@ function generate_error()
 {
     global $CSS_REFS, $JS_REFS;
 
-    $errorfile = file_get_contents("templates/error.template.php");
+    $errorfile = file_get_contents('templates/error.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $errorfile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $errorfile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
-    if (!file_put_contents("app/error.php", $prestep2, LOCK_EX)) {
-        die("Unable to open file!");
+    if (! file_put_contents('app/error.php', $prestep2, LOCK_EX)) {
+        exit('Unable to open file!');
     }
-    echo "Generating Error file<br>";
+    echo 'Generating Error file<br>';
 }
 
 function generate_startpage()
 {
     global $CSS_REFS, $JS_REFS;
 
-    $startfile = file_get_contents("templates/start.template.php");
+    $startfile = file_get_contents('templates/start.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $startfile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $startfile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
-    if (!file_put_contents("app/index.php", $prestep2, LOCK_EX)) {
-        die("Unable to open file!");
+    if (! file_put_contents('app/index.php', $prestep2, LOCK_EX)) {
+        exit('Unable to open file!');
     }
-    echo "Generating main index file.<br>";
+    echo 'Generating main index file.<br>';
 }
 
 function generate_navbar($tablename, $start_page, $keep_startpage, $append_links, $td)
 {
     global $generate_start_checked_links, $startpage_filename;
 
-    $navbarfile = file_get_contents("templates/navbar.template.php");
+    $navbarfile = file_get_contents('templates/navbar.template.php');
 
     echo "<h3>Table: $tablename</h3>";
 
     // make sure that a previous startpage was created before trying to keep it alive
-    if (!$keep_startpage || ($keep_startpage && !file_exists($startpage_filename))) {
-        if (!file_exists($startpage_filename)) {
+    if (! $keep_startpage || ($keep_startpage && ! file_exists($startpage_filename))) {
+        if (! file_exists($startpage_filename)) {
             // called on the first run of the POST loop
-            echo "Generating fresh Startpage file<br>";
-            $step0 = str_replace("{TABLE_BUTTONS}", $start_page, $navbarfile);
-            if (!file_put_contents($startpage_filename, $step0, LOCK_EX)) {
-                die("Unable to open fresh startpage file!");
+            echo 'Generating fresh Startpage file<br>';
+            $step0 = str_replace('{TABLE_BUTTONS}', $start_page, $navbarfile);
+            if (! file_put_contents($startpage_filename, $step0, LOCK_EX)) {
+                exit('Unable to open fresh startpage file!');
             }
         } else {
             // called on subsequent runs of the POST loop
-            echo "Populating Startpage file<br>";
+            echo 'Populating Startpage file<br>';
             $navbarfile = file_get_contents($startpage_filename);
-            if (!$navbarfile) {
-                die("Unable to open existing startpage file!");
+            if (! $navbarfile) {
+                exit('Unable to open existing startpage file!');
             }
             append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $generate_start_checked_links, $td);
         }
     } else {
         if ($append_links) {
             // load existing template
-            echo "Retrieving existing Startpage file<br>";
+            echo 'Retrieving existing Startpage file<br>';
             $navbarfile = file_get_contents($startpage_filename);
-            if (!$navbarfile) {
-                die("Unable to open existing startpage file!");
+            if (! $navbarfile) {
+                exit('Unable to open existing startpage file!');
             }
             append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $generate_start_checked_links, $td);
         }
@@ -130,7 +129,7 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
     global $buttons_delimiter, $appname;
 
     // extract existing links from app/index.php
-    echo "Looking for new link to append to Startpage file<br>";
+    echo 'Looking for new link to append to Startpage file<br>';
     $navbarfile_appended = $navbarfile;
     $link_matcher_pattern = '/href=["\']?([^"\'>]+)["\']?/im';
     preg_match_all($link_matcher_pattern, $navbarfile, $navbarfile_links);
@@ -144,17 +143,17 @@ function append_links_to_navbar($navbarfile, $start_page, $startpage_filename, $
     preg_match_all($link_matcher_pattern, $start_page, $start_page_links);
     if (count($start_page_links)) {
         foreach ($start_page_links[1] as $start_page_link) {
-            if (!in_array($start_page_link, $generate_start_checked_links)) {
+            if (! in_array($start_page_link, $generate_start_checked_links)) {
                 if (in_array($start_page_link, $navbarfile_links[1])) {
-                    echo '- Not appending ' . $start_page_link . ' as it already exists<br>';
+                    echo '- Not appending '.$start_page_link.' as it already exists<br>';
                 } else {
-                    echo '- Appending ' . $start_page_link . '<br>';
+                    echo '- Appending '.$start_page_link.'<br>';
                     array_push($navbarfile_links[1], $start_page_link);
-                    $button_string = "\t" . '<li><a class="dropdown-item" href="' . $start_page_link . '">' . $td . '</a></i>' . "\n\t" . $buttons_delimiter;
+                    $button_string = "\t".'<li><a class="dropdown-item" href="'.$start_page_link.'">'.$td.'</a></i>'."\n\t".$buttons_delimiter;
                     $step0 = str_replace($buttons_delimiter, $button_string, $navbarfile);
-                    $step1 = str_replace("{APP_NAME}", $appname, $step0);
-                    if (!file_put_contents($startpage_filename, $step1, LOCK_EX)) {
-                        die("Unable to open file!");
+                    $step1 = str_replace('{APP_NAME}', $appname, $step0);
+                    if (! file_put_contents($startpage_filename, $step1, LOCK_EX)) {
+                        exit('Unable to open file!');
                     }
                 }
                 array_push($generate_start_checked_links, $start_page_link);
@@ -167,18 +166,18 @@ function generate_index($tablename, $tabledisplay, $column_id, $columns_selected
 {
     global $CSS_REFS, $JS_REFS;
 
-    $indexfile = file_get_contents("templates/index.template.php");
+    $indexfile = file_get_contents('templates/index.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $indexfile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $indexfile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
     $columns_selected = implode("', '", $columns_selected);
-    $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
-    $step5 = str_replace("{COLUMN_ID}", $column_id, $step1);
-    $step7 = str_replace("{COLUMNS}", $columns_selected, $step5);
-    if (!file_put_contents("app/$tablename/index.php", $step7, LOCK_EX)) {
-        die("Unable to open file!");
+    $step0 = str_replace('{TABLE_NAME}', $tablename, $prestep2);
+    $step1 = str_replace('{TABLE_DISPLAY}', $tabledisplay, $step0);
+    $step5 = str_replace('{COLUMN_ID}', $column_id, $step1);
+    $step7 = str_replace('{COLUMNS}', $columns_selected, $step5);
+    if (! file_put_contents("app/$tablename/index.php", $step7, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename Index file<br>";
 }
@@ -187,84 +186,84 @@ function generate_read($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
-    $readfile = file_get_contents("templates/read.template.php");
+    $readfile = file_get_contents('templates/read.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $readfile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $readfile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
-    $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    if (!file_put_contents("app/$tablename/read.php", $step1, LOCK_EX)) {
-        die("Unable to open file!");
+    $step0 = str_replace('{TABLE_NAME}', $tablename, $prestep2);
+    $step1 = str_replace('{TABLE_ID}', $column_id, $step0);
+    if (! file_put_contents("app/$tablename/read.php", $step1, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename Read file<br>";
 }
 
 function generate_crud_class($tablename, $tabledisplay, $tablecomment, $column_id, $foreign_key_references, $column_classes)
 {
-    $crud_class_file = file_get_contents("templates/crud_class.template.php");
+    $crud_class_file = file_get_contents('templates/crud_class.template.php');
 
-    $step0 = str_replace("{TABLE}", $tablename, $crud_class_file);
-    $step1 = str_replace("{TABLE_DISPLAY}", $tabledisplay, $step0);
+    $step0 = str_replace('{TABLE}', $tablename, $crud_class_file);
+    $step1 = str_replace('{TABLE_DISPLAY}', $tabledisplay, $step0);
     $step2 = str_replace('"{TABLE_COMMENT}"', $tablecomment, $step1);
-    $step3 = str_replace("{COLUMN_ID}", $column_id, $step2);
-    $step4 = str_replace("/**{FOREIGN_KEY_REFS}*/", $foreign_key_references, $step3);
-    $step5 = str_replace("/**{COLUMNS_CLASSES}*/", $column_classes, $step4);
-    if (!file_put_contents("app/$tablename/class.php", $step5, LOCK_EX)) {
-        die("Unable to open file!");
+    $step3 = str_replace('{COLUMN_ID}', $column_id, $step2);
+    $step4 = str_replace('/**{FOREIGN_KEY_REFS}*/', $foreign_key_references, $step3);
+    $step5 = str_replace('/**{COLUMNS_CLASSES}*/', $column_classes, $step4);
+    if (! file_put_contents("app/$tablename/class.php", $step5, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename class file<br><br>";
 }
 
 function generate_database_link($tablename, $column_id, $columns_list, $preview_columns_list, $attributes_list)
 {
-    $database_class_file = file_get_contents("templates/database-link.template.php");
+    $database_class_file = file_get_contents('templates/database-link.template.php');
 
-    $columns = "'" . implode("', '", $columns_list) . "'";
-    $preview_columns = "'" . implode("', '", $preview_columns_list) . "'";
+    $columns = "'".implode("', '", $columns_list)."'";
+    $preview_columns = "'".implode("', '", $preview_columns_list)."'";
     $attributes = implode("\n", $attributes_list);
 
-    $step0 = str_replace("{TABLE}", $tablename, $database_class_file);
-    $step1 = str_replace("{COLUMN_ID}", $column_id, $step0);
-    $step2 = str_replace("/**{COLUMNS}*/", $columns, $step1);
-    $step3 = str_replace("/**{PREVIEW_COLUMNS}*/", $preview_columns, $step2);
-    $step4 = str_replace("/**{ATTRIBUTES}*/", $attributes, $step3);
+    $step0 = str_replace('{TABLE}', $tablename, $database_class_file);
+    $step1 = str_replace('{COLUMN_ID}', $column_id, $step0);
+    $step2 = str_replace('/**{COLUMNS}*/', $columns, $step1);
+    $step3 = str_replace('/**{PREVIEW_COLUMNS}*/', $preview_columns, $step2);
+    $step4 = str_replace('/**{ATTRIBUTES}*/', $attributes, $step3);
 
-    $dir = "app/database_link";
-    if (!is_dir($dir)) {
+    $dir = 'app/database_link';
+    if (! is_dir($dir)) {
         mkdir($dir, 0777, true);
     }
 
-    if (!file_put_contents("$dir/$tablename.php", $step4, LOCK_EX)) {
-        die("Unable to open file!");
+    if (! file_put_contents("$dir/$tablename.php", $step4, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename database link file<br>";
 }
 
-function generate_object($tablename, $columns_list, $attributes_list,  $constructor_parameters)
+function generate_object($tablename, $columns_list, $attributes_list, $constructor_parameters)
 {
-    $database_class_file = file_get_contents("templates/object-class.template.php");
+    $database_class_file = file_get_contents('templates/object-class.template.php');
 
-    $columns = "'" . implode("', '", $columns_list) . "'";
+    $columns = "'".implode("', '", $columns_list)."'";
     $attributes = implode("\n", $attributes_list);
-    $constructor_parameters = implode(",", $constructor_parameters);
+    $constructor_parameters = implode(',', $constructor_parameters);
     $construct_statements = implode("\n", array_map(fn ($c) => "\$this->$c = \$$c;", $columns_list));
     $array_construct = implode(",\n", array_map(fn ($c) => "\$row['$c']", $columns_list));
 
-    $step0 = str_replace("{TABLE}", $tablename, $database_class_file);
-    $step1 = str_replace("/**{COLUMNS}*/", $columns, $step0);
-    $step2 = str_replace("/**{ATTRIBUTES}*/", $attributes, $step1);
-    $step3 = str_replace("/**{CONSTRUCT_PARAMETERS}*/", $constructor_parameters, $step2);
-    $step4 = str_replace("/**{CONSTRUCT_STATEMENTS}*/", $construct_statements, $step3);
-    $step5 = str_replace("/**{ARRAY_CONSTRUCT_ROW}*/", $array_construct, $step4);
+    $step0 = str_replace('{TABLE}', $tablename, $database_class_file);
+    $step1 = str_replace('/**{COLUMNS}*/', $columns, $step0);
+    $step2 = str_replace('/**{ATTRIBUTES}*/', $attributes, $step1);
+    $step3 = str_replace('/**{CONSTRUCT_PARAMETERS}*/', $constructor_parameters, $step2);
+    $step4 = str_replace('/**{CONSTRUCT_STATEMENTS}*/', $construct_statements, $step3);
+    $step5 = str_replace('/**{ARRAY_CONSTRUCT_ROW}*/', $array_construct, $step4);
 
-    $dir = "app/object_class";
-    if (!is_dir($dir)) {
+    $dir = 'app/object_class';
+    if (! is_dir($dir)) {
         mkdir($dir, 0777, true);
     }
 
-    if (!file_put_contents("$dir/$tablename.php", $step5, LOCK_EX)) {
-        die("Unable to open file!");
+    if (! file_put_contents("$dir/$tablename.php", $step5, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename object class file<br>";
 }
@@ -273,15 +272,15 @@ function generate_delete($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
-    $deletefile = file_get_contents("templates/delete.template.php");
+    $deletefile = file_get_contents('templates/delete.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $deletefile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $deletefile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
-    $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step1 = str_replace("{TABLE_ID}", $column_id, $step0);
-    if (!file_put_contents("app/$tablename/delete.php", $step1, LOCK_EX)) {
-        die("Unable to open file!");
+    $step0 = str_replace('{TABLE_NAME}', $tablename, $prestep2);
+    $step1 = str_replace('{TABLE_ID}', $column_id, $step0);
+    if (! file_put_contents("app/$tablename/delete.php", $step1, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename Delete file<br>";
 }
@@ -290,15 +289,15 @@ function generate_create($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
-    $createfile = file_get_contents("templates/create.template.php");
+    $createfile = file_get_contents('templates/create.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $createfile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $createfile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
-    $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step9 = str_replace("{COLUMN_ID}", $column_id, $step0);
-    if (!file_put_contents("app/$tablename/create.php", $step9, LOCK_EX)) {
-        die("Unable to open file!");
+    $step0 = str_replace('{TABLE_NAME}', $tablename, $prestep2);
+    $step9 = str_replace('{COLUMN_ID}', $column_id, $step0);
+    if (! file_put_contents("app/$tablename/create.php", $step9, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename Create file<br>";
 }
@@ -307,15 +306,15 @@ function generate_update($tablename, $column_id)
 {
     global $CSS_REFS, $JS_REFS;
 
-    $updatefile = file_get_contents("templates/update.template.php");
+    $updatefile = file_get_contents('templates/update.template.php');
 
-    $prestep1 = str_replace("{CSS_REFS}", $CSS_REFS, $updatefile);
-    $prestep2 = str_replace("{JS_REFS}", $JS_REFS, $prestep1);
+    $prestep1 = str_replace('{CSS_REFS}', $CSS_REFS, $updatefile);
+    $prestep2 = str_replace('{JS_REFS}', $JS_REFS, $prestep1);
 
-    $step0 = str_replace("{TABLE_NAME}", $tablename, $prestep2);
-    $step3 = str_replace("{COLUMN_ID}", $column_id, $step0);
-    if (!file_put_contents("app/$tablename/update.php", $step3, LOCK_EX)) {
-        die("Unable to open file!");
+    $step0 = str_replace('{TABLE_NAME}', $tablename, $prestep2);
+    $step3 = str_replace('{COLUMN_ID}', $column_id, $step0);
+    if (! file_put_contents("app/$tablename/update.php", $step3, LOCK_EX)) {
+        exit('Unable to open file!');
     }
     echo "Generating $tablename Update file<br>";
 }
@@ -328,10 +327,10 @@ function generate($postdata)
     // These tuples have a columnname and a boolean that signals if they are a foreign key reference.
     // This is used to select which columns should be included in previews, such as select foreign keys and foreign key preview.
     foreach ($postdata as $key => $table_data) {
-        if (!in_array($key, $excluded_keys)) {
+        if (! in_array($key, $excluded_keys)) {
             foreach ($table_data as $column) {
                 if (isset($column['columninpreview'])) {
-                    $preview_columns[$column['tablename']][$column['columnname']] = !empty($column['fk']);
+                    $preview_columns[$column['tablename']][$column['columnname']] = ! empty($column['fk']);
                 }
             }
         }
@@ -350,9 +349,9 @@ function generate($postdata)
         $constructor_parameters = [];
         $db_attributes = [];
 
-        if (!in_array($key, $excluded_keys)) {
+        if (! in_array($key, $excluded_keys)) {
 
-            // Specific INDEX page variables            
+            // Specific INDEX page variables
             foreach ($table_data as $c) {
                 // Find the primary key of this table
                 if (isset($c['primary'])) {
@@ -373,14 +372,14 @@ function generate($postdata)
             $tablename = $first_column['tablename'];
 
             // Gather data specific to this table
-            if (!empty($first_column['tabledisplay'])) {
+            if (! empty($first_column['tabledisplay'])) {
                 $tabledisplay = $first_column['tabledisplay'];
             } else {
                 $tabledisplay = $tablename;
             }
 
-            if (!empty($first_column['tablecomment'])) {
-                $tablecomment = "'" . $first_column['tablecomment'] . "'";
+            if (! empty($first_column['tablecomment'])) {
+                $tablecomment = "'".$first_column['tablecomment']."'";
             } else {
                 $tablecomment = 'null';
             }
@@ -395,11 +394,11 @@ function generate($postdata)
             $result = mysqli_query($link, $sql_get_fk_ref);
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                    $table = $row["Table"];
-                    $fk_table = $row["FK Table"];
+                    $table = $row['Table'];
+                    $fk_table = $row['FK Table'];
                     if (isset($preview_columns[$table])) {
-                        $fk_column = $row["FK Column"];
-                        $column = $row["Column"];
+                        $fk_column = $row['FK Column'];
+                        $column = $row['Column'];
                         if (isset($table_data[$fk_column]['primary'])) {
                             $foreign_key_references[] = "\nnew ExternalReference('$table', '$fk_table', '$column', '$fk_column', '$fk_column')";
                         } elseif (isset($column_id)) {
@@ -418,26 +417,26 @@ function generate($postdata)
                 if (empty($c['auto'])) {
                     // Foreign Key
                     // Create FK JOINS.
-                    if (!empty($c['fk'])) {
+                    if (! empty($c['fk'])) {
                         //Get the Foreign Key
                         [$fk_table, $fk_column] = get_foreign_table_and_column($tablename, $c['columnname']);
 
                         if (isset($preview_columns[$fk_table])) {
                             // Go over the preview columns and add them to the JOIN recursively.
-                            $join_name = $c['columnname'] . $fk_table;
-                            $sql_concat_select = array();
-                            $sql_select = array();
+                            $join_name = $c['columnname'].$fk_table;
+                            $sql_concat_select = [];
+                            $sql_select = [];
 
                             // We need may need multiple JOIN, but in any case we need to join our referred foreign key.
-                            $join_clauses = "\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`" . $c['columnname'] . "`";
+                            $join_clauses = "\tLEFT JOIN `$fk_table` AS `$join_name` ON `$join_name`.`$fk_column` = `$tablename`.`".$c['columnname'].'`';
 
-                            $local_join_clauses = "";
+                            $local_join_clauses = '';
 
                             get_fk_preview_queries($fk_table, $join_name, $sql_concat_select, $sql_select, $local_join_clauses);
                             $join_clauses .= $local_join_clauses;
 
                             // implode all gathered values to make the joins and selects.
-                            $join_columns .= "CONCAT_WS(' | '," . implode(', ', $sql_concat_select) . ')';
+                            $join_columns .= "CONCAT_WS(' | ',".implode(', ', $sql_concat_select).')';
                         }
                     }
                 }
@@ -446,7 +445,7 @@ function generate($postdata)
                 $constructor_parameters[] = create_constructor_parameter($c['columnname'], $type, $c['columnnullable']);
             }
 
-            $foreign_key_references = implode(",", $foreign_key_references);
+            $foreign_key_references = implode(',', $foreign_key_references);
             $column_classes = implode(",\n", $column_classes);
 
             //Generate everything (without navbar)
@@ -479,7 +478,7 @@ function generate($postdata)
             generate_error();
             generate_startpage();
 
-            if (!file_exists("app/$tablename/")) {
+            if (! file_exists("app/$tablename/")) {
                 mkdir("app/$tablename/", 0777, true);
             }
 
@@ -516,8 +515,8 @@ function generate($postdata)
                         echo "<p class='alert alert-primary'>$response</p>";
                     }
 
-                    generate($_POST);
-                    ?>
+generate($_POST);
+?>
                     <hr>
                     <br>Your app has been created! It is completely self contained in the /app folder. You can move this
                     folder anywhere on your server.<br><br>

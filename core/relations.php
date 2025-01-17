@@ -1,79 +1,88 @@
 <?php
 
-if(isset($_POST['index'])) {
-    
-    if((isset($_POST['server'])) && $_POST['server'] <> '') {
-        $server=trim($_POST['server']);
-    } else {
-        $server = "localhost";
-    }
-	if(isset($_POST['username'])) $username=trim($_POST['username']);
-	if(isset($_POST['password'])) $password=trim($_POST['password']);
-	if(isset($_POST['database'])) $database=trim($_POST['database']);
-	if(isset($_POST['numrecordsperpage'])) $numrecordsperpage=$_POST['numrecordsperpage'];
+if (isset($_POST['index'])) {
 
-    if((isset($_POST['appname'])) && $_POST['appname'] <> '') {
-        $appname=trim($_POST['appname']);
+    if ((isset($_POST['server'])) && $_POST['server'] != '') {
+        $server = trim($_POST['server']);
     } else {
-        $appname = "Database Admin";
+        $server = 'localhost';
+    }
+    if (isset($_POST['username'])) {
+        $username = trim($_POST['username']);
+    }
+    if (isset($_POST['password'])) {
+        $password = trim($_POST['password']);
+    }
+    if (isset($_POST['database'])) {
+        $database = trim($_POST['database']);
+    }
+    if (isset($_POST['numrecordsperpage'])) {
+        $numrecordsperpage = $_POST['numrecordsperpage'];
+    }
+
+    if ((isset($_POST['appname'])) && $_POST['appname'] != '') {
+        $appname = trim($_POST['appname']);
+    } else {
+        $appname = 'Database Admin';
     }
 
     /* Attempt to connect to MySQL database */
-	$link = mysqli_connect($server, $username, $password, $database);
-	// Check connection
-	if($link === false)
-		die("ERROR: Could not connect. " . mysqli_connect_error());
+    $link = mysqli_connect($server, $username, $password, $database);
+    // Check connection
+    if ($link === false) {
+        exit('ERROR: Could not connect. '.mysqli_connect_error());
+    }
 
-	/* Clean up User inputs against SQL injection */
-	foreach($_POST as $k => $v) {
-		$_POST[$k] = mysqli_real_escape_string($link, $v);
-	}
+    /* Clean up User inputs against SQL injection */
+    foreach ($_POST as $k => $v) {
+        $_POST[$k] = mysqli_real_escape_string($link, $v);
+    }
 
-	if (!file_exists('app'))
-		mkdir('app', 0777, true);
-
+    if (! file_exists('app')) {
+        mkdir('app', 0777, true);
+    }
 
     $helpersfilename = 'helpers.php';
-    $handle = fopen('helpers.php', "r") or die("Unable to open Helpers file! Please check your file permissions.");;
+    $handle = fopen('helpers.php', 'r') or exit('Unable to open Helpers file! Please check your file permissions.');
     $helpers = fread($handle, filesize($helpersfilename));
     fclose($handle);
 
-    $helpersfile = fopen("app/".$helpersfilename, "w") or die("Unable to create Helpers file! Please check your file permissions");
+    $helpersfile = fopen('app/'.$helpersfilename, 'w') or exit('Unable to create Helpers file! Please check your file permissions');
     fwrite($helpersfile, $helpers);
-	fclose($helpersfile);
+    fclose($helpersfile);
 
-	$configfile = fopen("app/config.php", "w") or die("Unable to open Config file!");
-	$txt  = "<?php \n";
-	$txt .= "\$db_server = '$server'; \n";
-	$txt .= "\$db_name = '$database'; \n";
-	$txt .= "\$db_user = '$username'; \n";
-	$txt .= "\$db_password = '$password'; \n";
-	$txt .= "\$no_of_records_per_page = $numrecordsperpage; \n";
-	$txt .= "\$appname = '$appname'; \n\n";
+    $configfile = fopen('app/config.php', 'w') or exit('Unable to open Config file!');
+    $txt = "<?php \n";
+    $txt .= "\$db_server = '$server'; \n";
+    $txt .= "\$db_name = '$database'; \n";
+    $txt .= "\$db_user = '$username'; \n";
+    $txt .= "\$db_password = '$password'; \n";
+    $txt .= "\$no_of_records_per_page = $numrecordsperpage; \n";
+    $txt .= "\$appname = '$appname'; \n\n";
     $txt .= "\$protocol=(isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] == 'on' ? 'https' : 'http');";
     $txt .= "\$domain = \$protocol . '://' . \$_SERVER['SCRIPT_NAME'];";
-	$txt .= "\$link = mysqli_connect(\$db_server, \$db_user, \$db_password, \$db_name); \n";
+    $txt .= "\$link = mysqli_connect(\$db_server, \$db_user, \$db_password, \$db_name); \n";
 
-    $txt .= '$query = "SHOW VARIABLES LIKE \'character_set_database\'";' ."\n";
-    $txt .= 'if ($result = mysqli_query($link, $query)) {' ."\n";
-    $txt .= '    while ($row = mysqli_fetch_row($result)) {' ."\n";
-    $txt .= '        if (!$link->set_charset($row[1])) {' ."\n";
-    $txt .= '            printf("Error loading character set $row[1]: %s\n", $link->error);' ."\n";
-    $txt .= '            exit();' ."\n";
-    $txt .= '        } else {' ."\n";
-    $txt .= '            // printf("Current character set: %s", $link->character_set_name());' ."\n";
-    $txt .= '        }' ."\n";
-    $txt .= '    }' ."\n";
-    $txt .= '}' ."\n";
+    $txt .= '$query = "SHOW VARIABLES LIKE \'character_set_database\'";'."\n";
+    $txt .= 'if ($result = mysqli_query($link, $query)) {'."\n";
+    $txt .= '    while ($row = mysqli_fetch_row($result)) {'."\n";
+    $txt .= '        if (!$link->set_charset($row[1])) {'."\n";
+    $txt .= '            printf("Error loading character set $row[1]: %s\n", $link->error);'."\n";
+    $txt .= '            exit();'."\n";
+    $txt .= '        } else {'."\n";
+    $txt .= '            // printf("Current character set: %s", $link->character_set_name());'."\n";
+    $txt .= '        }'."\n";
+    $txt .= '    }'."\n";
+    $txt .= '}'."\n";
 
-	$txt .= "\n?>";
-	fwrite($configfile, $txt);
-	fclose($configfile);
+    $txt .= "\n?>";
+    fwrite($configfile, $txt);
+    fclose($configfile);
 
 }
-require "app/config.php";
+require 'app/config.php';
 
-if(isset($_POST['submit'])){
+if (isset($_POST['submit'])) {
     $tablename = $_POST['tablename'];
     $fkname = $_POST['fkname'];
 
@@ -81,16 +90,16 @@ if(isset($_POST['submit'])){
     if ($result = mysqli_query($link, $sql)) {
         echo "The foreign_key '$fkname' was deleted from '$tablename'";
     } else {
-        echo("Something went wrong. Error description: " . mysqli_error($link));
+        echo 'Something went wrong. Error description: '.mysqli_error($link);
     }
 }
 
-if(isset($_POST['addkey'])){
-    $primary = $_POST['primary'];  
+if (isset($_POST['addkey'])) {
+    $primary = $_POST['primary'];
     $fk = $_POST['fk'];
 
-    $split_primary=explode('|', $primary);
-    $split_fk=explode('|', $fk);
+    $split_primary = explode('|', $primary);
+    $split_fk = explode('|', $fk);
 
     $fk_name = $split_fk[0].'_ibfk_1';
 
@@ -98,31 +107,31 @@ if(isset($_POST['addkey'])){
     $onupd_val = $_POST['onupdate'];
 
     switch ($ondel_val) {
-        case "cascade":
-           $ondel = "ON DELETE CASCADE";
+        case 'cascade':
+            $ondel = 'ON DELETE CASCADE';
             break;
-        case "setnull":
-            $ondel = "ON DELETE SET NULL";
+        case 'setnull':
+            $ondel = 'ON DELETE SET NULL';
             break;
-       case "restrict":
-           $ondel = "ON DELETE RESTRICT";
-           break;
-       default:
-           $ondel = "";
+        case 'restrict':
+            $ondel = 'ON DELETE RESTRICT';
+            break;
+        default:
+            $ondel = '';
     }
 
     switch ($onupd_val) {
-        case "cascade":
-           $onupd = "ON UPDATE CASCADE";
+        case 'cascade':
+            $onupd = 'ON UPDATE CASCADE';
             break;
-        case "setnull":
-            $onupd = "ON UPDATE SET NULL";
+        case 'setnull':
+            $onupd = 'ON UPDATE SET NULL';
             break;
-       case "restrict":
-            $onupd = "ON UPDATE RESTRICT";
+        case 'restrict':
+            $onupd = 'ON UPDATE RESTRICT';
             break;
-       default:
-            $onupd = "";
+        default:
+            $onupd = '';
     }
 
     $sql = "ALTER TABLE $split_fk[0] ADD FOREIGN KEY $fk_name ($split_fk[1]) REFERENCES $split_primary[0]($split_primary[1]) $ondel $onupd;";
@@ -130,7 +139,7 @@ if(isset($_POST['addkey'])){
     if ($result = mysqli_query($link, $sql)) {
         echo "The foreign_key '$fk_name' was created from ' $split_fk[0]($split_fk[1])' to '$split_primary[0]($split_primary[1])'.";
     } else {
-         echo("Something went wrong. Error description: " . mysqli_error($link));
+        echo 'Something went wrong. Error description: '.mysqli_error($link);
     }
 }
 
@@ -162,36 +171,37 @@ if(isset($_POST['addkey'])){
                                         FROM information_schema.TABLE_CONSTRAINTS i
                                         LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
                                         WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND i.TABLE_SCHEMA = DATABASE()";
-                                if (($result = mysqli_query($link, $sql)) && $result->num_rows > 0) {
-                                    $row = mysqli_fetch_assoc($result);
-                                    foreach ($row as $col => $value) {
-                                        echo "<th>";
-                                        echo $col;
-                                        echo "</th>"; 
-									}
-									echo "</thead><tbody>";
-									mysqli_data_seek($result, 0);
-									while($row = mysqli_fetch_array($result))
-									{
-										echo "<tr>";
-										echo "<td>" . $row['Table Name'] . "</td>";
-										echo "<td>" . $row['Foreign Key'] . "</td>";
-										echo "<td>" . $row['Primary Table'] . "</td>";
-										echo "<td>" . $row['Primary Key'] . "</td>";
-										echo "<td>" . $row['Constraint Name'] . "</td>";
-										echo "<td class='fk-delete'>";
-										?><form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+if (($result = mysqli_query($link, $sql)) && $result->num_rows > 0) {
+    $row = mysqli_fetch_assoc($result);
+    foreach ($row as $col => $value) {
+        echo '<th>';
+        echo $col;
+        echo '</th>';
+    }
+    echo '</thead><tbody>';
+    mysqli_data_seek($result, 0);
+    while ($row = mysqli_fetch_array($result)) {
+        echo '<tr>';
+        echo '<td>'.$row['Table Name'].'</td>';
+        echo '<td>'.$row['Foreign Key'].'</td>';
+        echo '<td>'.$row['Primary Table'].'</td>';
+        echo '<td>'.$row['Primary Key'].'</td>';
+        echo '<td>'.$row['Constraint Name'].'</td>';
+        echo "<td class='fk-delete'>";
+        ?><form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 										<?php
-												echo '<input type="hidden" name="tablename" value="';
-												echo $row['Table Name'] .'">';
-												echo '<input type="hidden" name="fkname" value="';
-												echo $row['Constraint Name'] . '">';
-												echo "<button type='submit' id='singlebutton' name='submit' class='btn btn-danger'>Delete</button>"; 
-												echo "</form></td>";
-												echo "</tr>";
-									}
-								} else echo "</thead><tbody><tr><td>No relations found</td></tr>";
-                            ?>
+                echo '<input type="hidden" name="tablename" value="';
+        echo $row['Table Name'].'">';
+        echo '<input type="hidden" name="fkname" value="';
+        echo $row['Constraint Name'].'">';
+        echo "<button type='submit' id='singlebutton' name='submit' class='btn btn-danger'>Delete</button>";
+        echo '</form></td>';
+        echo '</tr>';
+    }
+} else {
+    echo '</thead><tbody><tr><td>No relations found</td></tr>';
+}
+?>
                                 </tbody>
                                 </table> 
                 <div class="text-center">
@@ -199,23 +209,23 @@ if(isset($_POST['addkey'])){
                       <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 <?php
                         $sql = "select TABLE_NAME as TableName, COLUMN_NAME as ColumnName from information_schema.columns where table_schema = '$db_name'";
-                        $result = mysqli_query($link,$sql);
-                        echo "<label>This column:</label>
+$result = mysqli_query($link, $sql);
+echo "<label>This column:</label>
                             <select name='fk' id='fk' style='max-width:20%;'><br>";
-                        while ($column = mysqli_fetch_array($result)) {
-                            echo '<option name="'.$column[0]. '|'.$column[1]. '  " value="'.$column[0].'|'.$column[1]. '">'.$column[0].' ('.$column[1].')</option>';
-                        }
-                        echo '</select>';
+while ($column = mysqli_fetch_array($result)) {
+    echo '<option name="'.$column[0].'|'.$column[1].'  " value="'.$column[0].'|'.$column[1].'">'.$column[0].' ('.$column[1].')</option>';
+}
+echo '</select>';
 
-                        mysqli_free_result($result);
-                        $result = mysqli_query($link,$sql);
-                        echo "<label>has a foreign key relation to:</label>
+mysqli_free_result($result);
+$result = mysqli_query($link, $sql);
+echo "<label>has a foreign key relation to:</label>
                             <select name='primary' id='primary' style='max-width:20%'>";
-                        while ($column = mysqli_fetch_array($result)) {
-                            echo '<option name="'.$column[0]. '|'.$column[1]. '  " value="'.$column[0].'|'.$column[1]. '">'.$column[0].' ('.$column[1].')</option>';
+while ($column = mysqli_fetch_array($result)) {
+    echo '<option name="'.$column[0].'|'.$column[1].'  " value="'.$column[0].'|'.$column[1].'">'.$column[0].' ('.$column[1].')</option>';
 
-                        }
-                        echo '</select>';
+}
+echo '</select>';
 ?>
                        <select name='ondelete' id='ondelete' style='max-width:15%'>";
                             <option name="ondelete_action" value="">Pick action</option>

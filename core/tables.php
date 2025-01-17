@@ -1,6 +1,6 @@
     <?php
-        include "app/config.php";
-    ?>
+        include 'app/config.php';
+?>
     <!doctype html>
     <html lang="en">
     <head>
@@ -30,40 +30,38 @@
                     <form class="form-horizontal" action="columns.php" method="post">
                         <fieldset>
                             <?php
-                            //Get all tables
-                            $tablelist = array();
-                            $res = mysqli_query($link,"SELECT TABLE_NAME, TABLE_COMMENT FROM `information_schema`.`TABLES` WHERE TABLE_SCHEMA = '$db_name' ORDER BY TABLE_NAME;");
-                            $i = 0;
-                            while($cRow = mysqli_fetch_assoc($res))
-                            {
-                                //Loop trough list of tables
-                                $table = $cRow['TABLE_NAME'];
-                                $tablecomment = $cRow['TABLE_COMMENT'];         
+                        //Get all tables
+                        $tablelist = [];
+$res = mysqli_query($link, "SELECT TABLE_NAME, TABLE_COMMENT FROM `information_schema`.`TABLES` WHERE TABLE_SCHEMA = '$db_name' ORDER BY TABLE_NAME;");
+$i = 0;
+while ($cRow = mysqli_fetch_assoc($res)) {
+    //Loop trough list of tables
+    $table = $cRow['TABLE_NAME'];
+    $tablecomment = $cRow['TABLE_COMMENT'];
 
-                                echo
-                        '<div class="row align-items-center">
+    echo '<div class="row align-items-center">
                             <div class="col-md-3 text-right">
-                            <span data-toggle="tooltip" data-placement="top" title="' . $tablecomment . '">
-                                  <label class="control-label" for="table['.$i.'][tablename]">'. $table . ' </label>
+                            <span data-toggle="tooltip" data-placement="top" title="'.$tablecomment.'">
+                                  <label class="control-label" for="table['.$i.'][tablename]">'.$table.' </label>
                             </span>
                             </div>
                             <div class="col-md-6">
                                      <input type="hidden" name="table['.$i.'][tablename]" value="'.$table.'"/>
                                      <input type="hidden" name="table['.$i.'][tablecomment]" value="'.$tablecomment.'"/>
-                                     <input id="textinput_'.$table. '" name="table['.$i.'][tabledisplay]" type="text" placeholder="Display table name in frontend" class="form-control rounded-0 shadow-sm">
+                                     <input id="textinput_'.$table.'" name="table['.$i.'][tabledisplay]" type="text" placeholder="Display table name in frontend" class="form-control rounded-0 shadow-sm">
                             </div>
                             <div class="col-md-2">
                               <input class="mr-1" type="checkbox"  name="table['.$i.'][tablecheckbox]" id="checkboxes-'.$i.'" value="1"><label for="checkboxes-'.$i.'">Generate CRUD</label>
                             </div>
                             <div class="col-md-1">
-                              <a href="laravel/table.php?table='. $table .'">Laravel</a>
+                              <a href="laravel/table.php?table='.$table.'">Laravel</a>
                             </div>
                         </div>
                         ';
 
-                                $i++;
-                            }
-                            ?>
+    $i++;
+}
+?>
                             <div class="row">
                                 <div class="col-md-6 mx-auto">
                                     <label class="control-label" for="singlebutton"></label>

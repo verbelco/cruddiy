@@ -1,9 +1,9 @@
 <?php
 
-include "app/config.php";
-include "helpers.php";
-$config_folder = "temp/";
-if (!is_dir($config_folder)) {
+include 'app/config.php';
+include 'helpers.php';
+$config_folder = 'temp/';
+if (! is_dir($config_folder)) {
     mkdir($config_folder, 0777, true);
 }
 
@@ -34,14 +34,14 @@ if (!is_dir($config_folder)) {
                             <option selected></option>
                             <?php
                             $configs = scandir($config_folder);
-                            unset($configs[0]);
-                            unset($configs[1]);
+unset($configs[0]);
+unset($configs[1]);
 
-                            foreach (array_reverse($configs) as $k => $fname) {
-                                $name = pathinfo($fname, PATHINFO_FILENAME);
-                                echo "<option value='$name'>$name</option>";
-                            }
-                            ?>
+foreach (array_reverse($configs) as $k => $fname) {
+    $name = pathinfo($fname, PATHINFO_FILENAME);
+    echo "<option value='$name'>$name</option>";
+}
+?>
                         </select>
                     </div>
                 </div>
@@ -56,104 +56,101 @@ if (!is_dir($config_folder)) {
                 <form class="form-horizontal" action="generate.php" id="cruddiy_data" method="post">
                     <fieldset>                  
                         <?php
-                        function get_primary_keys($table){
+                        function get_primary_keys($table)
+                        {
                             global $link;
                             $sql = "SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'";
-                            $result = mysqli_query($link,$sql);
-							$primary_keys = Array();
-                            while($row = mysqli_fetch_assoc($result))
-                            {
+                            $result = mysqli_query($link, $sql);
+                            $primary_keys = [];
+                            while ($row = mysqli_fetch_assoc($result)) {
                                 $primary_keys[] = $row['Column_name'];
                             }
+
                             return $primary_keys;
                         }
 
-                        function get_autoincrement_cols($table){
-                            global $link;
-                            $sql = "DESCRIBE $table";
-                            $result = mysqli_query($link,$sql);
-							$auto_keys = Array();
-                            while($row = mysqli_fetch_assoc($result))
-                            {
-                                if ($row['Extra'] == 'auto_increment') {
-                                    $auto_keys[] = $row['Field'];
-                                }
-                            }
-                            return $auto_keys;
-                        }
+function get_autoincrement_cols($table)
+{
+    global $link;
+    $sql = "DESCRIBE $table";
+    $result = mysqli_query($link, $sql);
+    $auto_keys = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        if ($row['Extra'] == 'auto_increment') {
+            $auto_keys[] = $row['Field'];
+        }
+    }
 
-                        function get_foreign_keys($table){
-                            global $link;
-                            global $db_name;
-                            $fks[] = "";
-                            $sql = "SELECT k.COLUMN_NAME as 'Foreign Key'
+    return $auto_keys;
+}
+
+function get_foreign_keys($table)
+{
+    global $link;
+    global $db_name;
+    $fks[] = '';
+    $sql = "SELECT k.COLUMN_NAME as 'Foreign Key'
                                     FROM information_schema.TABLE_CONSTRAINTS i
                                     LEFT JOIN information_schema.KEY_COLUMN_USAGE k ON i.CONSTRAINT_NAME = k.CONSTRAINT_NAME
                                     WHERE i.CONSTRAINT_TYPE = 'FOREIGN KEY' AND i.TABLE_NAME = '$table'";
-                            $result = mysqli_query($link,$sql);
-                            while($row = mysqli_fetch_assoc($result))
-                            {
-                                $fks[] = $row['Foreign Key'];
-                            }
-                            return $fks;
-                        }
+    $result = mysqli_query($link, $sql);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $fks[] = $row['Foreign Key'];
+    }
 
-                        $checked_tables_counter=0;
-                        if ( isset( $_POST['table'] ) )
-                        {
-                            foreach ( $_POST['table'] as $table )
-                            {
-                                if (isset($table['tablecheckbox']) && $table['tablecheckbox'] == 1) {
-                                    $tablename = $table['tablename'];
-                                    $tablecomment = $table['tablecomment'];
-                                    $tabledisplay = $table['tabledisplay'];
-                                    echo "<div class='text-center mb-4'><span data-toggle='tooltip' data-placement='top' title='$tablecomment'><b>Table: " . $tabledisplay . " (". $tablename .")</b></span></div>";
-                                    $columns = get_columns($tablename);
-                                    $primary_keys = get_primary_keys($tablename);
-                                    $auto_keys = get_autoincrement_cols($tablename);
-                                    $foreign_keys = get_foreign_keys($tablename);
+    return $fks;
+}
 
-                                    foreach($columns as $column){
-                                        $column_type = get_col_types($tablename,$column);
-                                        $column_comment = get_col_comments($tablename,$column);
-                                        $column_nullable = get_col_nullable($tablename,$column);
-                                        $columnname = $column;
+$checked_tables_counter = 0;
+if (isset($_POST['table'])) {
+    foreach ($_POST['table'] as $table) {
+        if (isset($table['tablecheckbox']) && $table['tablecheckbox'] == 1) {
+            $tablename = $table['tablename'];
+            $tablecomment = $table['tablecomment'];
+            $tabledisplay = $table['tabledisplay'];
+            echo "<div class='text-center mb-4'><span data-toggle='tooltip' data-placement='top' title='$tablecomment'><b>Table: ".$tabledisplay.' ('.$tablename.')</b></span></div>';
+            $columns = get_columns($tablename);
+            $primary_keys = get_primary_keys($tablename);
+            $auto_keys = get_autoincrement_cols($tablename);
+            $foreign_keys = get_foreign_keys($tablename);
 
-                                        if (in_array ("$column", $primary_keys)) {
-                                            $primary = "🔑";
-                                            echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][primary]" value="'.$primary.'"/>';
-                                        }
-                                        else {
-                                            $primary = "";
-                                        }
+            foreach ($columns as $column) {
+                $column_type = get_col_types($tablename, $column);
+                $column_comment = get_col_comments($tablename, $column);
+                $column_nullable = get_col_nullable($tablename, $column);
+                $columnname = $column;
 
-                                        if (in_array ("$column", $auto_keys)) {
-                                            $auto = "🔒";
-                                            echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][auto]" value="'.$auto.'"/>';
-                                        }
-                                        else {
-                                            $auto = "";
-                                        }
+                if (in_array("$column", $primary_keys)) {
+                    $primary = '🔑';
+                    echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][primary]" value="'.$primary.'"/>';
+                } else {
+                    $primary = '';
+                }
 
-                                        if (in_array ("$column", $foreign_keys)) {
-                                            $fk = "🛅";
-                                            echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][fk]" value="'.$fk.'"/>';
-                                        }
-                                        else {
-                                            $fk = "";
-                                        }
+                if (in_array("$column", $auto_keys)) {
+                    $auto = '🔒';
+                    echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][auto]" value="'.$auto.'"/>';
+                } else {
+                    $auto = '';
+                }
 
-                                        if ($column_nullable) {
-                                            $nb = "🫙";
-                                        }
-                                        else {
-                                            $nb = "";
-                                        }
+                if (in_array("$column", $foreign_keys)) {
+                    $fk = '🛅';
+                    echo '<input type="hidden" name="'.$tablename.'columns['.$columnname.'][fk]" value="'.$fk.'"/>';
+                } else {
+                    $fk = '';
+                }
 
-                                        echo "<span data-toggle='tooltip' data-placement='top' data-bs-html=\"true\" title=" . prepare_text_for_tooltip($column_comment) . ">";
-                                        echo '<div class="row align-items-center mb-2">
+                if ($column_nullable) {
+                    $nb = '🫙';
+                } else {
+                    $nb = '';
+                }
+
+                echo "<span data-toggle='tooltip' data-placement='top' data-bs-html=\"true\" title=".prepare_text_for_tooltip($column_comment).'>';
+                echo '<div class="row align-items-center mb-2">
                                     <div class="col-2 text-right">
-                                        <label class="col-form-label" for="'.$tablename.'">'. $primary . $auto . $fk . $nb . $column . ' </label>
+                                        <label class="col-form-label" for="'.$tablename.'">'.$primary.$auto.$fk.$nb.$column.' </label>
                                     </div>
                                     <div class="col-md-6">
                                         <input type="hidden" name="'.$tablename.'columns['.$columnname.'][tablename]" value="'.$tablename.'"/>
@@ -163,7 +160,7 @@ if (!is_dir($config_folder)) {
                                         <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columntype]" value="'.$column_type.'"/>
                                         <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columncomment]" value="'.$column_comment.'"/>
                                         <input type="hidden" name="'.$tablename.'columns['.$columnname.'][columnnullable]" value="'.$column_nullable.'"/>
-                                        <input id="textinput_'.$tablename. '-'.$columnname.'"name="'. $tablename. 'columns['.$columnname.'][columndisplay]" type="text" placeholder="Display field name in frontend" class="form-control rounded-0">
+                                        <input id="textinput_'.$tablename.'-'.$columnname.'"name="'.$tablename.'columns['.$columnname.'][columndisplay]" type="text" placeholder="Display field name in frontend" class="form-control rounded-0">
                                     </div>
                                     <div class="col-md-2">
                                         <input type="checkbox"  name="'.$tablename.'columns['.$columnname.'][columnvisible]" id="checkboxes-'.$checked_tables_counter.'-'.$columnname.'" value="1" checked>
@@ -172,12 +169,12 @@ if (!is_dir($config_folder)) {
                                         <input type="checkbox"  name="'.$tablename.'columns['.$columnname.'][columninpreview]" id="checkboxes-'.$checked_tables_counter.'-'.$columnname.'-2" value="1" checked>
                                 <label for="checkboxes-'.$checked_tables_counter.'-'.$columnname.'-2">Visible in preview?</label></div>
                      </div></span>';
-                                    }
-                                    $checked_tables_counter++;
-                                }
-                            }
-                        }
-                        ?>
+            }
+            $checked_tables_counter++;
+        }
+    }
+}
+?>
 
                         <div class="row">
                             <div class="col-md-8 mx-auto">

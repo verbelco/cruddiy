@@ -1,8 +1,8 @@
 <?php
 
-require_once "../app/config.php";
-require_once "helpers.php";
-require_once "../helpers.php";
+require_once '../app/config.php';
+require_once 'helpers.php';
+require_once '../helpers.php';
 
 ?>
 
@@ -23,16 +23,16 @@ require_once "../helpers.php";
                 <div class="col-md-12 mx-auto p-5">
                     <?php
                     $table = $_GET['table'];
-                    $modelName = $_GET['modelName'] ?? str_replace('_', '', $table);
-                    $variableName = $_GET['variableName'] ?? camelCase($table);
-                    $routeName = $_GET['routeName'] ?? kebabCase($table);
-                    ?>
+$modelName = $_GET['modelName'] ?? str_replace('_', '', $table);
+$variableName = $_GET['variableName'] ?? camelCase($table);
+$routeName = $_GET['routeName'] ?? kebabCase($table);
+?>
 
                     <form method="GET">
-                        Table: <input name="table" value="<?php echo $table;?>"> <br>
-                        ModelName: <input name="modelName" value="<?php echo $modelName;?>"> <br>
-                        VariableName: <input name="variableName" value="<?php echo $variableName;?>"> <br>
-                        RouteName: <input name="routeName" value="<?php echo $routeName;?>"> <br>
+                        Table: <input name="table" value="<?php echo $table; ?>"> <br>
+                        ModelName: <input name="modelName" value="<?php echo $modelName; ?>"> <br>
+                        VariableName: <input name="variableName" value="<?php echo $variableName; ?>"> <br>
+                        RouteName: <input name="routeName" value="<?php echo $routeName; ?>"> <br>
                         <input type='submit'>
                     </form>
 

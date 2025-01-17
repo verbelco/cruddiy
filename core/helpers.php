@@ -4,7 +4,7 @@
 function prepare_text_for_tooltip($string)
 {
     if (isset($string)) {
-        return "'" . str_replace("'", '"', $string) . "'";
+        return "'".str_replace("'", '"', $string)."'";
     } else {
         return "''";
     }
@@ -19,28 +19,29 @@ function get_fk_preview_queries($table, $join_name, &$sql_concat_select, &$sql_s
             // Reference is a foreign key to another table itself
             [$fk_table, $fk_column] = get_foreign_table_and_column($table, $column);
             if (isset($preview_columns[$fk_table])) {
-                $new_join_name = $join_name . $fk_table;
+                $new_join_name = $join_name.$fk_table;
                 $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$new_join_name` ON `$new_join_name`.`$fk_column` = `$join_name`.`$column`";
                 get_fk_preview_queries($fk_table, $new_join_name, $sql_concat_select, $sql_select, $join_clauses);
             } else {
-                $sql_concat_select[] = '`' . $join_name . '`.`' . $column . '`';
-                $sql_select[] = '`' . $column . '`';
+                $sql_concat_select[] = '`'.$join_name.'`.`'.$column.'`';
+                $sql_select[] = '`'.$column.'`';
             }
         } else {
-            $sql_concat_select[] = '`' . $join_name . '`.`' . $column . '`';
-            $sql_select[] = '`' . $column . '`';
+            $sql_concat_select[] = '`'.$join_name.'`.`'.$column.'`';
+            $sql_select[] = '`'.$column.'`';
         }
     }
 }
 
 function is_primary_key($t, $c)
 {
-    $cols = $_POST[$t . 'columns'];
+    $cols = $_POST[$t.'columns'];
     foreach ($cols as $col) {
         if (isset($col['primary']) && $col['columnname'] == $c) {
             return 1;
         }
     }
+
     return 0;
 }
 
@@ -58,11 +59,11 @@ function get_default_value($table, $column)
     }
 
     // Rewrite some SQL to PHP
-    if ($def == "current_timestamp()") {
-        $def = "new DateTime()";
+    if ($def == 'current_timestamp()') {
+        $def = 'new DateTime()';
     }
 
-    return !isset($def) || $def == "" || $def == "NULL" ? "null" : $def;
+    return ! isset($def) || $def == '' || $def == 'NULL' ? 'null' : $def;
 }
 
 function get_foreign_table_and_column($tablename, $columnname)
@@ -78,9 +79,10 @@ function get_foreign_table_and_column($tablename, $columnname)
     $result = mysqli_query($link, $sql_getfk);
     if (mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
-            $fk_table = $row["FK Table"];
-            $fk_column = $row["FK Column"];
+            $fk_table = $row['FK Table'];
+            $fk_column = $row['FK Column'];
         }
+
         return [$fk_table, $fk_column];
     }
 }
@@ -93,29 +95,30 @@ function isJson($table, $column)
             FROM information_schema.check_constraints
             WHERE constraint_schema = '$db_name' AND table_name = '$table' AND constraint_name = '$column' AND check_clause = 'json_valid(`$column`)'";
     $result = $link->query($sql);
+
     return $result->num_rows > 0;
 }
 
 function column_type($sql_column_def)
 {
     switch ($sql_column_def) {
-        case (preg_match("/text/i", $sql_column_def) ? true : false):
+        case preg_match('/text/i', $sql_column_def) ? true : false:
             return 1;
-        case (preg_match("/enum/i", $sql_column_def) ? true : false):
+        case preg_match('/enum/i', $sql_column_def) ? true : false:
             return 2;
-        case (preg_match("/varchar/i", $sql_column_def) ? true : false):
+        case preg_match('/varchar/i', $sql_column_def) ? true : false:
             return 3;
-        case (preg_match("/tinyint\(1\)/i", $sql_column_def) ? true : false):
+        case preg_match("/tinyint\(1\)/i", $sql_column_def) ? true : false:
             return 4;
-        case (preg_match("/int/i", $sql_column_def) ? true : false):
+        case preg_match('/int/i', $sql_column_def) ? true : false:
             return 5;
-        case (preg_match("/decimal/i", $sql_column_def) ? true : false):
+        case preg_match('/decimal/i', $sql_column_def) ? true : false:
             return 6;
-        case (preg_match("/float/i", $sql_column_def) ? true : false):
+        case preg_match('/float/i', $sql_column_def) ? true : false:
             return 6;
-        case (preg_match("/datetime/i", $sql_column_def) ? true : false):
+        case preg_match('/datetime/i', $sql_column_def) ? true : false:
             return 8;
-        case (preg_match("/date/i", $sql_column_def) ? true : false):
+        case preg_match('/date/i', $sql_column_def) ? true : false:
             return 7;
         default:
             return 0;
@@ -124,15 +127,15 @@ function column_type($sql_column_def)
 
 function type_to_str($type)
 {
-    return match($type) {
-        1 => "text",
-        2 => "enum",
-        3 => "string",
-        4 => "bool",
-        5 => "int",
-        6 => "float",
-        7 => "date",
-        8 => "datetime",
+    return match ($type) {
+        1 => 'text',
+        2 => 'enum',
+        3 => 'string',
+        4 => 'bool',
+        5 => 'int',
+        6 => 'float',
+        7 => 'date',
+        8 => 'datetime',
         default => 'string',
     };
 }
@@ -140,51 +143,52 @@ function type_to_str($type)
 function get_react_type($table, $column)
 {
     $type = column_type(get_col_types($table, $column));
-    $typeStr = match($type) {
-        1 => "string",
+    $typeStr = match ($type) {
+        1 => 'string',
         2 => $column,
-        3 => "string",
-        4 => "boolean",
-        5 => "number",
-        6 => "number",
-        7 => "Date",
-        8 => "Date",
+        3 => 'string',
+        4 => 'boolean',
+        5 => 'number',
+        6 => 'number',
+        7 => 'Date',
+        8 => 'Date',
         default => 'string'
     };
 
     $nullable = get_col_nullable($table, $column);
-    if($nullable){
+    if ($nullable) {
         $typeStr .= ' | undefined';
     }
+
     return $typeStr;
 }
 
 function type_to_php($type)
 {
-    return match($type) {
-        1 => "string",
-        2 => "string",
-        3 => "string",
-        4 => "bool",
-        5 => "int",
-        6 => "float",
-        7 => "DateTime",
-        8 => "DateTime",
+    return match ($type) {
+        1 => 'string',
+        2 => 'string',
+        3 => 'string',
+        4 => 'bool',
+        5 => 'int',
+        6 => 'float',
+        7 => 'DateTime',
+        8 => 'DateTime',
         default => 'string',
     };
 }
 
 function type_to_laravel_rules($type)
 {
-    return match($type) {
-        1 => "string",
-        2 => "string",
-        3 => "string",
-        4 => "boolean",
-        5 => "integer",
-        6 => "numeric",
-        7 => "date",
-        8 => "datetime",
+    return match ($type) {
+        1 => 'string',
+        2 => 'string',
+        3 => 'string',
+        4 => 'boolean',
+        5 => 'integer',
+        6 => 'numeric',
+        7 => 'date',
+        8 => 'datetime',
         default => 'string',
     };
 }
@@ -198,15 +202,15 @@ function get_enums($tablename, $columnname): array
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
     preg_match('/enum\((.*)\)$/', $row[0], $matches);
 
-    return array_map(fn($enum) => str_replace("'", '',$enum), explode(',', $matches[1]));
+    return array_map(fn ($enum) => str_replace("'", '', $enum), explode(',', $matches[1]));
 }
 
 /** Returns a string with a php list with enum values, such as:
  * ['UTC', 'Wintertijd (UTC+1)', 'Zomertijd (UTC+2)', 'Kalendertijd(UTC+1/UTC+2)']
  */
 function get_enum_list($tablename, $columnname)
-{    
-    return "['" . implode("','", get_enums($tablename, $columnname)) . "']";
+{
+    return "['".implode("','", get_enums($tablename, $columnname))."']";
 }
 
 function create_column_object($name, $displayname, $comments, $table, $sql_join, $sql_select, $nullable, $primary_key, $type)
@@ -218,36 +222,38 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
 
     $default = get_default_value($table, $name);
 
-    $comments = empty($comments) ? "null" : prepare_text_for_tooltip($comments);
-    $sql_join = empty($sql_join) ? "null" : '"' . $sql_join . '"';
-    $sql_select = empty($sql_select) ? "null" : '"' . $sql_select . '"';
+    $comments = empty($comments) ? 'null' : prepare_text_for_tooltip($comments);
+    $sql_join = empty($sql_join) ? 'null' : '"'.$sql_join.'"';
+    $sql_select = empty($sql_select) ? 'null' : '"'.$sql_select.'"';
 
-    $required = $nullable ? "False" : "True";
-    $primary_key = $primary_key ? "False" : "True";
+    $required = $nullable ? 'False' : 'True';
+    $primary_key = $primary_key ? 'False' : 'True';
     $type = type_to_str($type);
 
-    if ($sql_join != "null" && $sql_select != "null") {
+    if ($sql_join != 'null' && $sql_select != 'null') {
         [$fk_table, $fk_column] = get_foreign_table_and_column($table, $name);
-        $fk_primary = is_primary_key($fk_table, $fk_column) ? "True" : "False";
+        $fk_primary = is_primary_key($fk_table, $fk_column) ? 'True' : 'False';
+
         return "'$name' => new ForeignKeyColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, '$fk_table', '$fk_column', $fk_primary, $required, $primary_key)";
-    } else if (isJson($table, $name)) {
+    } elseif (isJson($table, $name)) {
         return "'$name' => new JSONColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } else if ($type == "text") {
+    } elseif ($type == 'text') {
         return "'$name' => new TextColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } else if ($type == "enum") {
+    } elseif ($type == 'enum') {
         $enum_list = get_enum_list($table, $name);
         $enum_dict = "array_combine($enum_list, $enum_list)";
+
         return "'$name' => new EnumColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key, $enum_dict)";
-    } else if ($type == "bool") {
+    } elseif ($type == 'bool') {
         return "'$name' => new BoolColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } else if ($type == "int") {
+    } elseif ($type == 'int') {
         return "'$name' => new IntColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } else if ($type == "float") {
+    } elseif ($type == 'float') {
         return "'$name' => new FloatColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } else if ($type == "date") {
+    } elseif ($type == 'date') {
         return "'$name' => new DateColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
-    } else if ($type == "datetime") {
-        if ($name == "MutatieMoment") {
+    } elseif ($type == 'datetime') {
+        if ($name == 'MutatieMoment') {
             return "'$name' => new MutatieMomentColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
         } else {
             return "'$name' => new DateTimeColumn('$name',\n '$displayname', $comments, '$table', $default, $sql_join, $sql_select, $required, $primary_key)";
@@ -260,25 +266,25 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
 
 function create_db_attribute($name, $type, $comments, $nullable)
 {
-    $comments = empty($comments) ? "" : "/** " . str_replace("\n", "\n*", $comments) . " */\n";
-    $nullable = $nullable ? "?" : "";
+    $comments = empty($comments) ? '' : '/** '.str_replace("\n", "\n*", $comments)." */\n";
+    $nullable = $nullable ? '?' : '';
 
     $type = type_to_php($type);
 
-    return $comments . "protected $nullable$type $$name;";
+    return $comments."protected $nullable$type $$name;";
 }
 
 function create_constructor_parameter($name, $type, $nullable)
 {
-    $nullable = $nullable ? "?" : "";
+    $nullable = $nullable ? '?' : '';
 
     $type = type_to_php($type);
 
     return "$nullable$type $$name";
 }
 
-
-function PascalCase($string) {
+function PascalCase($string)
+{
     $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
     $string = strtolower($string);
     $string = lcfirst(str_replace(' ', '', ucwords($string)));
@@ -286,7 +292,8 @@ function PascalCase($string) {
     return ucwords($string);
 }
 
-function camelCase($string) {
+function camelCase($string)
+{
     $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
     $string = strtolower($string);
     $string = lcfirst(str_replace(' ', '', ucwords($string)));
@@ -294,7 +301,8 @@ function camelCase($string) {
     return $string;
 }
 
-function kebabCase($string) {
+function kebabCase($string)
+{
     return strtolower(str_replace([' ', '_'], ['-', '-'], $string));
 }
 
@@ -303,50 +311,57 @@ function getTemplate(string $template, string $modelName, string $variableName, 
 {
     $result = file_get_contents("templates/{$template}");
 
-    $result = str_replace("{modelName}", $modelName, $result);
-    $result = str_replace("{variableName}", $variableName, $result);
-    $result = str_replace("{routeName}", $routeName, $result);
-    
+    $result = str_replace('{modelName}', $modelName, $result);
+    $result = str_replace('{variableName}', $variableName, $result);
+    $result = str_replace('{routeName}', $routeName, $result);
+
     return $result;
 }
 
 function get_columns($table): array
 {
-    global $link; 
+    global $link;
     $sql = "SHOW columns FROM $table";
-    $result = mysqli_query($link,$sql);
+    $result = mysqli_query($link, $sql);
     $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
-    return array_map(fn(array $row) => $row['Field'], $rows);
+    return array_map(fn (array $row) => $row['Field'], $rows);
 }
 
-function get_col_types($table,$column){
-    global $link; 
+function get_col_types($table, $column)
+{
+    global $link;
     $sql = "SHOW FIELDS FROM $table where FIELD ="."'".$column."'";
-    $result = mysqli_query($link,$sql);
+    $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_assoc($result);
-    return $row['Type'] ;
+
+    return $row['Type'];
 }
 
-function get_col_comments($table,$column){
-    global $link; 
+function get_col_comments($table, $column)
+{
+    global $link;
     $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
-    $result = mysqli_query($link,$sql);
+    $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_assoc($result);
-    return $row['Comment'] ;
+
+    return $row['Comment'];
 }
 
-function get_col_nullable($table,$column){
-    global $link; 
+function get_col_nullable($table, $column)
+{
+    global $link;
     $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
-    $result = mysqli_query($link,$sql);
+    $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_assoc($result);
-    return ($row['Null'] == "YES") ? true : 0;
+
+    return ($row['Null'] == 'YES') ? true : 0;
 }
 
 function getReactFormElement(string $column, string $table, string $tableVariableName): string
 {
-    $required = get_col_nullable($table, $column) ? "" : "\n      required: true,";
+    $required = get_col_nullable($table, $column) ? '' : "\n      required: true,";
+
     return "    {
       id: '{$column}',
       label: {$tableVariableName}Labels.{$column},
@@ -383,5 +398,5 @@ function getLaravelRequestValidation(string $column, string $table, string $tabl
     $type = type_to_laravel_rules(column_type(get_col_types($table, $column)));
     $rules = [$required, $type];
 
-    return "            '$column' => '" . implode('|', $rules)."'";
+    return "            '$column' => '".implode('|', $rules)."'";
 }

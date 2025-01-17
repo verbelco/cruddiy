@@ -1,27 +1,27 @@
 <?php
 // Include config file
-require_once "../config.php";
-require_once "../shared/helpers.php";
-require_once "class.php";
+require_once '../config.php';
+require_once '../shared/helpers.php';
+require_once 'class.php';
 
 $original_column_list = $CRUD['{TABLE_NAME}']->get_original_columns();
 $read_only_columns_list = $CRUD['{TABLE_NAME}']->get_read_only_columns();
 
-include "pre_extension.php";
+include 'pre_extension.php';
 
 // Processing form data when form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $row = array();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $row = [];
     foreach ($original_column_list as $name => $column) {
-        if ($column->get_name() != "{COLUMN_ID}") {
+        if ($column->get_name() != '{COLUMN_ID}') {
             $row[$name] = $column->get_sql_create_value($_POST[$name]);
         }
     }
 
-    $inserts = implode(", ", array_map(function ($c) {
-        return "`" . $c . "`";
+    $inserts = implode(', ', array_map(function ($c) {
+        return '`'.$c.'`';
     }, array_keys($row)));
-    $question_marks = implode(", ", array_fill(0, count($row), '?'));
+    $question_marks = implode(', ', array_fill(0, count($row), '?'));
 
     $stmt = $link->prepare("INSERT INTO `{TABLE_NAME}` ($inserts) VALUES ($question_marks)");
 
@@ -32,18 +32,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = $e->getMessage();
     }
 
-    if (!isset($error)) {
+    if (! isset($error)) {
         $new_id = mysqli_insert_id($link);
-        if (!isset($_POST['another'])) {
+        if (! isset($_POST['another'])) {
             header("location: ../{TABLE_NAME}/read.php?{COLUMN_ID}=$new_id");
         } else {
             $message = "Record with <a href='../{TABLE_NAME}/read.php?{COLUMN_ID}=$new_id'>{COLUMN_ID}=$new_id</a> added to {TABLE_NAME}";
         }
     }
-} else if (isset($_GET['duplicate'])) {
+} elseif (isset($_GET['duplicate'])) {
     $duplicate_id = trim($_GET['duplicate']);
 
-    $stmt = $link->prepare("SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?");
+    $stmt = $link->prepare('SELECT * FROM `{TABLE_NAME}` WHERE `{COLUMN_ID}` = ?');
     $stmt->execute([$duplicate_id]);
     $result = $stmt->get_result();
     if ($result->num_rows == 1) {
@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     {CSS_REFS}
     {JS_REFS}
 </head>
-<?php require_once "../shared/navbar.php"; ?>
+<?php require_once '../shared/navbar.php'; ?>
 
 <body class="bg-light">
     <div class="container-lg bg-white py-5 shadow">
@@ -72,17 +72,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <h2>Create {TABLE_NAME}</h2>
                 </div>
                 <?php print_error_if_exists($error);
-                print_message_if_exists($message); ?>
+print_message_if_exists($message); ?>
                 <p>Please fill this form and submit to add a record to the database.</p>
-                <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
                     <div>
                         <?php
-                        foreach ($original_column_list as $name => $column) {
-                            if ($column->get_name() != "{COLUMN_ID}") {
-                                echo $column->html_create_row($row[$name]);
-                            }
-                        }
-                        ?>
+        foreach ($original_column_list as $name => $column) {
+            if ($column->get_name() != '{COLUMN_ID}') {
+                echo $column->html_create_row($row[$name]);
+            }
+        }
+?>
                     </div>
                     <div class="mt-3 mb-3">
                         <input type="submit" class="btn btn-primary" value="Create">
@@ -92,8 +92,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
                 <p> * field can not be left empty </p>
                 <?php
-                include "post_extension.php";
-                ?>
+                include 'post_extension.php';
+?>
             </div>
         </div>
     </div>
