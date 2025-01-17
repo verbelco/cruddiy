@@ -188,7 +188,7 @@ function type_to_laravel_rules($type)
         5 => 'integer',
         6 => 'numeric',
         7 => 'date',
-        8 => 'datetime',
+        8 => 'date',
         default => 'string',
     };
 }
