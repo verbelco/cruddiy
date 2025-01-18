@@ -23,10 +23,10 @@ require_once '../helpers.php';
                 <div class="col-md-12 mx-auto p-5">
                     <?php
                     $table = $_GET['table'];
-$modelName = $_GET['modelName'] ?? str_replace('_', '', $table);
-$variableName = $_GET['variableName'] ?? camelCase($table);
-$routeName = $_GET['routeName'] ?? kebabCase($table);
-?>
+                    $modelName = $_GET['modelName'] ?? str_replace('_', '', $table);
+                    $variableName = $_GET['variableName'] ?? camelCase($table);
+                    $routeName = $_GET['routeName'] ?? kebabCase($table);
+                    ?>
 
                     <form method="GET">
                         Table: <input name="table" value="<?php echo $table; ?>"> <br>

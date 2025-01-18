@@ -9,26 +9,26 @@ import ShowHeader from '../shared/components/showHeader.tsx';
 import ShowReadColumns from '../shared/components/showReadColumns.tsx';
 import { {variableName}Labels } from './components/labels.ts';
 import { {variableName}Tooltips } from './components/tooltips.ts';
-import { useDelete{ModelName}, useShow{ModelName} } from './hooks/use{ModelName}Query.ts';
-import { {ModelName} } from './types.ts';
+import { useDelete{modelName}, useShow{modelName} } from './hooks/use{modelName}Query.ts';
+import { {modelName} } from './types.ts';
 
-export default function {ModelName}Show() {
+export default function {modelName}Show() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [{variableName}Data, set{ModelName}Data] = useState<{ModelName} | null>(null);
+  const [{variableName}Data, set{modelName}Data] = useState<{modelName} | null>(null);
 
-  const { data: {variableName}, isLoading } = useShow{ModelName}(Number(id), {
+  const { data: {variableName}, isLoading } = useShow{modelName}(Number(id), {
     enabled: !!id,
   });
 
-  const { mutateAsync: delete{ModelName} } = useDelete{ModelName}();
+  const { mutateAsync: delete{modelName} } = useDelete{modelName}();
 
   useEffect(() => {
     if ({variableName}) {
-      set{ModelName}Data({variableName});
+      set{modelName}Data({variableName});
     }
   }, [{variableName}]);
 
@@ -39,7 +39,7 @@ export default function {ModelName}Show() {
   const handleDelete = async () => {
     try {
       if ({variableName}Data) {
-        await delete{ModelName}({variableName}Data.id);
+        await delete{modelName}({variableName}Data.id);
         navigate('/manager/{routeName}');
       }
     } catch (error) {
@@ -64,7 +64,7 @@ export default function {ModelName}Show() {
       <ReadPaper>
         <ShowHeader
           id={id}
-          className={'{ModelName}'}
+          className={'{modelName}'}
           linkName={'{routeName}'}
           navigate={navigate}
           setOpen={setOpen}
@@ -73,7 +73,7 @@ export default function {ModelName}Show() {
       </ReadPaper>
 
       <ShowDialog
-        className={'{ModelName}'}
+        className={'{modelName}'}
         instanceName={{variableName}Data?.titel}
         open={open}
         setOpen={setOpen}

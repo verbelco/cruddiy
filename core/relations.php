@@ -42,15 +42,6 @@ if (isset($_POST['index'])) {
         mkdir('app', 0777, true);
     }
 
-    $helpersfilename = 'helpers.php';
-    $handle = fopen('helpers.php', 'r') or exit('Unable to open Helpers file! Please check your file permissions.');
-    $helpers = fread($handle, filesize($helpersfilename));
-    fclose($handle);
-
-    $helpersfile = fopen('app/'.$helpersfilename, 'w') or exit('Unable to create Helpers file! Please check your file permissions');
-    fwrite($helpersfile, $helpers);
-    fclose($helpersfile);
-
     $configfile = fopen('app/config.php', 'w') or exit('Unable to open Config file!');
     $txt = "<?php \n";
     $txt .= "\$db_server = '$server'; \n";

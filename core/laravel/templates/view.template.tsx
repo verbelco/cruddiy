@@ -8,11 +8,9 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { showDate } from '../../../util/dateTime.ts';
 import { parseURLParams } from '../../../util/parse.ts';
 import ShowDialog from '../shared/components/showDialog.tsx';
 import { useExtendedTable } from '../shared/hooks/Table/ManagerExtendedTable.tsx';
-import { booleanFilterParams } from '../shared/types.ts';
 import { {variableName}Labels } from './components/labels.ts';
 import { {variableName}Tooltips } from './components/tooltips.ts';
 import { use{modelName}Filters } from './hooks/use{modelName}Filters.ts';

@@ -286,7 +286,6 @@ function create_constructor_parameter($name, $type, $nullable)
 function PascalCase($string)
 {
     $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
-    $string = strtolower($string);
     $string = lcfirst(str_replace(' ', '', ucwords($string)));
 
     return ucwords($string);
@@ -295,7 +294,6 @@ function PascalCase($string)
 function camelCase($string)
 {
     $string = preg_replace('/[^a-zA-Z0-9]+/', ' ', $string);
-    $string = strtolower($string);
     $string = lcfirst(str_replace(' ', '', ucwords($string)));
 
     return $string;
@@ -303,7 +301,7 @@ function camelCase($string)
 
 function kebabCase($string)
 {
-    return strtolower(str_replace([' ', '_'], ['-', '-'], $string));
+    return strtolower(str_replace([' ', '_'], ['-', '-'], preg_replace('/(?<!^)[A-Z]/', '-$0', $string)));
 }
 
 /** Open a template and replace basic information */
