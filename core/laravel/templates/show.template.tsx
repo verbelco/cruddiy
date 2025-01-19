@@ -74,7 +74,7 @@ export default function {modelName}Show() {
 
       <ShowDialog
         className={'{modelName}'}
-        instanceName={{variableName}Data?.id.toString()}
+        instanceName={{variableName}Data.id.toString()}
         open={open}
         setOpen={setOpen}
         handleDelete={handleDelete}
