@@ -34,7 +34,7 @@ const {modelName}Form: React.FC = () => {
     },
   });
 
-  const { setValue } = initForm;
+  const { setValue, control } = initForm;
 
   useEffect(() => {
     if ({variableName}) {

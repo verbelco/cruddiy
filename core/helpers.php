@@ -4,7 +4,7 @@
 function prepare_text_for_tooltip($string)
 {
     if (isset($string)) {
-        return "'".str_replace("'", '"', $string)."'";
+        return "'" . str_replace("'", '"', $string) . "'";
     } else {
         return "''";
     }
@@ -19,23 +19,23 @@ function get_fk_preview_queries($table, $join_name, &$sql_concat_select, &$sql_s
             // Reference is a foreign key to another table itself
             [$fk_table, $fk_column] = get_foreign_table_and_column($table, $column);
             if (isset($preview_columns[$fk_table])) {
-                $new_join_name = $join_name.$fk_table;
+                $new_join_name = $join_name . $fk_table;
                 $join_clauses .= "\n\t\t\tLEFT JOIN `$fk_table` AS `$new_join_name` ON `$new_join_name`.`$fk_column` = `$join_name`.`$column`";
                 get_fk_preview_queries($fk_table, $new_join_name, $sql_concat_select, $sql_select, $join_clauses);
             } else {
-                $sql_concat_select[] = '`'.$join_name.'`.`'.$column.'`';
-                $sql_select[] = '`'.$column.'`';
+                $sql_concat_select[] = '`' . $join_name . '`.`' . $column . '`';
+                $sql_select[] = '`' . $column . '`';
             }
         } else {
-            $sql_concat_select[] = '`'.$join_name.'`.`'.$column.'`';
-            $sql_select[] = '`'.$column.'`';
+            $sql_concat_select[] = '`' . $join_name . '`.`' . $column . '`';
+            $sql_select[] = '`' . $column . '`';
         }
     }
 }
 
 function is_primary_key($t, $c)
 {
-    $cols = $_POST[$t.'columns'];
+    $cols = $_POST[$t . 'columns'];
     foreach ($cols as $col) {
         if (isset($col['primary']) && $col['columnname'] == $c) {
             return 1;
@@ -48,15 +48,23 @@ function is_primary_key($t, $c)
 function get_default_value($table, $column)
 {
     // Get the default value of a column
-    global $link;
+    global $link, $db_name;
 
     $sql = "SELECT COLUMN_DEFAULT AS `def`
     FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = 'hydrodb' and TABLE_NAME = '$table' AND COLUMN_NAME = '$column';";
+    WHERE TABLE_SCHEMA = '$db_name' and TABLE_NAME = '$table' AND COLUMN_NAME = '$column';";
+
     $result = mysqli_query($link, $sql);
     if (mysqli_num_rows($result) == 1) {
         $def = mysqli_fetch_assoc($result)['def'];
     }
+
+    return $def ?? null;
+}
+
+function get_default_value_php($table, $column)
+{
+    $def = get_default_value($table, $column);
 
     // Rewrite some SQL to PHP
     if ($def == 'current_timestamp()') {
@@ -202,7 +210,7 @@ function get_enums($tablename, $columnname): array
     $row = mysqli_fetch_array($result, MYSQLI_NUM);
     preg_match('/enum\((.*)\)$/', $row[0], $matches);
 
-    return array_map(fn ($enum) => str_replace("'", '', $enum), explode(',', $matches[1]));
+    return array_map(fn($enum) => str_replace("'", '', $enum), explode(',', $matches[1]));
 }
 
 /** Returns a string with a php list with enum values, such as:
@@ -210,7 +218,7 @@ function get_enums($tablename, $columnname): array
  */
 function get_enum_list($tablename, $columnname)
 {
-    return "['".implode("','", get_enums($tablename, $columnname))."']";
+    return "['" . implode("','", get_enums($tablename, $columnname)) . "']";
 }
 
 function create_column_object($name, $displayname, $comments, $table, $sql_join, $sql_select, $nullable, $primary_key, $type)
@@ -220,11 +228,11 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
         $displayname = $name;
     }
 
-    $default = get_default_value($table, $name);
+    $default = get_default_value_php($table, $name);
 
     $comments = empty($comments) ? 'null' : prepare_text_for_tooltip($comments);
-    $sql_join = empty($sql_join) ? 'null' : '"'.$sql_join.'"';
-    $sql_select = empty($sql_select) ? 'null' : '"'.$sql_select.'"';
+    $sql_join = empty($sql_join) ? 'null' : '"' . $sql_join . '"';
+    $sql_select = empty($sql_select) ? 'null' : '"' . $sql_select . '"';
 
     $required = $nullable ? 'False' : 'True';
     $primary_key = $primary_key ? 'False' : 'True';
@@ -266,12 +274,12 @@ function create_column_object($name, $displayname, $comments, $table, $sql_join,
 
 function create_db_attribute($name, $type, $comments, $nullable)
 {
-    $comments = empty($comments) ? '' : '/** '.str_replace("\n", "\n*", $comments)." */\n";
+    $comments = empty($comments) ? '' : '/** ' . str_replace("\n", "\n*", $comments) . " */\n";
     $nullable = $nullable ? '?' : '';
 
     $type = type_to_php($type);
 
-    return $comments."protected $nullable$type $$name;";
+    return $comments . "protected $nullable$type $$name;";
 }
 
 function create_constructor_parameter($name, $type, $nullable)
@@ -323,13 +331,13 @@ function get_columns($table): array
     $result = mysqli_query($link, $sql);
     $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
-    return array_map(fn (array $row) => $row['Field'], $rows);
+    return array_map(fn(array $row) => $row['Field'], $rows);
 }
 
 function get_col_types($table, $column)
 {
     global $link;
-    $sql = "SHOW FIELDS FROM $table where FIELD ="."'".$column."'";
+    $sql = "SHOW FIELDS FROM $table where FIELD =" . "'" . $column . "'";
     $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_assoc($result);
 
@@ -339,7 +347,7 @@ function get_col_types($table, $column)
 function get_col_comments($table, $column)
 {
     global $link;
-    $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
+    $sql = "SHOW FULL FIELDS FROM $table where FIELD =" . "'" . $column . "'";
     $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_assoc($result);
 
@@ -349,7 +357,7 @@ function get_col_comments($table, $column)
 function get_col_nullable($table, $column)
 {
     global $link;
-    $sql = "SHOW FULL FIELDS FROM $table where FIELD ="."'".$column."'";
+    $sql = "SHOW FULL FIELDS FROM $table where FIELD =" . "'" . $column . "'";
     $result = mysqli_query($link, $sql);
     $row = mysqli_fetch_assoc($result);
 
@@ -359,29 +367,80 @@ function get_col_nullable($table, $column)
 function getReactFormElement(string $column, string $table, string $tableVariableName): string
 {
     $required = get_col_nullable($table, $column) ? '' : "\n      required: true,";
+    $type = match (column_type(get_col_types($table, $column))) {
+        2 => "\n      select: true,\n      options: Object.values({$column}),",
+        4 => "\n      select: true,\n      type: 'bool',",
+        5, 6 => "\n      type: 'number',",
+        7 => "\n      type: 'date',",
+        8 => "\n      type: 'datetime',",
+        default => ""
+    };
 
     return "    {
       id: '{$column}',
       label: {$tableVariableName}Labels.{$column},
-      name: '{$column}',$required
+      name: '{$column}',$required$type
       tooltip: {$tableVariableName}Tooltips.{$column},
     }";
 }
 
 function getReactDetailElement(string $column, string $table, string $tableVariableName): string
 {
+    $required = get_col_nullable($table, $column) ? " ?? 'N/A'" : "";
+
+    $value = "{$tableVariableName}Data.{$column}";
+    $value = match (column_type(get_col_types($table, $column))) {
+        4 => "$value.toString()",
+        5 => "showNumber($value, 0, 'N/A')",
+        6 => "showNumber($value, 1, 'N/A')",
+        7 => "showDate($value, 'N/A')",
+        8 => "showDateTime($value, 'N/A')",
+        default => $value . $required
+    };
+
     return "    {
       label: {$tableVariableName}Labels.{$column},
-      value: {$tableVariableName}Data.{$column},
+      value: $value,
       tooltip: {$tableVariableName}Tooltips.{$column},
     }";
 }
 
+function getReactFormDefault(string $column, string $table): string
+{
+    $type = column_type(get_col_types($table, $column));
+    $default = get_default_value($table, $column);
+
+    if (isset($default) && ($default == "NULL" || $default == 'current_timestamp()')) {
+        return "undefined";
+    }
+
+    if (isset($default) && $type == 2) {
+        $default = PascalCase(str_replace("'", "", $default));
+        return "{$column}.{$default}";
+    }
+
+    if (!isset($default) && get_col_nullable($table, $column)) {
+        return "undefined";
+    }
+
+    return $default ?? "''";
+}
+
 function getReactTableColumnElement(string $column, string $table, string $tableVariableName): string
 {
+    $extra = match (column_type(get_col_types($table, $column))) {
+        2 => "\n      filterFn: 'equals',\n      filterVariant: 'select',\n      filterSelectOptions: Object.values({$column}),",
+        4 => "\n      filterFn: 'equals',\n      filterVariant: 'select',\n      filterSelectOptions: booleanFilterParams,\n      Cell: ({ cell }) => {return cell.getValue()?.toString();},",
+        5 => "\n      filterFn: 'between',\n      Cell: ({ cell }) => {return showNumber(cell.getValue() as number, 0);},",
+        6 => "\n      filterFn: 'between',\n      Cell: ({ cell }) => {return showNumber(cell.getValue() as number, 0);},",
+        7 => "\n      filterFn: 'between',\n      filterVariant: 'date',\n      Cell: ({ cell }) => {return showDate(cell.getValue() as Date);},",
+        8 => "\n      filterFn: 'between',\n      filterVariant: 'date',\n      Cell: ({ cell }) => {return showDateTime(cell.getValue() as Date);},",
+        default => ""
+    };
+
     return "    {
       accessorKey: '{$column}',
-      header: {$tableVariableName}Labels.{$column},
+      header: {$tableVariableName}Labels.{$column},$extra
       Header: () => (
         <Tooltip title={{$tableVariableName}Tooltips.{$column}}>
           <p>{{$tableVariableName}Labels.{$column}}</p>
@@ -396,5 +455,5 @@ function getLaravelRequestValidation(string $column, string $table, string $tabl
     $type = type_to_laravel_rules(column_type(get_col_types($table, $column)));
     $rules = [$required, $type];
 
-    return "            '$column' => '".implode('|', $rules)."'";
+    return "            '$column' => '" . implode('|', $rules) . "'";
 }

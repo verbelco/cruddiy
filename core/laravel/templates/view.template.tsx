@@ -111,7 +111,7 @@ const {modelName}View = () => {
       <MaterialReactTable table={table} />
       <ShowDialog
         className={'{modelName}'}
-        instanceName={selected{modelName}?.titel}
+        instanceName={selected{modelName}?.id.toString()}
         open={open}
         setOpen={setOpen}
         handleDelete={handleDelete{modelName}}

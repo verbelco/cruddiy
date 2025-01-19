@@ -24,7 +24,7 @@ function get_enum_type($table, $column): string
 {
     $enum_values = get_enums($table, $column);
 
-    return "export enum $column {".implode('', array_map(fn ($val) => "\n  ".PascalCase($val).": '".$val."'", $enum_values))."\n}";
+    return "export enum $column {".implode(',', array_map(fn ($val) => "\n  ".PascalCase($val)." = '".$val."'", $enum_values))."\n}";
 }
 
 function getTypesFile(string $table, string $modelName, string $variableName, string $routeName): string
@@ -73,7 +73,7 @@ function getFormFile(string $table, string $modelName, string $variableName, str
     $columns = get_columns($table);
     unset($columns[0]);
 
-    $defaultValues = implode(",\n", array_map(fn ($column) => "      {$column}: {$variableName}?.$column ?? ''", $columns));
+    $defaultValues = implode(",\n", array_map(fn ($column) => "      {$column}: {$variableName}?.$column ?? " . getReactFormDefault($column, $table), $columns));
     $result = str_replace('{defaultValues}', $defaultValues, $result);
 
     $fields = implode(",\n", array_map(fn ($column) => getReactFormElement($column, $table, $variableName), $columns));
