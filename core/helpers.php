@@ -309,7 +309,7 @@ function camelCase($string)
 
 function kebabCase($string)
 {
-    return strtolower(str_replace([' ', '_'], ['-', '-'], preg_replace('/(?<!^)[A-Z]/', '-$0', $string)));
+    return strtolower(str_replace([' ', '_', '--'], ['-', '-', '-'], preg_replace('/(?<!^)[A-Z]/', '-$0', $string)));
 }
 
 /** Open a template and replace basic information */
