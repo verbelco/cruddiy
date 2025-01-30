@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { parseURLParams } from '../../../util/parse.ts';
 import ShowDialog from '../shared/components/showDialog.tsx';
+import ViewBox from '../shared/components/viewBox.tsx';
 import { useExtendedTable } from '../shared/hooks/Table/ManagerExtendedTable.tsx';
 import { {variableName}Labels } from './components/labels.ts';
 import { {variableName}Tooltips } from './components/tooltips.ts';
@@ -107,7 +108,7 @@ const {modelName}View = () => {
   };
 
   return (
-    <div className="p-4 h-[calc(100vh-56px-2em)]">
+    <ViewBox>
       <MaterialReactTable table={table} />
       <ShowDialog
         className={'{modelName}'}
@@ -119,7 +120,7 @@ const {modelName}View = () => {
         handleSnackbarClose={handleSnackbarClose}
         snackbarMessage={snackbarMessage}
       />
-    </div>
+    </ViewBox>
   );
 };
 
