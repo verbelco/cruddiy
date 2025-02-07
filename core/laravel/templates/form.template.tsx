@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { setFormWithObject } from '../../../util/object.ts';
 import ManagerForm from '../shared/hooks/Form/ManagerForm.tsx';
@@ -16,9 +16,11 @@ import {
 import { {modelName} } from './types.ts';
 
 type FormDataType = Omit<{modelName}, 'id'>;
+type PreGivenAttributes = Partial<Meetpunt>;
 
 const {modelName}Form: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { state } = useLocation();
   const navigate = useNavigate();
   const isEditMode = !!id;
 
@@ -27,10 +29,12 @@ const {modelName}Form: React.FC = () => {
   });
   const { mutateAsync: create{modelName} } = useCreate{modelName}();
   const { mutateAsync: update{modelName} } = useUpdate{modelName}();
+  const preGivenAttributes: PreGivenAttributes | null = state ?? null;
 
   const initForm = useForm<FormDataType>({
     defaultValues: {
 {defaultValues}
+      ...preGivenAttributes,
     },
   });
 
