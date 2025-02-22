@@ -8,15 +8,14 @@ import ManagerForm from '../shared/hooks/Form/ManagerForm.tsx';
 import { FieldConfig } from '../shared/types.ts';
 import { {variableName}Labels } from './components/labels.ts';
 import { {variableName}Tooltips } from './components/tooltips.ts';
+import { use{modelName}FormConfig } from './hooks/use{modelName}Config.tsx';
+import { use{modelName}Form } from './hooks/use{modelName}Form.ts';
 import {
   useCreate{modelName},
   useShow{modelName},
   useUpdate{modelName},
 } from './hooks/use{modelName}Query.ts';
-import { {modelName} } from './types.ts';
-
-type FormDataType = Omit<{modelName}, 'id'>;
-type PreGivenAttributes = Partial<Meetpunt>;
+import { {modelName}, FormDataType, PreGivenAttributes } from './types.ts';
 
 const {modelName}Form: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,12 +30,7 @@ const {modelName}Form: React.FC = () => {
   const { mutateAsync: update{modelName} } = useUpdate{modelName}();
   const preGivenAttributes: PreGivenAttributes | null = state ?? null;
 
-  const initForm = useForm<FormDataType>({
-    defaultValues: {
-{defaultValues}
-      ...preGivenAttributes,
-    },
-  });
+  const initForm = use{modelName}Form({variableName}, preGivenAttributes);
 
   const { setValue, control } = initForm;
 
@@ -46,9 +40,7 @@ const {modelName}Form: React.FC = () => {
     }
   }, [{variableName}, setValue]);
 
-  const fields: FieldConfig<FormDataType>[] = [
-{fields}
-  ];
+  const fields = use{modelName}FormConfig(control, {variableName});
 
   const form = ManagerForm<{modelName}, FormDataType>({
     id,

@@ -11,7 +11,8 @@ import {
   Paginated,
   ShowResponse,
 } from '../../../shared/components/types.ts';
-import { {modelName} } from '../types.ts';
+import { BulkRequest, BulkResponse } from '../../shared/types.ts';
+import { {modelName}, FormDataType } from '../types.ts';
 
 export const use{modelName} = ({
   columnFilters = [],
@@ -117,6 +118,44 @@ export const useDelete{modelName} = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['{routeName}'] });
+    },
+  });
+};
+
+export const useUpdateBulk{modelName} = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: BulkRequest<FormDataType>) => {
+      const response = await client.post<BulkResponse>(
+        `/manager/crud/{routeName}/bulk-update`,
+        data,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['{routeName}'],
+      });
+    },
+  });
+};
+
+export const useDeleteBulk{modelName} = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: BulkRequest<FormDataType>) => {
+      const response = await client.post<BulkResponse>(
+        `/manager/crud/{routeName}/bulk-destroy`,
+        data,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['{routeName}'],
+      });
     },
   });
 };

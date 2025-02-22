@@ -11,3 +11,6 @@ export type {modelName}Tooltips = {
 export type {modelName}Labels = {
   [K in keyof {modelName}]: string;
 };
+
+export type FormDataType = Omit<{modelName}, 'id'>;
+export type PreGivenAttributes = Partial<FormDataType>;

@@ -1,22 +1,20 @@
-import { Tooltip } from '@mui/material';
 import { AxiosError } from 'axios';
-import {
-  type MRT_ColumnDef,
-  MRT_Row,
-  MaterialReactTable,
-} from 'material-react-table';
-import { useEffect, useMemo, useState } from 'react';
+import { MRT_Row, MaterialReactTable } from 'material-react-table';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { parseURLParams } from '../../../util/parse.ts';
 import ShowDialog from '../shared/components/showDialog.tsx';
 import ViewBox from '../shared/components/viewBox.tsx';
 import { useExtendedTable } from '../shared/hooks/Table/ManagerExtendedTable.tsx';
-import { {variableName}Labels } from './components/labels.ts';
-import { {variableName}Tooltips } from './components/tooltips.ts';
+import { BulkProps } from '../shared/types.ts';
+import {
+  use{modelName}FormConfig,
+  use{modelName}TableConfig,
+} from './hooks/use{modelName}Config.tsx';
 import { use{modelName}Filters } from './hooks/use{modelName}Filters.ts';
-import { use{modelName}, useDelete{modelName} } from './hooks/use{modelName}Query.ts';
-import { {modelName} } from './types.ts';
+import { use{modelName}, useDelete{modelName}, useDeleteBulk{modelName}, useUpdateBulk{modelName} } from './hooks/use{modelName}Query.ts';
+import { {modelName}, FormDataType } from './types.ts';
 
 const {modelName}View = () => {
   const navigate = useNavigate();
@@ -56,12 +54,19 @@ const {modelName}View = () => {
     }
   }, [search, setColumnFilters]);
 
-  const columns = useMemo<MRT_ColumnDef<{modelName}>[]>(
-    () => [
-{tableColumns}
-    ],
-    [],
-  );
+  const columns = use{modelName}TableConfig();
+
+  const bulkForm = use{modelName}Form();
+  const { control } = bulkForm;
+  const bulkFields = use{modelName}FormConfig(control);
+  const { mutateAsync: bulkDelete } = useDeleteBulk{modelName}();
+  const { mutateAsync: bulkUpdate } = useUpdateBulk{modelName}();
+  const bulkProps: BulkProps<FormDataType> = {
+    form: bulkForm,
+    fields: bulkFields,
+    updateMutation: bulkUpdate,
+    deleteMutation: bulkDelete,
+  };
 
   const { mutateAsync: delete{modelName} } = useDelete{modelName}();
 
@@ -95,6 +100,8 @@ const {modelName}View = () => {
       isLoading,
       isRefetching,
       newButtonText: '{modelName} aanmaken',
+      bulkEnabled: false,
+      bulkProps,
     },
     {
       columns,

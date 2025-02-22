@@ -56,10 +56,22 @@ require_once '../helpers.php';
                         <pre><?php echo htmlspecialchars(getTooltipsFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
+                        <h3>useConfig</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getUseConfigFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
                         <h3>useFilters</h3>
                     </div>
                     <div class="row bg-light p-3">
                         <pre><?php echo htmlspecialchars(getUseFiltersFile($table, $modelName, $variableName, $routeName)); ?></pre>
+                    </div>
+                    <div class="row">
+                        <h3>useForm</h3>
+                    </div>
+                    <div class="row bg-light p-3">
+                        <pre><?php echo htmlspecialchars(getUseFormFile($table, $modelName, $variableName, $routeName)); ?></pre>
                     </div>
                     <div class="row">
                         <h3>useQuery</h3>
