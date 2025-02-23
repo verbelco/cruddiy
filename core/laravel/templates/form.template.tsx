@@ -1,13 +1,9 @@
 import { Typography } from '@mui/material';
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { setFormWithObject } from '../../../util/object.ts';
 import ManagerForm from '../shared/hooks/Form/ManagerForm.tsx';
-import { FieldConfig } from '../shared/types.ts';
-import { {variableName}Labels } from './components/labels.ts';
-import { {variableName}Tooltips } from './components/tooltips.ts';
 import { use{modelName}FormConfig } from './hooks/use{modelName}Config.tsx';
 import { use{modelName}Form } from './hooks/use{modelName}Form.ts';
 import {

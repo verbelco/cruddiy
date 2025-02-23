@@ -14,6 +14,18 @@ import {
 import { BulkRequest, BulkResponse } from '../../shared/types.ts';
 import { {modelName}, FormDataType } from '../types.ts';
 
+const getTransformedData = (data: Partial<{modelName}>) => {
+  return {
+    ...data,
+  };
+};
+
+const getTransformedDataBulk = (data: { fields?: Partial<{modelName}> }) => {
+  return data.fields !== undefined
+    ? { ...data, fields: getTransformedData(data.fields) }
+    : data;
+};
+
 export const use{modelName} = ({
   columnFilters = [],
   globalFilter = '',
@@ -66,7 +78,7 @@ export const useUpdate{modelName} = () => {
     mutationFn: async (data: {modelName}) => {
       const response = await client.put<{modelName}>(
         `/manager/crud/{routeName}/${data.id}`,
-        data,
+        getTransformedData(data)
       );
       return response.data;
     },
@@ -100,7 +112,7 @@ export const useCreate{modelName} = () => {
     mutationFn: async (data: Omit<{modelName}, 'id'>) => {
       const response = await client.post<{modelName}>(
         '/manager/crud/{routeName}',
-        data,
+        getTransformedData(data)
       );
       return response.data;
     },
@@ -129,7 +141,7 @@ export const useUpdateBulk{modelName} = () => {
     mutationFn: async (data: BulkRequest<FormDataType>) => {
       const response = await client.post<BulkResponse>(
         `/manager/crud/{routeName}/bulk-update`,
-        data,
+        getTransformedDataBulk(data)
       );
       return response.data;
     },
