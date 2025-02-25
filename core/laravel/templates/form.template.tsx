@@ -32,7 +32,7 @@ const {modelName}Form: React.FC = () => {
 
   useEffect(() => {
     if ({variableName}) {
-      setFormWithObject<{modelName}, FormDataType>({variableName}, setValue);
+      setFormWithObject<{modelName}, FormDataType>({variableName}, setValue, []);
     }
   }, [{variableName}, setValue]);
 
